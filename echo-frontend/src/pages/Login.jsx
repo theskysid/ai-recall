@@ -170,8 +170,8 @@ const Login = () => {
             className="login-form"
           >
             <input
-              type="text"
-              placeholder="Email or phone number"
+              type="email"
+              placeholder="Email"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               className="auth-input"
@@ -181,7 +181,7 @@ const Login = () => {
             {otpSent && (
               <div className="otp-section">
                 <p className="otp-label">
-                  Enter the 6-digit code sent to your email or phone
+                  Enter the 6-digit code sent to your email
                 </p>
                 <input
                   type="text"

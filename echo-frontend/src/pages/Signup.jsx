@@ -35,7 +35,7 @@ const Signup = () => {
       await authService.sendSignupOtp(identifier);
       setOtpSent(true);
       setCountdown(60);
-      setMessage("OTP sent! Check your email or phone.");
+      setMessage("OTP sent! Check your email.");
     } catch (error) {
       setMessage(error.message);
     } finally {
@@ -96,13 +96,6 @@ const Signup = () => {
           <p>Create an account to start chatting</p>
         </div>
 
-        <div className="sandbox-notice">
-          <span className="sandbox-notice-icon">ℹ️</span>
-          <p>
-            <strong>Note on Phone OTP:</strong> Mobile SMS is sandboxed in Twilio (only registered numbers can receive messages without credits). We recommend using <strong>Email OTP</strong>, Google, or Password sign up instead.
-          </p>
-        </div>
-
         <form
           onSubmit={otpSent ? handleVerifySignup : handleSendOtp}
           className="signup-form"
@@ -118,8 +111,8 @@ const Signup = () => {
             disabled={isLoading || otpSent}
           />
           <input
-            type="text"
-            placeholder="Email or phone number"
+            type="email"
+            placeholder="Email"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             className="auth-input"
@@ -139,7 +132,7 @@ const Signup = () => {
           {otpSent && (
             <div className="otp-section">
               <p className="otp-label">
-                Enter the 6-digit code sent to your email or phone
+                Enter the 6-digit code sent to your email
               </p>
               <input
                 type="text"

@@ -35,10 +35,6 @@ public class OtpService {
         return generateAndSaveOtp(email, IdentifierType.EMAIL);
     }
 
-    public String createOrUpdateForPhone(String phone) {
-        return generateAndSaveOtp(phone, IdentifierType.PHONE);
-    }
-
     private String generateAndSaveOtp(String identifier, IdentifierType type) {
         OtpVerification record = otpRepository
                 .findByIdentifierAndType(identifier, type)

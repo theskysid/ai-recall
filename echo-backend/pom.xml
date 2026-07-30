@@ -122,13 +122,6 @@
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
-        <!-- Phone OTP: Twilio SDK -->
-        <dependency>
-            <groupId>com.twilio.sdk</groupId>
-            <artifactId>twilio</artifactId>
-            <version>10.1.5</version>
-        </dependency>
-
         <!-- Google OAuth2: ID token verification -->
         <dependency>
             <groupId>com.google.api-client</groupId>

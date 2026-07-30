@@ -26,9 +26,6 @@ public class User {
     @Column(unique = true)
     private String email;
 
-    @Column(unique = true)
-    private String phone;
-
     @Column(name = "google_id", unique = true)
     private String googleId;
 

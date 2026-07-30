@@ -14,11 +14,11 @@ public class OtpVerification {
     private Long id;
 
     @Column(nullable = false)
-    private String identifier;      // email or phone
+    private String identifier;      // email
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private IdentifierType type;    // EMAIL or PHONE
+    private IdentifierType type;    // EMAIL (PHONE retained only for legacy rows)
 
     @Column(nullable = false)
     private String otpCode;
