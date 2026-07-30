@@ -1,0 +1,358 @@
+/* ═══════════════════════════════════════════════════════
+   Navbar — Premium Glass Navigation
+   ═══════════════════════════════════════════════════════ */
+
+.navbar {
+    background: rgba(6, 6, 12, 0.8);
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 1px solid var(--border-glass);
+    transition: all var(--transition-smooth);
+}
+
+.navbar-compact {
+    background: rgba(6, 6, 12, 0.92);
+    border-bottom-color: rgba(255, 255, 255, 0.04);
+}
+
+.navbar-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 64px;
+    transition: height var(--transition-smooth);
+    position: relative;
+}
+
+.navbar-compact .navbar-container {
+    height: 50px;
+    padding: 0 1rem;
+}
+
+/* ── Brand ─────────────────────────────────── */
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
+    color: var(--text-main);
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    transition: all var(--transition-base);
+    z-index: 1002;
+}
+
+.navbar-brand:hover {
+    opacity: 0.85;
+}
+
+.navbar-logo-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    font-size: 1rem;
+    font-weight: 800;
+    background: rgba(139, 92, 246, 0.1);
+    padding: 0.3rem 0.55rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    animation: pulseGlow 4s infinite ease-in-out;
+    transition: all var(--transition-base);
+}
+
+.navbar-brand:hover .navbar-logo-icon {
+    background: rgba(139, 92, 246, 0.18);
+    border-color: rgba(139, 92, 246, 0.35);
+}
+
+.navbar-brand-text {
+    background: linear-gradient(135deg, #ffffff 0%, #a5b4c8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+/* ── Menu ──────────────────────────────────── */
+.navbar-menu {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.navbar-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.45rem 0.9rem;
+    border-radius: var(--radius-pill);
+    transition: all var(--transition-base);
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+.navbar-link:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.navbar-link.active {
+    color: var(--text-main);
+    background: rgba(139, 92, 246, 0.12);
+    border-color: rgba(139, 92, 246, 0.25);
+}
+
+.navbar-auth-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.navbar-btn-signup {
+    background: var(--gradient-primary);
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 0.5rem 1.15rem;
+    border-radius: var(--radius-pill);
+    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
+    transition: all var(--transition-base);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    white-space: nowrap;
+}
+
+.navbar-btn-signup:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(139, 92, 246, 0.45);
+    color: #ffffff;
+}
+
+/* ── User Status ───────────────────────────── */
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 0.35rem 0.45rem 0.35rem 0.85rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border-glass);
+    transition: all var(--transition-base);
+}
+
+.navbar-user:hover {
+    border-color: var(--border-glass-hover);
+}
+
+.user-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-success);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    flex-shrink: 0;
+}
+
+.user-info {
+    color: var(--text-main);
+    font-weight: 500;
+    font-size: 0.85rem;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Logout Button ─────────────────────────── */
+.logout-btn {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    padding: 0.3rem 0.75rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    white-space: nowrap;
+}
+
+.logout-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+    box-shadow: 0 0 14px var(--color-danger-glow);
+}
+
+.logout-btn:active {
+    transform: scale(0.97);
+}
+
+/* ── Hamburger Menu Button ─────────────────── */
+.navbar-hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    z-index: 1002;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    transition: background var(--transition-base);
+}
+
+.navbar-hamburger:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.navbar-hamburger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--text-main);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    transform-origin: center;
+}
+
+.navbar-hamburger.open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.navbar-hamburger.open span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+
+.navbar-hamburger.open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ── Mobile Overlay ────────────────────────── */
+.navbar-overlay {
+    display: none;
+}
+
+/* ═══════════════════════════════════════════════
+   Responsive — Tablet
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .navbar-container {
+        padding: 0 1rem;
+        height: 56px;
+    }
+
+    .navbar-hamburger {
+        display: flex;
+    }
+
+    .navbar-overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        animation: fadeIn 0.2s ease;
+    }
+
+    .navbar-menu {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: min(280px, 80vw);
+        height: 100vh;
+        background: rgba(10, 10, 20, 0.97);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        border-left: 1px solid var(--border-glass);
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.35rem;
+        padding: 5rem 1.5rem 2rem;
+        z-index: 1001;
+        transform: translateX(100%);
+        transition: transform 0.35s var(--ease-out-expo);
+        box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .navbar-menu.menu-open {
+        transform: translateX(0);
+    }
+
+    .navbar-link {
+        font-size: 1rem;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-md);
+    }
+
+    .navbar-auth-group {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .navbar-btn-signup {
+        text-align: center;
+        padding: 0.75rem 1rem;
+    }
+
+    .navbar-user {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        border-radius: var(--radius-md);
+        margin-top: 0.5rem;
+    }
+
+    .user-info {
+        max-width: none;
+        flex: 1;
+    }
+
+    .logout-btn {
+        padding: 0.5rem 0.85rem;
+    }
+}
+
+/* ═══════════════════════════════════════════════
+   Responsive — Small mobile
+   ═══════════════════════════════════════════════ */
+@media (max-width: 480px) {
+    .navbar-logo-icon {
+        font-size: 0.9rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .navbar-brand-text {
+        font-size: 1rem;
+    }
+}
+
+/* ═══════════════════════════════════════════════
+   Hide navbar completely on mobile chat page
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .navbar-compact {
+        display: none;
+    }
+}
