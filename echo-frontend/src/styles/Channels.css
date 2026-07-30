@@ -201,3 +201,57 @@
     border-color: rgba(239, 68, 68, 0.4);
     color: #fca5a5;
 }
+
+/* ── Channel messaging view (reuses .dm-* shell) ── */
+.channel-header-avatar {
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.channel-member-badge {
+    background: var(--bg-surface-glass-light);
+    border: 1px solid var(--border-glass);
+    color: var(--text-muted);
+    font-size: 0.62rem;
+    padding: 1px 7px;
+    border-radius: var(--radius-pill);
+    font-weight: 600;
+}
+
+.channel-leave-btn {
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    background: var(--color-danger-glow);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.channel-leave-btn:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.25);
+}
+
+.channel-leave-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.channel-invite-banner {
+    margin: 0 0 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface-glass-light);
+    border: 1px solid var(--border-glass);
+    color: var(--text-muted);
+    font-size: 0.76rem;
+    text-align: center;
+}
+
+.channel-invite-banner strong {
+    color: var(--text-secondary);
+    letter-spacing: 0.15em;
+}

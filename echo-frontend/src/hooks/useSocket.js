@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
 import { authService } from '../services/authService';
@@ -14,6 +14,7 @@ const useSocket = ({
     setRefreshTrigger
 }) => {
     const [onlineUsers, setOnlineUsers] = useState(new Set());
+    const [isConnected, setIsConnected] = useState(false);
 
     const stompClient = useRef(null);
     const socketRef = useRef(null);
@@ -47,6 +48,7 @@ const useSocket = ({
 
             stompClient.current = null;
             socketRef.current = null;
+            setIsConnected(false);
         };
 
         const connectAndFetch = async () => {
@@ -72,6 +74,8 @@ const useSocket = ({
                     clearTimeout(reconnectTimeoutRef.current);
                     reconnectTimeoutRef.current = null;
                 }
+
+                setIsConnected(true);
 
                 // Presence channel — tracks who is online for the Friends/Users list.
                 stompClient.current.subscribe('/topic/public', (msg) => {
@@ -157,6 +161,7 @@ const useSocket = ({
 
             }, (error) => {
                 console.error('STOMP connection error:', error);
+                setIsConnected(false);
                 if (isMountedRef.current && !reconnectTimeoutRef.current) {
                     reconnectTimeoutRef.current = setTimeout(() => {
                         connectAndFetch();
@@ -173,10 +178,45 @@ const useSocket = ({
         };
     }, [username, userColor, loadFriendsData, pushNotification, friendsListRef, dmHandlers, setUnreadDms, setRefreshTrigger]);
 
+    /**
+     * Subscribe to a channel's topic. Returns the STOMP subscription (call
+     * .unsubscribe() to leave the topic) or null if not currently connected.
+     */
+    const subscribeToChannel = useCallback((channelId, onMessage) => {
+        if (channelId == null || !stompClient.current || !stompClient.current.connected) {
+            return null;
+        }
+        return stompClient.current.subscribe(`/topic/channel/${channelId}`, (msg) => {
+            try {
+                onMessage(JSON.parse(msg.body));
+            } catch (error) {
+                console.error('Error parsing channel message:', error);
+            }
+        });
+    }, []);
+
+    /**
+     * Send a CHAT message to a channel via /app/channel/{channelId}/send.
+     */
+    const sendChannelMessage = useCallback((channelId, content) => {
+        if (channelId == null || !content || !stompClient.current || !stompClient.current.connected) {
+            return;
+        }
+        stompClient.current.send(`/app/channel/${channelId}/send`, {}, JSON.stringify({
+            sender: username,
+            content,
+            color: userColor,
+            type: 'CHAT'
+        }));
+    }, [username, userColor]);
+
     return {
         stompClient,
         onlineUsers,
-        setOnlineUsers
+        setOnlineUsers,
+        isConnected,
+        subscribeToChannel,
+        sendChannelMessage
     };
 };
 

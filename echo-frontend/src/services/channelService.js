@@ -23,5 +23,21 @@ export const channelService = {
     joinChannel: async (inviteCode) => {
         const response = await api.post('/api/channels/join', { inviteCode });
         return response.data;
+    },
+
+    /**
+     * Get the CHAT message history for a channel the user belongs to.
+     */
+    getMessages: async (channelId) => {
+        const response = await api.get(`/api/channels/${channelId}/messages`);
+        return response.data;
+    },
+
+    /**
+     * Leave a channel.
+     */
+    leaveChannel: async (channelId) => {
+        const response = await api.delete(`/api/channels/${channelId}/leave`);
+        return response.data;
     }
 };

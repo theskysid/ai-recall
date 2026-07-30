@@ -129,6 +129,13 @@
             <version>2.7.0</version>
         </dependency>
 
+        <!-- LiveKit Server SDK: mint access tokens for WebRTC calls -->
+        <dependency>
+            <groupId>io.livekit</groupId>
+            <artifactId>livekit-server</artifactId>
+            <version>0.10.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>

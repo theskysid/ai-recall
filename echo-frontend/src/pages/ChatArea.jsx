@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
+import { channelService } from '../services/channelService';
 import useSocket from '../hooks/useSocket';
 import useFriends from '../hooks/useFriends';
 import useChannels from '../hooks/useChannels';
@@ -145,7 +146,10 @@ const ChatArea = () => {
 
     const {
         stompClient,
-        onlineUsers
+        onlineUsers,
+        isConnected,
+        subscribeToChannel,
+        sendChannelMessage
     } = useSocket({
         username,
         userColor,
@@ -157,12 +161,17 @@ const ChatArea = () => {
         setRefreshTrigger
     });
 
-    const { channels, upsertChannel } = useChannels();
+    const { channels, upsertChannel, removeChannel } = useChannels();
 
-    // Clicking a channel just highlights it for now — the messaging view lands in Step 7.
+    const activeChannel = channels.find((c) => c.id === activeChannelId) || null;
+
+    // Selecting a channel opens its message feed.
     const onSelectChannel = useCallback((channelId) => {
         setActiveChannelId(channelId);
-    }, []);
+        if (isMobile) {
+            setMobileSidebarOpen(false);
+        }
+    }, [isMobile]);
 
     // Add a newly created/joined channel to the sidebar immediately and select it.
     const handleChannelReady = useCallback((channel) => {
@@ -170,6 +179,18 @@ const ChatArea = () => {
         upsertChannel(channel);
         setActiveChannelId(channel.id);
     }, [upsertChannel]);
+
+    // Leave a channel: call the API, drop it from the sidebar, clear the active view.
+    const handleLeaveChannel = useCallback(async (channelId) => {
+        try {
+            await channelService.leaveChannel(channelId);
+        } catch (err) {
+            window.alert(err.response?.data?.error || err.message || 'Could not leave channel');
+            return;
+        }
+        removeChannel(channelId);
+        setActiveChannelId((prev) => (prev === channelId ? null : prev));
+    }, [removeChannel]);
 
     const openDmChat = (otherUser) => {
         if (otherUser === username) return;
@@ -206,7 +227,7 @@ const ChatArea = () => {
 
 
 
-    const totalColumns = openChats.length;
+    const totalColumns = (activeChannel ? 1 : 0) + openChats.length;
     const gridClass = totalColumns <= 1 ? 'columns-1' : totalColumns === 2 ? 'columns-2' : 'columns-3';
 
     const chat = {
@@ -218,7 +239,10 @@ const ChatArea = () => {
         unreadDms,
         stompClient,
         registerDmHandler,
-        unregisterDmHandler
+        unregisterDmHandler,
+        isConnected,
+        subscribeToChannel,
+        sendChannelMessage
     };
 
     const friends = {
@@ -254,7 +278,9 @@ const ChatArea = () => {
         authService,
         channels,
         activeChannelId,
+        activeChannel,
         onSelectChannel,
+        onLeaveChannel: handleLeaveChannel,
         onOpenChannelModal: () => setShowChannelModal(true)
     };
 

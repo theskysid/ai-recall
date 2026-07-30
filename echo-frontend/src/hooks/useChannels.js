@@ -41,11 +41,19 @@ const useChannels = () => {
         });
     }, []);
 
+    /**
+     * Remove a channel from the list (e.g. after leaving).
+     */
+    const removeChannel = useCallback((channelId) => {
+        setChannels((prev) => prev.filter((c) => c.id !== channelId));
+    }, []);
+
     return {
         channels,
         setChannels,
         loadChannels,
-        upsertChannel
+        upsertChannel,
+        removeChannel
     };
 };
 

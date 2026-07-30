@@ -139,6 +139,17 @@ public class ChannelService {
     }
 
     /**
+     * Whether the given user is a current member of the channel. Throws if the
+     * channel does not exist.
+     */
+    @Transactional(readOnly = true)
+    public boolean isMember(User user, Long channelId) {
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new RuntimeException("Channel not found"));
+        return channelMembershipRepository.existsByChannelAndUser(channel, user);
+    }
+
+    /**
      * Persist a CHAT message posted to a channel by one of its members. Validates
      * that the channel exists and the sender is a current member before saving.
      */
