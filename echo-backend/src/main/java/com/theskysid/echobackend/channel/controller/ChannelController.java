@@ -2,9 +2,11 @@ package com.theskysid.echobackend.channel.controller;
 
 import com.theskysid.echobackend.auth.service.AuthenticationService;
 import com.theskysid.echobackend.channel.dto.ChannelDTO;
+import com.theskysid.echobackend.channel.dto.ChannelMessageDTO;
 import com.theskysid.echobackend.channel.dto.CreateChannelRequestDTO;
 import com.theskysid.echobackend.channel.dto.JoinChannelRequestDTO;
 import com.theskysid.echobackend.channel.entity.Channel;
+import com.theskysid.echobackend.channel.entity.ChannelMessage;
 import com.theskysid.echobackend.channel.service.ChannelService;
 import com.theskysid.echobackend.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,7 +100,39 @@ public class ChannelController {
         }
     }
 
+    /**
+     * GET /api/channels/{id}/messages — CHAT history for a channel the user belongs to.
+     */
+    @GetMapping("/{id}/messages")
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getChannelMessages(@PathVariable Long id, Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+        }
+        try {
+            User currentUser = authenticationService.resolveAuthenticatedUser(authentication.getName());
+            List<ChannelMessageDTO> messages = channelService.getChannelHistory(currentUser, id).stream()
+                    .map(this::toChannelMessageDTO)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(messages);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     // ── Helpers ─────────────────────────────────────────────────
+
+    private ChannelMessageDTO toChannelMessageDTO(ChannelMessage message) {
+        return ChannelMessageDTO.builder()
+                .id(message.getId())
+                .channelId(message.getChannel().getId())
+                .sender(message.getSender().getUsername())
+                .content(message.getContent())
+                .color(message.getColor())
+                .type(message.getType().name())
+                .timestamp(message.getTimestamp())
+                .build();
+    }
 
     private ChannelDTO toChannelDTO(Channel channel, User currentUser, LocalDateTime joinedAt) {
         return ChannelDTO.builder()

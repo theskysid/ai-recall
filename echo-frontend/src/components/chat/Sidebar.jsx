@@ -1,8 +1,9 @@
 import React from 'react';
 import FriendList from './FriendList';
+import '../../styles/Channels.css';
 
 const Sidebar = ({ chat, friends, ui, layout }) => {
-    const { openChats = [], setOpenChats, onlineUsers = new Set(), openDmChat, unreadDms = new Map() } = chat || {};
+    const { onlineUsers = new Set(), openDmChat, unreadDms = new Map() } = chat || {};
     const {
         friendsList = [],
         incomingRequestsCount = 0,
@@ -14,15 +15,17 @@ const Sidebar = ({ chat, friends, ui, layout }) => {
         handleRemoveFriend
     } = friends || {};
     const {
-        showGlobalChat,
-        setShowGlobalChat,
         sidebarTab,
         setSidebarTab,
         setShowFindFriendsModal,
         longPressTimerRef,
         isLongPressTriggeredRef,
         username,
-        userColor
+        userColor,
+        channels = [],
+        activeChannelId,
+        onSelectChannel,
+        onOpenChannelModal
     } = ui || {};
     const { mobileSidebarOpen, setMobileSidebarOpen } = layout || {};
 
@@ -47,19 +50,37 @@ const Sidebar = ({ chat, friends, ui, layout }) => {
                 </div>
             </div>
 
-            {!showGlobalChat && (
-                <button
-                    onClick={() => {
-                        setShowGlobalChat(true);
-                        if (openChats.length >= 3) {
-                            setOpenChats(prev => prev.slice(prev.length - 2));
-                        }
-                    }}
-                    className="open-global-chat-btn"
-                >
-                    + Open Global Chat
-                </button>
-            )}
+            {/* ── CHANNELS ── */}
+            <div className="channels-section">
+                <div className="channels-section-header">
+                    <span className="channels-section-title">Channels</span>
+                    <button
+                        className="channels-add-btn"
+                        onClick={onOpenChannelModal}
+                        title="Create or join a channel"
+                        aria-label="Create or join a channel"
+                    >
+                        +
+                    </button>
+                </div>
+                {channels.length === 0 ? (
+                    <div className="channels-empty">No channels yet. Tap + to create or join.</div>
+                ) : (
+                    <div className="channels-list">
+                        {channels.map((ch) => (
+                            <button
+                                key={ch.id}
+                                className={`channel-item ${activeChannelId === ch.id ? 'active' : ''}`}
+                                onClick={() => onSelectChannel && onSelectChannel(ch.id)}
+                                title={ch.description || ch.name}
+                            >
+                                <span className="channel-item-hash">#</span>
+                                <span className="channel-item-name">{ch.name}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
 
             <div className="sidebar-tabs">
                 <button
@@ -80,31 +101,6 @@ const Sidebar = ({ chat, friends, ui, layout }) => {
             </div>
 
             <div className="users-list">
-                {/* Pinned Global Chat at top of sidebar */}
-                <div
-                    className={`friend-sidebar-item ${showGlobalChat ? 'menu-active' : ''}`}
-                    style={{ borderBottom: '1px solid var(--border-glass)', marginBottom: '0.5rem', paddingBottom: '0.6rem' }}
-                    onClick={() => {
-                        setShowGlobalChat(true);
-                        if (openChats.length >= 3) {
-                            setOpenChats(prev => prev.slice(prev.length - 2));
-                        }
-                    }}
-                >
-                    <div className="friend-sidebar-user">
-                        <div className="user-avatar friend-avatar" style={{ background: 'var(--gradient-primary)', color: '#fff' }}>
-                            🌐
-                        </div>
-                        <div className="friend-sidebar-meta">
-                            <span className="friend-sidebar-name">Global Chat</span>
-                            <span className="friend-sidebar-status online">● {chat?.onlineUsers?.size || 1} online</span>
-                        </div>
-                    </div>
-                    <div className="friend-sidebar-actions">
-                        <span className="friend-dm-icon" title="Pinned Global Chat" style={{ fontSize: '1rem' }}>📌</span>
-                    </div>
-                </div>
-
                 {sidebarTab === 'friends' ? (
                     <>
                         <button

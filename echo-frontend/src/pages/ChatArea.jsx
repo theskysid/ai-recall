@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import useSocket from '../hooks/useSocket';
 import useFriends from '../hooks/useFriends';
+import useChannels from '../hooks/useChannels';
 import useNotifications from '../hooks/useNotifications';
 import DirectMessageChat from './DirectMessageChat';
 import FindFriendsModal from './FindFriendsModal';
-import GlobalChat from '../components/chat/GlobalChat';
+import ChannelModal from '../components/chat/ChannelModal';
 import Sidebar from '../components/chat/Sidebar';
 import MobileLayout from '../components/chat/MobileLayout';
 import DesktopLayout from '../components/chat/DesktopLayout';
@@ -26,19 +27,18 @@ const ChatArea = () => {
         }
     }, [currentUser, navigate]);
 
-    // Multi-section chat state (up to 3 sections total)
-    const [showGlobalChat, setShowGlobalChat] = useState(true);
+    // Multi-section chat state (up to 3 DM sections total)
     const [openChats, setOpenChats] = useState([]); // Array of { username: string }
 
     // Responsive Mobile State
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
-    const [mobileActiveViewRaw, setMobileActiveViewRaw] = useState('list'); // 'list' | 'global' | 'dm'
+    const [mobileActiveViewRaw, setMobileActiveViewRaw] = useState('list'); // 'list' | 'dm'
 
     const setMobileActiveView = useCallback((newView) => {
         setMobileActiveViewRaw(newView);
-        if (newView === 'global' || newView === 'dm') {
+        if (newView === 'dm') {
             window.history.pushState({ mobileView: newView }, '', `#${newView}`);
-        } else if (newView === 'list' && (window.location.hash === '#global' || window.location.hash === '#dm')) {
+        } else if (newView === 'list' && window.location.hash === '#dm') {
             window.history.back();
         }
     }, []);
@@ -47,12 +47,10 @@ const ChatArea = () => {
 
     useEffect(() => {
         const handlePopState = () => {
-            if (!window.location.hash || (window.location.hash !== '#global' && window.location.hash !== '#dm')) {
-                setMobileActiveViewRaw('list');
-            } else if (window.location.hash === '#global') {
-                setMobileActiveViewRaw('global');
-            } else if (window.location.hash === '#dm') {
+            if (window.location.hash === '#dm') {
                 setMobileActiveViewRaw('dm');
+            } else {
+                setMobileActiveViewRaw('list');
             }
         };
         window.addEventListener('popstate', handlePopState);
@@ -95,6 +93,10 @@ const ChatArea = () => {
     // Friend System & Ephemeral DM states
     const [sidebarTab, setSidebarTab] = useState('friends'); // 'friends' | 'users'
     const [showFindFriendsModal, setShowFindFriendsModal] = useState(false);
+
+    // Channel states
+    const [showChannelModal, setShowChannelModal] = useState(false);
+    const [activeChannelId, setActiveChannelId] = useState(null);
     const [unreadDms, setUnreadDms] = useState(new Map());
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const [mobileSearch, setMobileSearch] = useState('');
@@ -108,7 +110,6 @@ const ChatArea = () => {
     const mobileListRef = useRef(null);
     const chatListScrollRef = useRef(null);
 
-    const emojis = ['😀', '😂', '😍', '🤔', '👍', '❤️', '🎉', '🔥', '😎', '⭐', '✨', '💯'];
     const username = currentUser?.username ?? '';
     const userColor = currentUser?.color ?? '#007bff';
 
@@ -144,18 +145,7 @@ const ChatArea = () => {
 
     const {
         stompClient,
-        messages,
-        setMessages,
-        onlineUsers,
-        isTyping,
-        sendMessage,
-        handleTyping,
-        message,
-        setMessage,
-        showEmojiPicker,
-        setShowEmojiPicker,
-        addEmoji,
-        messagesEndRef
+        onlineUsers
     } = useSocket({
         username,
         userColor,
@@ -167,12 +157,26 @@ const ChatArea = () => {
         setRefreshTrigger
     });
 
+    const { channels, upsertChannel } = useChannels();
+
+    // Clicking a channel just highlights it for now — the messaging view lands in Step 7.
+    const onSelectChannel = useCallback((channelId) => {
+        setActiveChannelId(channelId);
+    }, []);
+
+    // Add a newly created/joined channel to the sidebar immediately and select it.
+    const handleChannelReady = useCallback((channel) => {
+        if (!channel) return;
+        upsertChannel(channel);
+        setActiveChannelId(channel.id);
+    }, [upsertChannel]);
+
     const openDmChat = (otherUser) => {
         if (otherUser === username) return;
 
         setOpenChats(prev => {
             const filtered = prev.filter(c => c.username !== otherUser);
-            const maxLimit = showGlobalChat && !isMobile ? 2 : 3;
+            const maxLimit = 3;
             const next = [...filtered, { username: otherUser }];
             if (next.length > maxLimit) {
                 return next.slice(next.length - maxLimit);
@@ -202,37 +206,10 @@ const ChatArea = () => {
 
 
 
-    const formatTime = (timestamp) => {
-        if (!timestamp) return '';
-        let ts = timestamp;
-        if (typeof ts === 'string' && !ts.endsWith('Z') && !ts.includes('+') && !ts.includes('GMT')) {
-            ts += 'Z';
-        }
-        const dateObj = new Date(ts);
-        if (isNaN(dateObj.getTime())) return '';
-        return dateObj.toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
-
-    const totalColumns = (showGlobalChat ? 1 : 0) + openChats.length;
+    const totalColumns = openChats.length;
     const gridClass = totalColumns <= 1 ? 'columns-1' : totalColumns === 2 ? 'columns-2' : 'columns-3';
 
     const chat = {
-        messages,
-        setMessages,
-        message,
-        setMessage,
-        sendMessage,
-        handleTyping,
-        isTyping,
-        emojis,
-        addEmoji,
-        showEmojiPicker,
-        setShowEmojiPicker,
-        formatTime,
-        messagesEndRef,
         onlineUsers,
         openChats,
         setOpenChats,
@@ -269,14 +246,16 @@ const ChatArea = () => {
         userColor,
         showFindFriendsModal,
         setShowFindFriendsModal,
-        showGlobalChat,
-        setShowGlobalChat,
         sidebarTab,
         setSidebarTab,
         longPressTimerRef,
         isLongPressTriggeredRef,
         navigate,
-        authService
+        authService,
+        channels,
+        activeChannelId,
+        onSelectChannel,
+        onOpenChannelModal: () => setShowChannelModal(true)
     };
 
     const layout = {
@@ -328,6 +307,13 @@ const ChatArea = () => {
                     onClose={() => setShowFindFriendsModal(false)}
                     onFriendsChange={() => loadFriendsData(true)}
                     refreshTrigger={refreshTrigger}
+                />
+            )}
+
+            {showChannelModal && (
+                <ChannelModal
+                    onClose={() => setShowChannelModal(false)}
+                    onChannelReady={handleChannelReady}
                 />
             )}
         </div>

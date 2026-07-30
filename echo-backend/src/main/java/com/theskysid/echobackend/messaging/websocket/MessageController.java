@@ -64,20 +64,4 @@ public class MessageController {
         return ResponseEntity.ok(messages);
     }
 
-    @GetMapping("/global")
-    @org.springframework.transaction.annotation.Transactional
-    public ResponseEntity<?> getGlobalMessages(Authentication authentication) {
-        if (authentication == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
-        }
-        java.time.LocalDateTime cutoff = java.time.LocalDateTime.now().minusDays(7);
-        try {
-            chatMessageRepository.deleteOldGlobalMessages(cutoff);
-        } catch (Exception e) {
-            // Log and continue if cleanup has an issue
-        }
-        List<ChatMessage> messages = chatMessageRepository.findGlobalMessagesSince(cutoff);
-        return ResponseEntity.ok(messages);
-    }
-
 }

@@ -51,3 +51,7 @@ Ports: frontend `5173`, backend `8080`, Postgres `5433`.
   introducing new patterns, libraries, or architecture.
 - DB schema is managed by Hibernate `ddl-auto: update` — new `@Entity`
   classes auto-create tables; there is no migration tool.
+
+
+## Output Constraints 
+ Provide ONLY the requested code, file edits, commands, or factual status. Strip out all conversational filler, pleasantries, and narrations of your thought process. Do not explain what you are about to do. Only provide explanations if a prompt explicitly asks for one.

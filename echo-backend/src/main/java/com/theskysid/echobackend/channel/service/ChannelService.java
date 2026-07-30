@@ -2,7 +2,9 @@ package com.theskysid.echobackend.channel.service;
 
 import com.theskysid.echobackend.channel.entity.Channel;
 import com.theskysid.echobackend.channel.entity.ChannelMembership;
+import com.theskysid.echobackend.channel.entity.ChannelMessage;
 import com.theskysid.echobackend.channel.repository.ChannelMembershipRepository;
+import com.theskysid.echobackend.channel.repository.ChannelMessageRepository;
 import com.theskysid.echobackend.channel.repository.ChannelRepository;
 import com.theskysid.echobackend.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,9 @@ public class ChannelService {
 
     @Autowired
     private ChannelMembershipRepository channelMembershipRepository;
+
+    @Autowired
+    private ChannelMessageRepository channelMessageRepository;
 
     // Unambiguous alphabet (no 0/O/1/I) for readable, shareable invite codes.
     private static final String INVITE_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -131,6 +136,45 @@ public class ChannelService {
     @Transactional(readOnly = true)
     public long getMemberCount(Channel channel) {
         return channelMembershipRepository.countByChannel(channel);
+    }
+
+    /**
+     * Persist a CHAT message posted to a channel by one of its members. Validates
+     * that the channel exists and the sender is a current member before saving.
+     */
+    @Transactional
+    public ChannelMessage postMessage(Long channelId, User sender, String content, String color) {
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new RuntimeException("Channel not found"));
+
+        if (!channelMembershipRepository.existsByChannelAndUser(channel, sender)) {
+            throw new RuntimeException("You are not a member of this channel");
+        }
+
+        ChannelMessage message = ChannelMessage.builder()
+                .channel(channel)
+                .sender(sender)
+                .content(content == null ? "" : content)
+                .color(color)
+                .type(ChannelMessage.MessageType.CHAT)
+                .build();
+
+        return channelMessageRepository.save(message);
+    }
+
+    /**
+     * List the persisted CHAT history for a channel the user belongs to.
+     */
+    @Transactional(readOnly = true)
+    public List<ChannelMessage> getChannelHistory(User user, Long channelId) {
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new RuntimeException("Channel not found"));
+
+        if (!channelMembershipRepository.existsByChannelAndUser(channel, user)) {
+            throw new RuntimeException("You are not a member of this channel");
+        }
+
+        return channelMessageRepository.findChannelMessages(channel);
     }
 
     /**
