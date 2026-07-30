@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { channelService } from '../services/channelService';
+import LiveCallRoom from './LiveCallRoom';
 import '../styles/DirectMessageChat.css';
 import '../styles/Channels.css';
 
@@ -21,6 +22,12 @@ const ChannelChat = ({
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [isLeaving, setIsLeaving] = useState(false);
+    const [inCall, setInCall] = useState(false);
+
+    // Leave any active call when switching channels.
+    useEffect(() => {
+        setInCall(false);
+    }, [channelId]);
 
     const messagesEndRef = useRef(null);
     const messageIdsRef = useRef(new Set());
@@ -148,6 +155,13 @@ const ChannelChat = ({
 
                 <div className="dm-header-actions">
                     <button
+                        onClick={() => setInCall((v) => !v)}
+                        className={`channel-call-btn ${inCall ? 'active' : ''}`}
+                        title={inCall ? 'Return to chat' : 'Start or join the channel call'}
+                    >
+                        {inCall ? '💬 Chat' : '📹 Call'}
+                    </button>
+                    <button
                         onClick={handleLeave}
                         disabled={isLeaving}
                         className="channel-leave-btn"
@@ -161,7 +175,15 @@ const ChannelChat = ({
                 </div>
             </div>
 
-            <div className="dm-messages-container">
+            {inCall && (
+                <LiveCallRoom
+                    channelId={channelId}
+                    channelName={channel?.name}
+                    onLeaveCall={() => setInCall(false)}
+                />
+            )}
+
+            <div className="dm-messages-container" style={inCall ? { display: 'none' } : undefined}>
                 {channel?.inviteCode && (
                     <div className="channel-invite-banner">
                         🔗 Invite code: <strong>{channel.inviteCode}</strong>
@@ -196,7 +218,7 @@ const ChannelChat = ({
                 <div ref={messagesEndRef} />
             </div>
 
-            <div className="dm-input-container">
+            <div className="dm-input-container" style={inCall ? { display: 'none' } : undefined}>
                 <form onSubmit={sendMessage} className="dm-form">
                     <input
                         type="text"

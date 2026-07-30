@@ -255,3 +255,89 @@
     color: var(--text-secondary);
     letter-spacing: 0.15em;
 }
+
+/* ── Call button + video room ── */
+.channel-call-btn {
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary-glow);
+    border: 1px solid var(--color-primary);
+    color: var(--color-primary-hover);
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.channel-call-btn:hover {
+    background: rgba(139, 92, 246, 0.28);
+}
+
+.channel-call-btn.active {
+    background: var(--gradient-primary);
+    color: #fff;
+}
+
+.channel-call-container {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-root);
+}
+
+.channel-call-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-glass);
+    flex-shrink: 0;
+}
+
+.channel-call-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.channel-call-exit-btn {
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    background: var(--color-danger-glow);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.channel-call-exit-btn:hover {
+    background: rgba(239, 68, 68, 0.25);
+}
+
+.channel-call-stage {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+}
+
+.channel-call-status {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 2rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.channel-call-error {
+    color: #fca5a5;
+}
