@@ -45,6 +45,10 @@ livekit:
   api-secret: ${LIVEKIT_API_SECRET:}
   token-ttl-minutes: ${LIVEKIT_TOKEN_TTL_MINUTES:60}
 
+# Deepgram (call transcription) config
+deepgram:
+  api-key: ${DEEPGRAM_API_KEY:}
+
 # OTP settings
 otp:
   expiry-minutes: 5
