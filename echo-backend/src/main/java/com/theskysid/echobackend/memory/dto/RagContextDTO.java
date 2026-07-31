@@ -10,6 +10,7 @@ import java.util.List;
 public class RagContextDTO {
     private Long channelId;
     private String query;
+    private String answer;
     private String context;
     private List<Long> sourceIds;
 }

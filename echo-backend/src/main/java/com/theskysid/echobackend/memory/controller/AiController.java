@@ -32,8 +32,8 @@ public class AiController {
 
     /**
      * GET /api/channels/{channelId}/ask?q={query} — retrieve the most relevant
-     * stored memories for the query, scoped to this channel. Members only.
-     * (LLM answer generation is added in the next step.)
+     * stored memories for the query (channel-scoped), synthesize an answer with
+     * the LLM, and return it with the source ids. Members only.
      */
     @GetMapping("/{channelId}/ask")
     public ResponseEntity<?> ask(@PathVariable Long channelId,
@@ -50,8 +50,10 @@ public class AiController {
                         .body(Map.of("error", "You are not a member of this channel"));
             }
 
-            RagContextDTO context = ragService.retrieveContext(String.valueOf(channelId), query);
-            return ResponseEntity.ok(context);
+            RagContextDTO result = ragService.retrieveContext(String.valueOf(channelId), query);
+            return ResponseEntity.ok(Map.of(
+                    "answer", result.getAnswer() == null ? "" : result.getAnswer(),
+                    "sourceIds", result.getSourceIds()));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
