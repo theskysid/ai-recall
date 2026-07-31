@@ -46,7 +46,6 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.4</version>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -134,6 +133,20 @@
             <groupId>io.livekit</groupId>
             <artifactId>livekit-server</artifactId>
             <version>0.10.0</version>
+        </dependency>
+
+        <!-- pgvector: PGvector type + similarity search over embeddings -->
+        <dependency>
+            <groupId>com.pgvector</groupId>
+            <artifactId>pgvector</artifactId>
+            <version>0.1.6</version>
+        </dependency>
+
+        <!-- LangChain4j all-MiniLM-L6-v2: free, local, in-process embeddings (384 dims) -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
+            <version>0.31.0</version>
         </dependency>
 
     </dependencies>
