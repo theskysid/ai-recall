@@ -6,6 +6,7 @@ import com.theskysid.echobackend.channel.entity.ChannelMessage;
 import com.theskysid.echobackend.channel.repository.ChannelMembershipRepository;
 import com.theskysid.echobackend.channel.repository.ChannelMessageRepository;
 import com.theskysid.echobackend.channel.repository.ChannelRepository;
+import com.theskysid.echobackend.memory.service.MemoryIngestionService;
 import com.theskysid.echobackend.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,9 @@ public class ChannelService {
 
     @Autowired
     private ChannelMessageRepository channelMessageRepository;
+
+    @Autowired
+    private MemoryIngestionService memoryIngestionService;
 
     // Unambiguous alphabet (no 0/O/1/I) for readable, shareable invite codes.
     private static final String INVITE_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -170,7 +174,12 @@ public class ChannelService {
                 .type(ChannelMessage.MessageType.CHAT)
                 .build();
 
-        return channelMessageRepository.save(message);
+        ChannelMessage saved = channelMessageRepository.save(message);
+
+        // Fire-and-forget: embed into vector memory without blocking the broadcast.
+        memoryIngestionService.ingestMessage(saved);
+
+        return saved;
     }
 
     /**
