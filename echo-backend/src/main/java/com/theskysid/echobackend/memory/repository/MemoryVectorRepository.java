@@ -21,4 +21,16 @@ public interface MemoryVectorRepository extends JpaRepository<MemoryVector, UUID
             "LIMIT :limit", nativeQuery = true)
     List<MemoryVector> findNearest(@Param("queryVector") String queryVector,
                                    @Param("limit") int limit);
+
+    /**
+     * Retrieve the top 5 most similar vectors for a single channel using
+     * pgvector's cosine distance operator (<=>). Strictly filters by channel_id
+     * BEFORE ordering so results can never leak across channels.
+     */
+    @Query(value = "SELECT * FROM memory_vectors " +
+            "WHERE channel_id = :channelId " +
+            "ORDER BY embedding <=> CAST(:embedding AS vector) ASC " +
+            "LIMIT 5", nativeQuery = true)
+    List<MemoryVector> findTop5ByChannelAndSimilarity(@Param("channelId") Long channelId,
+                                                      @Param("embedding") String embedding);
 }

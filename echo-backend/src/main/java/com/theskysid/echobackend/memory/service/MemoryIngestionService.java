@@ -39,6 +39,7 @@ public class MemoryIngestionService {
         try {
             float[] embedding = embeddingService.embed(message.getContent());
             memoryVectorRepository.save(MemoryVector.builder()
+                    .channelId(message.getChannel().getId())
                     .content(message.getContent())
                     .embedding(embedding)
                     .sourceType(SourceType.MESSAGE)
@@ -66,6 +67,7 @@ public class MemoryIngestionService {
                 }
                 float[] embedding = embeddingService.embed(chunk);
                 memoryVectorRepository.save(MemoryVector.builder()
+                        .channelId(transcript.getChannel().getId())
                         .content(chunk)
                         .embedding(embedding)
                         .sourceType(SourceType.TRANSCRIPT)

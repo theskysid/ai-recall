@@ -22,6 +22,9 @@ public class MemoryVector {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(name = "channel_id", nullable = false)
+    private Long channelId;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
