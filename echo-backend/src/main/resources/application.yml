@@ -2,6 +2,11 @@ spring:
   output:
     ansi:
       enabled: always
+  # Groq (OpenAI-compatible LLM for decision extraction)
+  ai:
+    groq:
+      api-key: ${GROQ_API_KEY:}
+      model: ${GROQ_MODEL:llama3-8b-8192}
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${DB_USER}

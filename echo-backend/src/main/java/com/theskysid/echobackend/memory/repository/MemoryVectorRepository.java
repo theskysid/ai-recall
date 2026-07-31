@@ -40,4 +40,17 @@ public interface MemoryVectorRepository extends JpaRepository<MemoryVector, UUID
             "LIMIT 5", nativeQuery = true)
     List<MemoryVector> findTop5ByChannelAndSimilarity(@Param("channelId") Long channelId,
                                                       @Param("embedding") String embedding);
+
+    /**
+     * Retrieve the top active decisions most similar to the given embedding,
+     * scoped to one channel. Only returns vectors that are decisions and have
+     * NOT already been superseded (supersedes_id IS NULL). Used to find older
+     * decisions a new decision might replace.
+     */
+    @Query(value = "SELECT * FROM memory_vectors " +
+            "WHERE channel_id = :channelId AND is_decision = true AND supersedes_id IS NULL " +
+            "ORDER BY embedding <=> CAST(:embedding AS vector) ASC " +
+            "LIMIT 3", nativeQuery = true)
+    List<MemoryVector> findTopDecisionsByChannel(@Param("channelId") Long channelId,
+                                                 @Param("embedding") String embedding);
 }
