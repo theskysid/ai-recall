@@ -26,11 +26,31 @@ public interface MemoryVectorRepository extends JpaRepository<MemoryVector, UUID
      * Retrieve the top 5 most similar vectors for a single channel using
      * pgvector's cosine distance operator (<=>). Strictly filters by channel_id
      * BEFORE ordering so results can never leak across channels.
+     *
+     * Ordering is by a calculated score = cosine distance + supersession penalty.
+     * Cosine distance (<=>) is in [0, 2], where smaller = more similar. Any vector
+     * whose supersedes_id IS NOT NULL (it was explicitly replaced by a newer
+     * decision) has a large penalty (10) added to its distance, pushing it to the
+     * bottom of the list while still allowing it to be returned as a last resort.
      */
     @Query(value = "SELECT * FROM memory_vectors " +
             "WHERE channel_id = :channelId " +
-            "ORDER BY embedding <=> CAST(:embedding AS vector) ASC " +
+            "ORDER BY (embedding <=> CAST(:embedding AS vector)) " +
+            "+ (CASE WHEN supersedes_id IS NOT NULL THEN 10 ELSE 0 END) ASC " +
             "LIMIT 5", nativeQuery = true)
     List<MemoryVector> findTop5ByChannelAndSimilarity(@Param("channelId") Long channelId,
                                                       @Param("embedding") String embedding);
+
+    /**
+     * Retrieve the top active decisions most similar to the given embedding,
+     * scoped to one channel. Only returns vectors that are decisions and have
+     * NOT already been superseded (supersedes_id IS NULL). Used to find older
+     * decisions a new decision might replace.
+     */
+    @Query(value = "SELECT * FROM memory_vectors " +
+            "WHERE channel_id = :channelId AND is_decision = true AND supersedes_id IS NULL " +
+            "ORDER BY embedding <=> CAST(:embedding AS vector) ASC " +
+            "LIMIT 3", nativeQuery = true)
+    List<MemoryVector> findTopDecisionsByChannel(@Param("channelId") Long channelId,
+                                                 @Param("embedding") String embedding);
 }

@@ -256,6 +256,152 @@
     letter-spacing: 0.15em;
 }
 
+/* ── Ask AI widget (pinned above the chat feed) ── */
+.ask-ai-widget {
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border-glass);
+    background: var(--gradient-surface);
+}
+
+.ask-ai-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.ask-ai-title {
+    background: linear-gradient(135deg, #f1f5f9 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.ask-ai-chevron {
+    color: var(--text-dim);
+    font-size: 0.7rem;
+}
+
+.ask-ai-body {
+    padding: 0 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ask-ai-form {
+    display: flex;
+    gap: 8px;
+}
+
+.ask-ai-input {
+    flex: 1;
+    background: var(--bg-surface-glass-light);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-md);
+    padding: 9px 12px;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color var(--transition-base);
+}
+
+.ask-ai-input:focus {
+    border-color: var(--color-primary);
+}
+
+.ask-ai-input::placeholder {
+    color: var(--text-dim);
+}
+
+.ask-ai-submit {
+    padding: 0 16px;
+    border-radius: var(--radius-md);
+    background: var(--gradient-primary);
+    border: none;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity var(--transition-base);
+}
+
+.ask-ai-submit:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.ask-ai-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+}
+
+.ask-ai-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border-glass);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+}
+
+.ask-ai-error {
+    color: #fca5a5;
+    font-size: 0.82rem;
+    background: var(--color-danger-glow);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+}
+
+.ask-ai-answer {
+    background: var(--bg-surface-glass-light);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ask-ai-answer-text {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+}
+
+.ask-ai-sources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.ask-ai-source-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-primary-hover);
+    background: var(--color-primary-glow);
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-pill);
+    padding: 2px 9px;
+}
+
 /* ── Call button + video room ── */
 .channel-call-btn {
     padding: 6px 14px;

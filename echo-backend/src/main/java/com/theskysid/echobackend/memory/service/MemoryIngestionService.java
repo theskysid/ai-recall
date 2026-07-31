@@ -27,6 +27,9 @@ public class MemoryIngestionService {
     @Autowired
     private MemoryVectorRepository memoryVectorRepository;
 
+    @Autowired
+    private DecisionService decisionService;
+
     /**
      * Embed a channel message and store it as a MEMORY vector. Runs off the
      * main thread so it never blocks the WebSocket broadcast.
@@ -38,13 +41,15 @@ public class MemoryIngestionService {
         }
         try {
             float[] embedding = embeddingService.embed(message.getContent());
-            memoryVectorRepository.save(MemoryVector.builder()
+            MemoryVector vector = MemoryVector.builder()
                     .channelId(message.getChannel().getId())
                     .content(message.getContent())
                     .embedding(embedding)
                     .sourceType(SourceType.MESSAGE)
                     .sourceId(message.getId())
-                    .build());
+                    .build();
+            decisionService.processSupersession(vector);
+            memoryVectorRepository.save(vector);
         } catch (Exception e) {
             logger.warn("Failed to ingest message {} into memory: {}", message.getId(), e.getMessage());
         }
@@ -66,13 +71,15 @@ public class MemoryIngestionService {
                     continue;
                 }
                 float[] embedding = embeddingService.embed(chunk);
-                memoryVectorRepository.save(MemoryVector.builder()
+                MemoryVector vector = MemoryVector.builder()
                         .channelId(transcript.getChannel().getId())
                         .content(chunk)
                         .embedding(embedding)
                         .sourceType(SourceType.TRANSCRIPT)
                         .sourceId(transcript.getId())
-                        .build());
+                        .build();
+                decisionService.processSupersession(vector);
+                memoryVectorRepository.save(vector);
             }
         } catch (Exception e) {
             logger.warn("Failed to ingest transcript {} into memory: {}", transcript.getId(), e.getMessage());
