@@ -40,6 +40,16 @@ public class MemoryVector {
     @Column(name = "source_id", nullable = false)
     private Long sourceId;
 
+    // Whether this vector represents an extracted "decision".
+    @Builder.Default
+    @Column(name = "is_decision", nullable = false)
+    private boolean isDecision = false;
+
+    // If set, the id of the newer decision that replaced this one. When present,
+    // this vector is superseded and gets demoted in retrieval.
+    @Column(name = "supersedes_id")
+    private UUID supersedesId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

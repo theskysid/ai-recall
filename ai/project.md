@@ -1,27 +1,35 @@
 # Project
 
-**Echo Messaging** — a real-time chat application. Spring Boot + React,
-connected over WebSocket (STOMP/SockJS), deployed via Docker to AWS EC2.
+**Recall** (codebase: Echo Messaging) — a real-time chat + AI-memory app.
+Spring Boot + React over WebSocket (STOMP/SockJS), PostgreSQL 16 with pgvector.
+Channels can hold text chat, video calls, transcription, and a searchable
+vector "memory" of everything said.
 
 ## Features today
 
-- **Authentication** — password login/signup, email OTP, phone OTP (Twilio),
-  Google OAuth2. Stateless JWT issued as an httpOnly cookie.
-- **Global/public chat** — real-time group messaging with typing indicators,
-  online-user list, JOIN/LEAVE events. Messages retained 7 days.
-- **Private/direct messaging** — 1:1 messaging restricted to friends, with a
-  per-conversation retention policy.
-- **Friendship system** — search users, send/accept/reject/cancel requests,
-  list friends, real-time friend events over WebSocket.
-- **Channels (backend only)** — any user can create a channel (name +
-  description), which auto-generates a unique shareable invite code; others
-  join by code; members can leave; owner-leave transfers ownership to the
-  longest-standing member (or deletes the empty channel). REST:
-  create / join / leave / list. No channel messaging or UI yet.
-- **User profiles** — display name, bio, profile fields.
+- **Authentication** — password login/signup, email OTP, Google OAuth2.
+  Stateless JWT in an httpOnly cookie. (Phone/SMS OTP has been removed.)
+- **Friendship + Direct Messages** — search/add friends, real-time 1:1
+  ephemeral DMs with per-conversation retention, online presence.
+- **Channels** — create (auto invite code) / join by code / leave (owner
+  transfers to longest-standing member) / list. Real-time per-channel
+  messaging over STOMP with persisted history.
+- **Video calls** — LiveKit WebRTC per channel; backend mints scoped access
+  tokens (`/call-token`), frontend renders the room.
+- **Transcription** — Deepgram batch transcription of call audio, stored as
+  `CallTranscript` (`/transcribe`).
+- **Vector memory (RAG)** — messages and transcripts are embedded locally
+  (all-MiniLM-L6-v2, 384-dim) via an async pipeline and stored in pgvector.
+  `/ask?q=` retrieves the top-5 channel-scoped memories (cosine similarity).
+
+## Removed
+
+- **Global/public chat** — deleted; superseded by channels. Presence
+  (`/topic/public` JOIN/LEAVE) is kept for online status.
+- **Phone/SMS OTP + Twilio** — removed; email OTP + Google + password remain.
 
 ## Planned next
 
-- **Channel messaging** — STOMP topics + frontend for the new channel feature.
-- **Audio/video calls** — LiveKit env vars are scaffolded in `.env`
-  (`LIVEKIT_*`, `VITE_LIVEKIT_URL`); no backend/frontend code exists yet.
+- LLM answer generation on top of RAG retrieval (`/ask` currently returns
+  context + source ids only).
+- Frontend UI for asking questions and viewing transcripts.
