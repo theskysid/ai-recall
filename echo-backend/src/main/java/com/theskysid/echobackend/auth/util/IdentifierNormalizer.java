@@ -22,15 +22,4 @@ public final class IdentifierNormalizer {
     public static String normalizeEmail(String email) {
         return normalizeIdentifier(email).toLowerCase(Locale.ROOT);
     }
-
-    public static String normalizePhone(String phone) {
-        String normalized = normalizeIdentifier(phone);
-        if (normalized.isEmpty()) {
-            return normalized;
-        }
-
-        boolean hasLeadingPlus = normalized.startsWith("+");
-        String digitsOnly = normalized.replaceAll("\\D", "");
-        return hasLeadingPlus ? "+" + digitsOnly : digitsOnly;
-    }
 }

@@ -1,0 +1,47 @@
+package com.theskysid.echobackend.memory.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Entity
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "memory_vectors")
+public class MemoryVector {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String content;
+
+    // Stored as a pgvector column. all-MiniLM-L6-v2 outputs 384 dimensions.
+    @Type(VectorType.class)
+    @Column(name = "embedding", columnDefinition = "vector(384)")
+    private float[] embedding;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source_type", nullable = false)
+    private SourceType sourceType;
+
+    @Column(name = "source_id", nullable = false)
+    private Long sourceId;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+}

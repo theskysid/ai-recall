@@ -8,7 +8,6 @@ public class UserDTO {
     private Long id;
     private String username;
     private String email;
-    private String phone;
     private String displayName;
     private String bio;
     private String googleId;

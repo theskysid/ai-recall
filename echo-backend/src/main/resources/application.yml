@@ -34,15 +34,20 @@ jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION}
 
-# Twilio SMS config
-twilio:
-  account-sid: ${TWILIO_ACCOUNT_SID}
-  auth-token: ${TWILIO_AUTH_TOKEN}
-  phone-number: ${TWILIO_PHONE_NUMBER}
-
 # Google OAuth2 config
 google:
   client-id: ${GOOGLE_CLIENT_ID}
+
+# LiveKit (audio/video calls) config
+livekit:
+  url: ${LIVEKIT_URL:}
+  api-key: ${LIVEKIT_API_KEY:}
+  api-secret: ${LIVEKIT_API_SECRET:}
+  token-ttl-minutes: ${LIVEKIT_TOKEN_TTL_MINUTES:60}
+
+# Deepgram (call transcription) config
+deepgram:
+  api-key: ${DEEPGRAM_API_KEY:}
 
 # OTP settings
 otp:

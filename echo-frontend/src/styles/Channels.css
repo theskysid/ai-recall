@@ -1,0 +1,343 @@
+/* ═══════════════════════════════════════════════════════
+   Channels — Sidebar section + Create/Join modal fields
+   Reuses design tokens from index.css and the ffm-* modal shell.
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Sidebar CHANNELS section ── */
+.channels-section {
+    padding: 0.75rem 0.5rem 0.5rem;
+    border-bottom: 1px solid var(--border-glass);
+}
+
+.channels-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0.5rem 0.5rem;
+}
+
+.channels-section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+
+.channels-add-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-xs);
+    background: var(--bg-surface-glass-light);
+    border: 1px solid var(--border-glass);
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.channels-add-btn:hover {
+    background: var(--color-primary-glow);
+    border-color: var(--color-primary);
+    color: var(--text-main);
+}
+
+.channels-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.channel-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.channel-item:hover {
+    background: var(--bg-surface-glass-light);
+    color: var(--text-main);
+}
+
+.channel-item.active {
+    background: var(--color-primary-glow);
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.channel-item-hash {
+    color: var(--text-dim);
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.channel-item.active .channel-item-hash {
+    color: var(--color-primary-hover);
+}
+
+.channel-item-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.channels-empty {
+    padding: 6px 10px 4px;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+}
+
+/* ── Create / Join modal fields (inside the ffm-* shell) ── */
+.channel-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 18px 16px;
+}
+
+.channel-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.channel-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.channel-optional {
+    color: var(--text-dim);
+    font-weight: 400;
+}
+
+.channel-input,
+.channel-textarea {
+    width: 100%;
+    background: var(--bg-surface-glass-light);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    color: var(--text-main);
+    font-size: 0.93rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color var(--transition-base);
+}
+
+.channel-textarea {
+    resize: vertical;
+    min-height: 76px;
+    line-height: 1.5;
+}
+
+.channel-input:focus,
+.channel-textarea:focus {
+    border-color: var(--color-primary);
+}
+
+.channel-input::placeholder,
+.channel-textarea::placeholder {
+    color: var(--text-dim);
+}
+
+.channel-code-input {
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.channel-hint {
+    font-size: 0.76rem;
+    color: var(--text-dim);
+}
+
+.channel-submit-btn {
+    padding: 12px 18px;
+    border-radius: var(--radius-md);
+    background: var(--gradient-primary);
+    border: none;
+    color: #fff;
+    font-size: 0.92rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity var(--transition-base), transform var(--transition-fast);
+}
+
+.channel-submit-btn:hover:not(:disabled) {
+    opacity: 0.92;
+}
+
+.channel-submit-btn:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.channel-submit-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* Error variant of the shared ffm feedback banner */
+.ffm-feedback.channel-feedback-error {
+    background: var(--color-danger-glow);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+}
+
+/* ── Channel messaging view (reuses .dm-* shell) ── */
+.channel-header-avatar {
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.channel-member-badge {
+    background: var(--bg-surface-glass-light);
+    border: 1px solid var(--border-glass);
+    color: var(--text-muted);
+    font-size: 0.62rem;
+    padding: 1px 7px;
+    border-radius: var(--radius-pill);
+    font-weight: 600;
+}
+
+.channel-leave-btn {
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    background: var(--color-danger-glow);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.channel-leave-btn:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.25);
+}
+
+.channel-leave-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.channel-invite-banner {
+    margin: 0 0 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface-glass-light);
+    border: 1px solid var(--border-glass);
+    color: var(--text-muted);
+    font-size: 0.76rem;
+    text-align: center;
+}
+
+.channel-invite-banner strong {
+    color: var(--text-secondary);
+    letter-spacing: 0.15em;
+}
+
+/* ── Call button + video room ── */
+.channel-call-btn {
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary-glow);
+    border: 1px solid var(--color-primary);
+    color: var(--color-primary-hover);
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.channel-call-btn:hover {
+    background: rgba(139, 92, 246, 0.28);
+}
+
+.channel-call-btn.active {
+    background: var(--gradient-primary);
+    color: #fff;
+}
+
+.channel-call-container {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-root);
+}
+
+.channel-call-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-glass);
+    flex-shrink: 0;
+}
+
+.channel-call-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.channel-call-exit-btn {
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    background: var(--color-danger-glow);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.channel-call-exit-btn:hover {
+    background: rgba(239, 68, 68, 0.25);
+}
+
+.channel-call-stage {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+}
+
+.channel-call-status {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 2rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.channel-call-error {
+    color: #fca5a5;
+}

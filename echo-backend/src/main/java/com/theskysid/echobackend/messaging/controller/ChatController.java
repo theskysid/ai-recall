@@ -72,31 +72,6 @@ public class ChatController {
         return chatMessage;
     }
 
-    @MessageMapping("/chat.sendMessage")
-    @SendTo("/topic/public")
-    public ChatMessage sendMessage(@Payload ChatMessage chatMessage) {
-
-        if (!userService.userExists(chatMessage.getSender())) {
-            return null;
-        }
-
-        if (chatMessage.getTimestamp() == null) {
-            chatMessage.setTimestamp(LocalDateTime.now());
-        }
-
-        if (chatMessage.getContent() == null) {
-            chatMessage.setContent("");
-        }
-
-        // Save only real chat messages
-        if (chatMessage.getType() == ChatMessage.MessageType.CHAT) {
-            return chatMessageRepository.save(chatMessage);
-        }
-
-        // TYPING / JOIN / LEAVE → broadcast only
-        return chatMessage;
-    }
-
     @MessageMapping("/chat.sendPrivateMessage")
     public void sendPrivateMessage(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
         String senderUsername = resolveSocketUsername(headerAccessor);

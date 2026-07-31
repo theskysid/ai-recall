@@ -7,7 +7,6 @@ import com.theskysid.echobackend.auth.otp.entity.OtpVerification.IdentifierType;
 import com.theskysid.echobackend.auth.service.AuthenticationService;
 import com.theskysid.echobackend.auth.service.EmailOtpService;
 import com.theskysid.echobackend.auth.service.OtpService;
-import com.theskysid.echobackend.auth.service.SmsOtpService;
 import com.theskysid.echobackend.user.dto.ProfileUpdateDTO;
 import com.theskysid.echobackend.user.dto.UserDTO;
 import com.theskysid.echobackend.user.entity.AuthProvider;
@@ -41,9 +40,6 @@ public class ProfileController {
 
     @Autowired
     private EmailOtpService emailOtpService;
-
-    @Autowired
-    private SmsOtpService smsOtpService;
 
     @Autowired
     private OtpService otpService;
@@ -157,57 +153,6 @@ public class ProfileController {
     }
 
     /**
-     * POST /api/profile/link-phone/send — send OTP to phone for linking
-     */
-    @PostMapping("/link-phone/send")
-    public ResponseEntity<?> sendLinkPhoneOtp(@RequestBody OtpRequestDTO request, Authentication authentication) {
-        if (authentication == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
-        }
-        try {
-            String normalizedPhone = IdentifierNormalizer.normalizePhone(request.getPhone());
-            User currentUser = authenticationService.resolveAuthenticatedUser(authentication.getName());
-            authenticationService.findByIdentifier(normalizedPhone, IdentifierType.PHONE).ifPresent(existing -> {
-                if (!existing.getId().equals(currentUser.getId())) {
-                    throw new RuntimeException("This phone is already linked to another account");
-                }
-            });
-            smsOtpService.sendOtp(normalizedPhone);
-            return ResponseEntity.ok(Map.of("message", "OTP sent to " + normalizedPhone));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
-    }
-
-    /**
-     * POST /api/profile/link-phone/verify — verify OTP and link phone
-     */
-    @PostMapping("/link-phone/verify")
-    public ResponseEntity<?> verifyLinkPhone(@RequestBody OtpVerifyDTO request, Authentication authentication) {
-        if (authentication == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
-        }
-        try {
-            String normalizedPhone = IdentifierNormalizer.normalizePhone(request.getPhone());
-            otpService.verifyOtp(normalizedPhone, IdentifierType.PHONE, request.getOtp());
-            User user = authenticationService.resolveAuthenticatedUser(authentication.getName());
-
-            authenticationService.findByIdentifier(normalizedPhone, IdentifierType.PHONE).ifPresent(existing -> {
-                if (!existing.getId().equals(user.getId())) {
-                    existing.setPhone(null);
-                    userRepository.save(existing);
-                }
-            });
-
-            user.setPhone(normalizedPhone);
-            User saved = userRepository.save(user);
-            return ResponseEntity.ok(toDTO(saved));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
-    }
-
-    /**
      * POST /api/profile/link-google — link Google account by verifying token
      */
     @PostMapping("/link-google")
@@ -260,24 +205,6 @@ public class ProfileController {
     }
 
     /**
-     * POST /api/profile/unlink-phone — remove phone from account
-     */
-    @PostMapping("/unlink-phone")
-    public ResponseEntity<?> unlinkPhone(Authentication authentication) {
-        if (authentication == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
-        }
-        User user = authenticationService.resolveAuthenticatedUser(authentication.getName());
-
-        if (!hasAlternativeAuth(user, "phone")) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Cannot unlink your only login method"));
-        }
-        user.setPhone(null);
-        User saved = userRepository.save(user);
-        return ResponseEntity.ok(toDTO(saved));
-    }
-
-    /**
      * POST /api/profile/unlink-google — remove Google from account
      */
     @PostMapping("/unlink-google")
@@ -304,7 +231,6 @@ public class ProfileController {
         int count = 0;
         if (user.getPassword() != null && !user.getPassword().isEmpty()) count++;
         if (user.getEmail() != null && !"email".equals(methodToRemove)) count++;
-        if (user.getPhone() != null && !"phone".equals(methodToRemove)) count++;
         if (user.getGoogleId() != null && !"google".equals(methodToRemove)) count++;
         return count > 0;
     }
@@ -314,7 +240,6 @@ public class ProfileController {
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
-        dto.setPhone(user.getPhone());
         dto.setDisplayName(user.getDisplayName());
         dto.setBio(user.getBio());
         dto.setGoogleId(user.getGoogleId() != null ? "connected" : null);

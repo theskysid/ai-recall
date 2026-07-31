@@ -1,14 +1,10 @@
 import React from 'react';
-import GlobalChat from './GlobalChat';
 import FriendList from './FriendList';
 import MobileDrawer from './MobileDrawer';
 import DirectMessageChat from '../../pages/DirectMessageChat';
 
 const MobileLayout = ({ chat, friends, notifications, ui, layout }) => {
     const {
-        messages = [],
-        formatTime,
-        onlineUsers = new Set(),
         openDmChat,
         unreadDms = new Map(),
         openChats = [],
@@ -28,7 +24,6 @@ const MobileLayout = ({ chat, friends, notifications, ui, layout }) => {
     } = friends || {};
     const {
         setShowFindFriendsModal,
-        setShowGlobalChat,
         longPressTimerRef,
         isLongPressTriggeredRef,
         username,
@@ -105,39 +100,6 @@ const MobileLayout = ({ chat, friends, notifications, ui, layout }) => {
                     {/* ── Chat List ── */}
                     <div className="tg-chat-list" ref={chatListScrollRef}>
 
-                        {/* Pinned Global Chat — always visible at the top */}
-                        <div
-                            className="tg-chat-row tg-chat-row-pinned"
-                            onClick={() => {
-                                setShowGlobalChat(true);
-                                setMobileActiveView('global');
-                            }}
-                        >
-                            <div className="tg-avatar tg-avatar-global">
-                                <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
-                                    <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
-                                </svg>
-                            </div>
-                            <div className="tg-chat-info">
-                                <div className="tg-chat-row-top">
-                                    <span className="tg-chat-name">Global Chat</span>
-                                    {messages.length > 0 && (
-                                        <span className="tg-chat-time">
-                                            {formatTime(messages[messages.length - 1].timestamp)}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="tg-chat-row-bottom">
-                                    <span className="tg-chat-preview">
-                                        {messages.length > 0
-                                            ? `${messages[messages.length - 1].sender}: ${messages[messages.length - 1].content || '...'}`
-                                            : `${onlineUsers.size} people online · tap to join`}
-                                    </span>
-                                    <span className="tg-pin-icon">📌</span>
-                                </div>
-                            </div>
-                        </div>
-
                         {/* Friends */}
                         {friendsList.length === 0 ? (
                             <div className="tg-empty-state">
@@ -156,14 +118,6 @@ const MobileLayout = ({ chat, friends, notifications, ui, layout }) => {
                     <MobileDrawer friends={friends} ui={ui} layout={layout} />
 
                 </div>
-            )}
-
-            {mobileActiveView === 'global' && (
-                <GlobalChat
-                    chat={chat}
-                    ui={ui}
-                    layout={{ mobile: true, onBack: () => setMobileActiveView('list') }}
-                />
             )}
 
             {mobileActiveView === 'dm' && openChats.length > 0 && (

@@ -76,7 +76,6 @@ const generateUserColor = () => {
     return colors[Math.floor(Math.random() * colors.length)];
 }
 
-const isEmailIdentifier = (identifier) => identifier?.includes('@');
 const normalizeIdentifier = (identifier) => identifier?.trim();
 
 export const authService = {
@@ -225,21 +224,17 @@ export const authService = {
     sendOtp: async (identifier) => {
         const value = normalizeIdentifier(identifier);
         if (!value) {
-            throw new Error('Email or phone is required');
+            throw new Error('Email is required');
         }
-        return isEmailIdentifier(value)
-            ? authService.sendEmailOtp(value)
-            : authService.sendPhoneOtp(value);
+        return authService.sendEmailOtp(value);
     },
 
     verifyOtp: async (identifier, otp) => {
         const value = normalizeIdentifier(identifier);
         if (!value) {
-            throw new Error('Email or phone is required');
+            throw new Error('Email is required');
         }
-        return isEmailIdentifier(value)
-            ? authService.verifyEmailOtp(value, otp)
-            : authService.verifyPhoneOtp(value, otp);
+        return authService.verifyEmailOtp(value, otp);
     },
 
     fetchPrivateMessages: async(user1, user2) => {
@@ -294,41 +289,6 @@ export const authService = {
             return { success: true, user: userData };
         } catch (error) {
             console.error('Verify email OTP failed', error);
-            const errorMessage = error.response?.data?.error || 'OTP verification failed.';
-            throw new Error(errorMessage);
-        }
-    },
-
-    // ── Phone OTP ──────────────────────────────────────────
-
-    sendPhoneOtp: async (phone) => {
-        try {
-            const response = await api.post('/auth/phone-otp/send', { phone });
-            return { success: true, message: response.data.message };
-        } catch (error) {
-            console.error('Send phone OTP failed', error);
-            const errorMessage = error.response?.data?.error || 'Failed to send OTP. Please try again.';
-            throw new Error(errorMessage);
-        }
-    },
-
-    verifyPhoneOtp: async (phone, otp) => {
-        try {
-            const response = await api.post('/auth/phone-otp/verify', { phone, otp });
-
-            const userColor = generateUserColor();
-            const userData = {
-                ...response.data,
-                color: userColor,
-                loginTime: new Date().toISOString()
-            };
-
-            localStorage.setItem('currentUser', JSON.stringify(userData));
-            localStorage.setItem('user', JSON.stringify(response.data));
-
-            return { success: true, user: userData };
-        } catch (error) {
-            console.error('Verify phone OTP failed', error);
             const errorMessage = error.response?.data?.error || 'OTP verification failed.';
             throw new Error(errorMessage);
         }
@@ -436,26 +396,6 @@ export const authService = {
         }
     },
 
-    sendLinkPhoneOtp: async (phone) => {
-        try {
-            const response = await api.post('/api/profile/link-phone/send', { phone });
-            return { success: true, message: response.data.message };
-        } catch (error) {
-            const errorMessage = error.response?.data?.error || 'Failed to send OTP.';
-            throw new Error(errorMessage);
-        }
-    },
-
-    verifyLinkPhone: async (phone, otp) => {
-        try {
-            const response = await api.post('/api/profile/link-phone/verify', { phone, otp });
-            return response.data;
-        } catch (error) {
-            const errorMessage = error.response?.data?.error || 'Phone linking failed.';
-            throw new Error(errorMessage);
-        }
-    },
-
     linkGoogle: async (idToken) => {
         try {
             const response = await api.post('/api/profile/link-google', { idToken });
@@ -472,16 +412,6 @@ export const authService = {
             return response.data;
         } catch (error) {
             const errorMessage = error.response?.data?.error || 'Cannot unlink email.';
-            throw new Error(errorMessage);
-        }
-    },
-
-    unlinkPhone: async () => {
-        try {
-            const response = await api.post('/api/profile/unlink-phone');
-            return response.data;
-        } catch (error) {
-            const errorMessage = error.response?.data?.error || 'Cannot unlink phone.';
             throw new Error(errorMessage);
         }
     },

@@ -46,7 +46,6 @@ public class SecurityConfig {
                                 "/auth/signup",
                                 "/auth/signup/verify",
                                 "/auth/email-otp/**",
-                                "/auth/phone-otp/**",
                                 "/auth/google/**")
                         .permitAll()
                         .requestMatchers("/h2-console/**").permitAll()

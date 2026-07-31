@@ -10,9 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@livekit/components-react": "^2.9.23",
+    "@livekit/components-styles": "^1.2.0",
     "@react-oauth/google": "^0.13.4",
     "@stomp/stompjs": "^7.2.0",
     "axios": "^1.12.2",
+    "livekit-client": "^2.21.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.1",

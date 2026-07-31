@@ -89,9 +89,7 @@ public class AuthenticationService {
 
     public LoginResponseDTO loginWithOtp(String identifier, IdentifierType type) {
         User user = resolveUserForOtpLogin(identifier, type)
-                .orElseThrow(() -> new RuntimeException(type == IdentifierType.EMAIL
-                        ? "No account linked to this email"
-                        : "No account linked to this phone"));
+                .orElseThrow(() -> new RuntimeException("No account linked to this email"));
         return issueLoginResponse(user);
     }
 
@@ -108,17 +106,19 @@ public class AuthenticationService {
             throw new RuntimeException("Username is required");
         }
         if (identifier == null || identifier.isBlank()) {
-            throw new RuntimeException("Email or phone is required");
+            throw new RuntimeException("Email is required");
         }
         if (request.getPassword() == null || request.getPassword().isBlank()) {
             throw new RuntimeException("Password is required");
         }
+        if (!IdentifierNormalizer.isEmail(identifier)) {
+            throw new RuntimeException("A valid email is required");
+        }
 
-        IdentifierType type = IdentifierNormalizer.isEmail(identifier) ? IdentifierType.EMAIL : IdentifierType.PHONE;
-        String normalizedIdentifier = normalizeByType(identifier, type);
-        otpService.verifyOtp(normalizedIdentifier, type, request.getOtp());
+        String normalizedIdentifier = IdentifierNormalizer.normalizeEmail(identifier);
+        otpService.verifyOtp(normalizedIdentifier, IdentifierType.EMAIL, request.getOtp());
 
-        Optional<User> existingUser = findByIdentifier(normalizedIdentifier, type);
+        Optional<User> existingUser = findByIdentifier(normalizedIdentifier, IdentifierType.EMAIL);
         Optional<User> usernameOwner = userRepository.findByUsernameIgnoreCase(username);
 
         if (usernameOwner.isPresent() && existingUser.map(user -> !usernameOwner.get().getId().equals(user.getId())).orElse(true)) {
@@ -132,13 +132,9 @@ public class AuthenticationService {
         User user = existingUser.orElseGet(User::new);
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        if (type == IdentifierType.EMAIL) {
-            user.setEmail(normalizedIdentifier);
-        } else {
-            user.setPhone(normalizedIdentifier);
-        }
+        user.setEmail(normalizedIdentifier);
         if (user.getAuthProvider() == null) {
-            user.setAuthProvider(type == IdentifierType.EMAIL ? AuthProvider.EMAIL : AuthProvider.PHONE);
+            user.setAuthProvider(AuthProvider.EMAIL);
         }
 
         User saved = userRepository.save(user);
@@ -169,56 +165,20 @@ public class AuthenticationService {
         }
 
         return userRepository.findByUsernameIgnoreCase(normalized)
-                .or(() -> userRepository.findByEmailIgnoreCase(IdentifierNormalizer.normalizeEmail(normalized)))
-                .or(() -> findByIdentifier(normalized, IdentifierType.PHONE));
+                .or(() -> userRepository.findByEmailIgnoreCase(IdentifierNormalizer.normalizeEmail(normalized)));
     }
 
     public Optional<User> findByIdentifier(String identifier, IdentifierType type) {
         if (type == IdentifierType.EMAIL) {
             return userRepository.findByEmailIgnoreCase(IdentifierNormalizer.normalizeEmail(identifier));
         }
-        return findByPhoneFlexible(identifier);
+        return Optional.empty();
     }
 
     private Optional<User> resolveUserForOtpLogin(String identifier, IdentifierType type) {
         String normalized = normalizeByType(identifier, type);
         return findByIdentifier(normalized, type)
-                .or(() -> type == IdentifierType.PHONE
-                        ? findByPhoneFlexible(identifier)
-                        : Optional.empty())
                 .or(() -> findByIdentifier(normalized));
-    }
-
-    private Optional<User> findByPhoneFlexible(String phone) {
-        String normalizedPhone = IdentifierNormalizer.normalizePhone(phone);
-        if (normalizedPhone.isEmpty()) {
-            return Optional.empty();
-        }
-
-        String digitsOnly = normalizedPhone.replaceAll("\\D", "");
-        Optional<User> byDigits = userRepository.findByPhoneDigits(digitsOnly);
-        if (byDigits.isPresent()) {
-            return byDigits;
-        }
-
-        Optional<User> direct = userRepository.findByPhone(normalizedPhone);
-        if (direct.isPresent()) {
-            return direct;
-        }
-
-        if (normalizedPhone.startsWith("+")) {
-            direct = userRepository.findByPhone(normalizedPhone.substring(1));
-            if (direct.isPresent()) {
-                return direct;
-            }
-        } else {
-            direct = userRepository.findByPhone("+" + normalizedPhone);
-            if (direct.isPresent()) {
-                return direct;
-            }
-        }
-
-        return userRepository.findByPhone(digitsOnly);
     }
 
     public UserDTO convertToUserDTO(User user) {
@@ -226,7 +186,6 @@ public class AuthenticationService {
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
-        dto.setPhone(user.getPhone());
         dto.setDisplayName(user.getDisplayName());
         dto.setBio(user.getBio());
         dto.setGoogleId(user.getGoogleId() != null ? "connected" : null);
@@ -245,9 +204,7 @@ public class AuthenticationService {
     }
 
     private String normalizeByType(String identifier, IdentifierType type) {
-        return type == IdentifierType.EMAIL
-                ? IdentifierNormalizer.normalizeEmail(identifier)
-                : IdentifierNormalizer.normalizePhone(identifier);
+        return IdentifierNormalizer.normalizeEmail(identifier);
     }
 
     private boolean hasPassword(User user) {

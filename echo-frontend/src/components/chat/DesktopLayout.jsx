@@ -1,12 +1,21 @@
 import React from 'react';
 import Sidebar from './Sidebar';
-import GlobalChat from './GlobalChat';
 import DirectMessageChat from '../../pages/DirectMessageChat';
+import ChannelChat from '../../pages/ChannelChat';
 
 const DesktopLayout = ({ chat, friends, notifications, ui, layout }) => {
     const { mobileSidebarOpen, setMobileSidebarOpen, gridClass } = layout || {};
-    const { showGlobalChat, setShowGlobalChat, username } = ui || {};
-    const { openChats = [], closeDmChat, stompClient, registerDmHandler, unregisterDmHandler } = chat || {};
+    const { username, activeChannel, onLeaveChannel } = ui || {};
+    const {
+        openChats = [],
+        closeDmChat,
+        stompClient,
+        registerDmHandler,
+        unregisterDmHandler,
+        isConnected,
+        subscribeToChannel,
+        sendChannelMessage
+    } = chat || {};
 
     return (
         <>
@@ -32,12 +41,19 @@ const DesktopLayout = ({ chat, friends, notifications, ui, layout }) => {
             />
 
             <div className={`chat-workspace-grid ${gridClass}`}>
-                {showGlobalChat && (
-                    <GlobalChat
-                        chat={chat}
-                        ui={ui}
-                        layout={{ mobile: false, onClose: () => setShowGlobalChat(false) }}
-                    />
+                {activeChannel && (
+                    <div key={`channel-${activeChannel.id}`} className="chat-panel-card">
+                        <ChannelChat
+                            key={`channel-${activeChannel.id}`}
+                            currentUser={username}
+                            channel={activeChannel}
+                            subscribeToChannel={subscribeToChannel}
+                            sendChannelMessage={sendChannelMessage}
+                            isConnected={isConnected}
+                            onLeave={onLeaveChannel}
+                            isEmbedded={true}
+                        />
+                    </div>
                 )}
 
                 {openChats.map((chatItem) => (

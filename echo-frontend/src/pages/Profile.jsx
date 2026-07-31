@@ -24,12 +24,6 @@ const Profile = () => {
   const [emailOtpSent, setEmailOtpSent] = useState(false);
   const [showLinkEmail, setShowLinkEmail] = useState(false);
 
-  // Link phone state
-  const [linkPhone, setLinkPhone] = useState("");
-  const [linkPhoneOtp, setLinkPhoneOtp] = useState("");
-  const [phoneOtpSent, setPhoneOtpSent] = useState(false);
-  const [showLinkPhone, setShowLinkPhone] = useState(false);
-
   const [actionLoading, setActionLoading] = useState("");
 
   useEffect(() => {
@@ -123,51 +117,6 @@ const Profile = () => {
       const data = await authService.unlinkEmail();
       setProfile(data);
       showMessage("Email unlinked", "success");
-    } catch (error) {
-      showMessage(error.message, "error");
-    } finally {
-      setActionLoading("");
-    }
-  };
-
-  // ── Link Phone ──────────────────────────────────────────
-  const handleSendLinkPhoneOtp = async () => {
-    setActionLoading("link-phone-send");
-    try {
-      await authService.sendLinkPhoneOtp(linkPhone);
-      setPhoneOtpSent(true);
-      showMessage("OTP sent to " + linkPhone, "success");
-    } catch (error) {
-      showMessage(error.message, "error");
-    } finally {
-      setActionLoading("");
-    }
-  };
-
-  const handleVerifyLinkPhone = async () => {
-    setActionLoading("link-phone-verify");
-    try {
-      const data = await authService.verifyLinkPhone(linkPhone, linkPhoneOtp);
-      setProfile(data);
-      setShowLinkPhone(false);
-      setLinkPhone("");
-      setLinkPhoneOtp("");
-      setPhoneOtpSent(false);
-      showMessage("Phone linked successfully!", "success");
-    } catch (error) {
-      showMessage(error.message, "error");
-    } finally {
-      setActionLoading("");
-    }
-  };
-
-  const handleUnlinkPhone = async () => {
-    if (!confirm("Are you sure you want to unlink your phone?")) return;
-    setActionLoading("unlink-phone");
-    try {
-      const data = await authService.unlinkPhone();
-      setProfile(data);
-      showMessage("Phone unlinked", "success");
     } catch (error) {
       showMessage(error.message, "error");
     } finally {
@@ -442,114 +391,6 @@ const Profile = () => {
                             setLinkEmail("");
                             setLinkEmailOtp("");
                             setEmailOtpSent(false);
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* ── Phone Card ──────────────────────── */}
-            <div
-              className={`account-card ${profile.phone ? "connected" : "disconnected"}`}
-            >
-              <div className="account-card-header">
-                <span className="account-icon">📱</span>
-                <div className="account-info">
-                  <h3>Phone</h3>
-                  <p>
-                    {profile.phone || "Not connected"}
-                  </p>
-                </div>
-                <span
-                  className={`status-badge ${profile.phone ? "active" : "inactive"}`}
-                >
-                  {profile.phone ? "✓" : "✕"}
-                </span>
-              </div>
-              {profile.phone ? (
-                <button
-                  className="unlink-btn"
-                  onClick={handleUnlinkPhone}
-                  disabled={actionLoading === "unlink-phone"}
-                >
-                  {actionLoading === "unlink-phone"
-                    ? "Unlinking..."
-                    : "Unlink Phone"}
-                </button>
-              ) : (
-                <>
-                  {!showLinkPhone ? (
-                    <button
-                      className="link-btn"
-                      onClick={() => setShowLinkPhone(true)}
-                    >
-                      Link Phone
-                    </button>
-                  ) : (
-                    <div className="link-form">
-                      <input
-                        type="tel"
-                        value={linkPhone}
-                        onChange={(e) => setLinkPhone(e.target.value)}
-                        placeholder="+91XXXXXXXXXX"
-                        className="profile-input compact"
-                        disabled={phoneOtpSent}
-                      />
-                      {phoneOtpSent && (
-                        <input
-                          type="text"
-                          value={linkPhoneOtp}
-                          onChange={(e) =>
-                            setLinkPhoneOtp(
-                              e.target.value.replace(/\D/g, "").slice(0, 6)
-                            )
-                          }
-                          placeholder="Enter OTP"
-                          className="profile-input compact otp"
-                          maxLength={6}
-                          autoFocus
-                        />
-                      )}
-                      <div className="link-actions">
-                        {!phoneOtpSent ? (
-                          <button
-                            className="link-btn"
-                            onClick={handleSendLinkPhoneOtp}
-                            disabled={
-                              !linkPhone.trim() ||
-                              actionLoading === "link-phone-send"
-                            }
-                          >
-                            {actionLoading === "link-phone-send"
-                              ? "Sending..."
-                              : "Send OTP"}
-                          </button>
-                        ) : (
-                          <button
-                            className="link-btn"
-                            onClick={handleVerifyLinkPhone}
-                            disabled={
-                              linkPhoneOtp.length !== 6 ||
-                              actionLoading === "link-phone-verify"
-                            }
-                          >
-                            {actionLoading === "link-phone-verify"
-                              ? "Verifying..."
-                              : "Verify & Link"}
-                          </button>
-                        )}
-                        <button
-                          className="cancel-link-btn"
-                          onClick={() => {
-                            setShowLinkPhone(false);
-                            setLinkPhone("");
-                            setLinkPhoneOtp("");
-                            setPhoneOtpSent(false);
                           }}
                         >
                           Cancel
