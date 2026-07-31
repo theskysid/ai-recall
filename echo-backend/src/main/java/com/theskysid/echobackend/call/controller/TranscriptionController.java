@@ -9,6 +9,7 @@ import com.theskysid.echobackend.call.service.DeepgramService;
 import com.theskysid.echobackend.channel.entity.Channel;
 import com.theskysid.echobackend.channel.repository.ChannelRepository;
 import com.theskysid.echobackend.channel.service.ChannelService;
+import com.theskysid.echobackend.memory.service.MemoryIngestionService;
 import com.theskysid.echobackend.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -37,6 +38,9 @@ public class TranscriptionController {
 
     @Autowired
     private CallTranscriptRepository callTranscriptRepository;
+
+    @Autowired
+    private MemoryIngestionService memoryIngestionService;
 
     @Autowired
     private AuthenticationService authenticationService;
@@ -70,6 +74,9 @@ public class TranscriptionController {
                     .audioUrl(request.getAudioUrl())
                     .fullTranscript(transcript)
                     .build());
+
+            // Fire-and-forget: chunk + embed into vector memory in the background.
+            memoryIngestionService.ingestTranscript(saved);
 
             return ResponseEntity.ok(toDTO(saved));
         } catch (RuntimeException e) {
