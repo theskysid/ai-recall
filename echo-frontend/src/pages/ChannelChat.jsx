@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { channelService } from '../services/channelService';
 import LiveCallRoom from './LiveCallRoom';
+import AskAiWidget from '../components/chat/AskAiWidget';
 import '../styles/DirectMessageChat.css';
 import '../styles/Channels.css';
 
@@ -181,6 +182,10 @@ const ChannelChat = ({
                     channelName={channel?.name}
                     onLeaveCall={() => setInCall(false)}
                 />
+            )}
+
+            {!inCall && (
+                <AskAiWidget channelId={channelId} channelName={channel?.name} />
             )}
 
             <div className="dm-messages-container" style={inCall ? { display: 'none' } : undefined}>

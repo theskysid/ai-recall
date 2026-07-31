@@ -39,5 +39,13 @@ export const channelService = {
     leaveChannel: async (channelId) => {
         const response = await api.delete(`/api/channels/${channelId}/leave`);
         return response.data;
+    },
+
+    /**
+     * Ask the channel's AI memory a question (RAG). Returns { answer, sourceIds }.
+     */
+    ask: async (channelId, query) => {
+        const response = await api.get(`/api/channels/${channelId}/ask`, { params: { q: query } });
+        return response.data;
     }
 };
