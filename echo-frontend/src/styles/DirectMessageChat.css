@@ -359,8 +359,7 @@
     font-family: var(--font-mono);
     font-size: 0.66rem;
     font-weight: 600;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     transition: background var(--transition-base), color var(--transition-base),
         border-color var(--transition-base);
 }

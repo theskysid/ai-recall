@@ -293,6 +293,11 @@ const ChannelChat = ({
                         <Icon name="hash" size={13} />
                     </span>
                     <h3 className="ch-name">{channel?.name}</h3>
+                    {channel?.description && (
+                        <span className="ch-desc" title={channel.description}>
+                            {channel.description}
+                        </span>
+                    )}
                     {channel?.memberCount != null && (
                         <span className="ch-members" title={`${channel.memberCount} members`}>
                             <Icon name="people" size={12} />

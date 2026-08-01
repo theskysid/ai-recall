@@ -81,8 +81,7 @@
     font-family: var(--font-mono);
     font-size: 0.7rem;
     font-weight: 500;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     color: var(--paper-3);
     padding: 0.5rem 0.85rem;
     border-radius: var(--r-1);
@@ -125,8 +124,7 @@
     font-family: var(--font-mono);
     font-size: 0.7rem;
     font-weight: 600;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     background: var(--amber);
     color: var(--ink-950);
     padding: 0.6rem 1.1rem;
@@ -179,8 +177,7 @@
     font-family: var(--font-mono);
     font-size: 0.65rem;
     font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     background: transparent;
     color: var(--paper-3);
     border: 1px solid transparent;

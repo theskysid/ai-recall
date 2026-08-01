@@ -159,8 +159,7 @@
     font-family: var(--font-mono);
     font-size: 0.64rem;
     font-weight: 500;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     color: var(--paper-3);
     transition: color var(--transition-base);
 }
@@ -214,8 +213,7 @@
     font-family: var(--font-mono);
     font-size: 0.66rem;
     font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     transition: border-color var(--transition-base), color var(--transition-base),
         background var(--transition-base);
 }
@@ -309,8 +307,7 @@
 .friend-sidebar-status {
     font-family: var(--font-mono);
     font-size: 0.62rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     color: var(--paper-4);
 }
 
@@ -366,8 +363,7 @@
 .you-label {
     font-family: var(--font-mono);
     font-size: 0.6rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     color: var(--amber);
     margin-left: 0.35rem;
 }
@@ -454,8 +450,7 @@
     font-family: var(--font-mono);
     font-size: 0.62rem;
     font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     white-space: nowrap;
     transition: background var(--transition-base);
 }
@@ -561,8 +556,7 @@
     font-family: var(--font-mono);
     font-size: 0.66rem;
     font-weight: 600;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     transition: background var(--transition-base), border-color var(--transition-base),
         color var(--transition-base);
 }
@@ -1022,8 +1016,7 @@
     font-family: var(--font-mono);
     font-size: 0.68rem;
     font-weight: 600;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
 }
 
 .tg-empty-add-btn:active {

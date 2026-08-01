@@ -124,8 +124,7 @@
     font-family: var(--font-mono);
     font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     padding: 0.9rem 1.3rem;
     border-radius: var(--r-1);
     border: 1px solid transparent;
