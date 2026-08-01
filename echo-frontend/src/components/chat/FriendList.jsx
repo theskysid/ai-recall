@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from '../ui/Icon';
 
 const FriendList = ({ chat, friends, ui, layout, mobile = false }) => {
     const { onlineUsers = new Set(), unreadDms = new Map(), openDmChat } = chat || {};
@@ -79,7 +80,7 @@ const FriendList = ({ chat, friends, ui, layout, mobile = false }) => {
                                     </span>
                                 </div>
                                 <div className="tg-chat-row-bottom">
-                                    <span className="tg-chat-preview">Tap to open DM</span>
+                                    <span className="tg-chat-preview">Tap to open a private chat</span>
                                     {unreadCount && (
                                         <span className="tg-unread-badge">{unreadCount}</span>
                                     )}
@@ -89,27 +90,14 @@ const FriendList = ({ chat, friends, ui, layout, mobile = false }) => {
                             <button
                                 type="button"
                                 className="friend-menu-trigger-btn"
-                                style={{
-                                    marginLeft: 'auto',
-                                    padding: '0.4rem 0.6rem',
-                                    background: 'transparent',
-                                    border: 'none',
-                                    color: 'var(--text-dim)',
-                                    fontSize: '1.4rem',
-                                    cursor: 'pointer',
-                                    lineHeight: 1,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    borderRadius: '8px'
-                                }}
-                                title="More Options"
+                                title="More options"
+                                aria-label={`More options for ${friend.username}`}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     if (setContextMenuFriendId) setContextMenuFriendId(isMenuOpen ? null : friendKey);
                                 }}
                             >
-                                ⋮
+                                <Icon name="more" size={16} />
                             </button>
 
                             {isMenuOpen && (
@@ -123,7 +111,8 @@ const FriendList = ({ chat, friends, ui, layout, mobile = false }) => {
                                             if (handleRemoveFriend) handleRemoveFriend(friend);
                                         }}
                                     >
-                                        🗑️ {removingFriendId === friend.friendshipId ? 'Removing…' : 'Remove Friend'}
+                                        <Icon name="trash" size={15} />
+                                        {removingFriendId === friend.friendshipId ? 'Removing…' : 'Remove friend'}
                                     </button>
                                     <button
                                         className="tg-ctx-item"
@@ -132,7 +121,8 @@ const FriendList = ({ chat, friends, ui, layout, mobile = false }) => {
                                             if (setContextMenuFriendId) setContextMenuFriendId(null);
                                         }}
                                     >
-                                        ✕ Cancel
+                                        <Icon name="close" size={15} />
+                                        Cancel
                                     </button>
                                 </div>
                             )}
@@ -174,17 +164,20 @@ const FriendList = ({ chat, friends, ui, layout, mobile = false }) => {
                             {unreadDms.has(friend.username) && (
                                 <span className="unread-count">{unreadDms.get(friend.username)}</span>
                             )}
-                            <span className="friend-dm-icon" title="Open Ephemeral DM">💬</span>
+                            <span className="friend-dm-icon" title="Open private chat">
+                                <Icon name="message" size={14} />
+                            </span>
                             <button
                                 type="button"
                                 className="friend-menu-trigger-btn"
-                                title="More Options (or Long Press)"
+                                title="More options (or long press)"
+                                aria-label={`More options for ${friend.username}`}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     if (setContextMenuFriendId) setContextMenuFriendId(isMenuOpen ? null : friendKey);
                                 }}
                             >
-                                ⋮
+                                <Icon name="more" size={16} />
                             </button>
                         </div>
 
@@ -203,7 +196,8 @@ const FriendList = ({ chat, friends, ui, layout, mobile = false }) => {
                                         if (handleRemoveFriend) handleRemoveFriend(friend);
                                     }}
                                 >
-                                    🗑️ {removingFriendId === friend.friendshipId ? 'Removing...' : 'Delete Friend'}
+                                    <Icon name="trash" size={13} />
+                                    {removingFriendId === friend.friendshipId ? 'Removing…' : 'Remove friend'}
                                 </button>
                                 <button
                                     type="button"
@@ -213,8 +207,9 @@ const FriendList = ({ chat, friends, ui, layout, mobile = false }) => {
                                         if (setContextMenuFriendId) setContextMenuFriendId(null);
                                     }}
                                     title="Close menu"
+                                    aria-label="Close menu"
                                 >
-                                    ✕
+                                    <Icon name="close" size={13} />
                                 </button>
                             </div>
                         )}

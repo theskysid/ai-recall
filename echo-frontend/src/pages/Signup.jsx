@@ -92,8 +92,8 @@ const Signup = () => {
     <div className="signup-container">
       <div className="signup-box">
         <div className="signup-header">
-          <h1>Sign Up</h1>
-          <p>Create an account to start chatting</p>
+          <h1>Start a record.</h1>
+          <p>Create an account to open your first channel.</p>
         </div>
 
         <form
@@ -186,7 +186,7 @@ const Signup = () => {
         {message && (
           <p
             className="auth-message"
-            style={{ color: isSuccess ? "#4CAF50" : "#ff6b6b" }}
+            style={{ color: isSuccess ? "var(--verdigris)" : "var(--brick-2)" }}
           >
             {message}
           </p>

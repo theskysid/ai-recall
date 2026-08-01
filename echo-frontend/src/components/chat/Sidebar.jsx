@@ -1,5 +1,6 @@
 import React from 'react';
 import FriendList from './FriendList';
+import Icon from '../ui/Icon';
 import '../../styles/Channels.css';
 
 const Sidebar = ({ chat, friends, ui, layout }) => {
@@ -32,20 +33,22 @@ const Sidebar = ({ chat, friends, ui, layout }) => {
     return (
         <div className={`sidebar ${mobileSidebarOpen ? 'sidebar-mobile-open' : ''}`}>
             <div className="sidebar-header">
-                <h3>Users & Friends</h3>
+                <h3>Channels &amp; people</h3>
                 <div className="sidebar-header-actions">
                     <button
                         onClick={() => loadFriendsData(true)}
                         className={`sidebar-refresh-icon ${isSidebarRefreshing ? 'spin' : ''}`}
-                        title="Live Refresh Friends & Requests"
+                        title="Refresh friends and requests"
+                        aria-label="Refresh friends and requests"
                     >
-                        🔄
+                        <Icon name="refresh" size={14} />
                     </button>
                     <button
                         className="sidebar-close-mobile"
                         onClick={() => setMobileSidebarOpen(false)}
+                        aria-label="Close sidebar"
                     >
-                        ✕
+                        <Icon name="close" size={14} />
                     </button>
                 </div>
             </div>
@@ -60,7 +63,7 @@ const Sidebar = ({ chat, friends, ui, layout }) => {
                         title="Create or join a channel"
                         aria-label="Create or join a channel"
                     >
-                        +
+                        <Icon name="plus" size={13} />
                     </button>
                 </div>
                 {channels.length === 0 ? (
@@ -87,16 +90,18 @@ const Sidebar = ({ chat, friends, ui, layout }) => {
                     className={`sidebar-tab-btn ${sidebarTab === 'friends' ? 'active' : ''}`}
                     onClick={() => setSidebarTab('friends')}
                 >
-                    👥 Friends
+                    <Icon name="people" size={13} />
+                    Friends
                     {incomingRequestsCount > 0 && (
-                        <span className="unread-count" style={{ marginLeft: '6px' }}>{incomingRequestsCount}</span>
+                        <span className="unread-count">{incomingRequestsCount}</span>
                     )}
                 </button>
                 <button
                     className={`sidebar-tab-btn ${sidebarTab === 'users' ? 'active' : ''}`}
                     onClick={() => setSidebarTab('users')}
                 >
-                    🌐 Global Users
+                    <Icon name="globe" size={13} />
+                    Everyone online
                 </button>
             </div>
 
@@ -107,7 +112,8 @@ const Sidebar = ({ chat, friends, ui, layout }) => {
                             className="add-friend-trigger-btn"
                             onClick={() => setShowFindFriendsModal(true)}
                         >
-                            🔍 Find / Add Friends
+                            <Icon name="search" size={13} />
+                            Find people
                             {incomingRequestsCount > 0 && (
                                 <span className="unread-count">{incomingRequestsCount}</span>
                             )}
@@ -115,7 +121,7 @@ const Sidebar = ({ chat, friends, ui, layout }) => {
 
                         {friendsList.length === 0 ? (
                             <div className="friends-empty-hint">
-                                No friends added yet. Click above to search and add friends!
+                                No friends yet. Search for someone above to start a private chat.
                             </div>
                         ) : (
                             <FriendList chat={chat} friends={friends} ui={ui} layout={layout} mobile={false} />
@@ -124,7 +130,7 @@ const Sidebar = ({ chat, friends, ui, layout }) => {
                 ) : (
                     <>
                         <div className="global-users-hint">
-                            Private chat is available only from the Friends tab.
+                            Open a private chat from the Friends tab.
                         </div>
                         {Array.from(onlineUsers).map(user => {
                             const isFriend = friendsList.some((friend) => friend.username === user);
@@ -138,7 +144,7 @@ const Sidebar = ({ chat, friends, ui, layout }) => {
                                         }
                                     }}
                                 >
-                                    <div className="user-avatar" style={{ backgroundColor: user === username ? userColor : '#007bff' }}>
+                                    <div className="user-avatar" style={user === username ? { backgroundColor: userColor, color: 'var(--ink-950)' } : undefined}>
                                         {user.charAt(0).toUpperCase()}
                                     </div>
                                     <span>{user}</span>

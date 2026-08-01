@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from '../ui/Icon';
 
 const MobileDrawer = ({
     friends,
@@ -32,7 +33,7 @@ const MobileDrawer = ({
                     </div>
                     <div className="tg-drawer-user-info">
                         <span className="tg-drawer-username">{username}</span>
-                        <span className="tg-drawer-subtitle">Echo User</span>
+                        <span className="tg-drawer-subtitle">Signed in</span>
                     </div>
                 </div>
                 <nav className="tg-drawer-nav">
@@ -43,8 +44,8 @@ const MobileDrawer = ({
                             if (navigate) navigate('/profile');
                         }}
                     >
-                        <span className="tg-drawer-item-icon">👤</span>
-                        My Profile
+                        <span className="tg-drawer-item-icon"><Icon name="user" size={17} /></span>
+                        Profile
                     </button>
                     <button
                         className="tg-drawer-item"
@@ -53,8 +54,8 @@ const MobileDrawer = ({
                             if (loadFriendsData) loadFriendsData(true);
                         }}
                     >
-                        <span className="tg-drawer-item-icon">🔄</span>
-                        Refresh
+                        <span className="tg-drawer-item-icon"><Icon name="refresh" size={17} /></span>
+                        Refresh friends
                     </button>
                     <div className="tg-drawer-divider" />
                     <button
@@ -64,8 +65,8 @@ const MobileDrawer = ({
                             if (navigate) navigate('/login');
                         }}
                     >
-                        <span className="tg-drawer-item-icon">🚪</span>
-                        Log Out
+                        <span className="tg-drawer-item-icon"><Icon name="logout" size={17} /></span>
+                        Log out
                     </button>
                 </nav>
             </div>

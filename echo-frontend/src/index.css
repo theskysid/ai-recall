@@ -1,69 +1,131 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+/* ═══════════════════════════════════════════════════════════════
+   Recall — "Archive Ink"
+
+   The product is a chat app that keeps a record: channels, calls,
+   transcripts, decisions, and a memory you can question. So the
+   interface is built like a well-kept archive rather than a
+   dashboard — warm ink ground, hairline rules, a serif for voice,
+   a monospace for anything the system filed away.
+
+   Two accents carry meaning, not decoration:
+     amber      = people. Actions you take, words you said.
+     verdigris  = the record. Anything the machine remembered.
+   ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Core Palette ────────────────────────────── */
-  --bg-root: #06060c;
-  --bg-surface: #0c0c17;
-  --bg-surface-glass: rgba(14, 14, 26, 0.78);
+  /* ── Ground ─────────────────────────────────── */
+  --ink-950: #08080a;
+  --ink-900: #0c0c0e;
+  --ink-870: #111114;
+  --ink-840: #16161a;
+  --ink-800: #1c1c21;
+  --ink-760: #26262c;
+
+  --line: rgba(255, 255, 255, 0.075);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --line-loud: rgba(255, 255, 255, 0.22);
+
+  /* ── Paper (text) ───────────────────────────── */
+  --paper: #efebe4;
+  --paper-2: #b4aea5;
+  --paper-3: #7c766d;
+  --paper-4: #514c46;
+
+  /* ── People ─────────────────────────────────── */
+  --amber: #e9a23b;
+  --amber-2: #f6c46a;
+  --amber-dim: rgba(233, 162, 59, 0.13);
+  --amber-line: rgba(233, 162, 59, 0.32);
+
+  /* ── The record ─────────────────────────────── */
+  --verdigris: #63c7b2;
+  --verdigris-2: #8adecb;
+  --verdigris-dim: rgba(99, 199, 178, 0.12);
+  --verdigris-line: rgba(99, 199, 178, 0.3);
+
+  /* ── Alarm ──────────────────────────────────── */
+  --brick: #e0645c;
+  --brick-2: #f08d86;
+  --brick-dim: rgba(224, 100, 92, 0.12);
+  --brick-line: rgba(224, 100, 92, 0.32);
+
+  /* ── Type ───────────────────────────────────── */
+  --font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ── Radius — crisp, not pillowy ────────────── */
+  --r-1: 4px;
+  --r-2: 8px;
+  --r-3: 12px;
+  --r-4: 18px;
+  --r-full: 999px;
+
+  /* ── Depth ──────────────────────────────────── */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-2: 0 10px 28px -12px rgba(0, 0, 0, 0.7);
+  --shadow-3: 0 28px 70px -24px rgba(0, 0, 0, 0.8);
+
+  /* ── Motion ─────────────────────────────────── */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --t-1: 0.12s;
+  --t-2: 0.18s;
+  --t-3: 0.28s;
+
+  /* ── Legacy aliases ─────────────────────────────────────────
+     Older selectors and a few inline styles still reference these
+     names. Mapping them keeps everything on one palette. ────── */
+  --bg-root: var(--ink-900);
+  --bg-surface: var(--ink-870);
+  --bg-surface-glass: rgba(17, 17, 20, 0.9);
   --bg-surface-glass-light: rgba(255, 255, 255, 0.04);
-  --bg-card: rgba(18, 18, 34, 0.6);
-  --bg-elevated: rgba(22, 22, 40, 0.8);
-
-  /* ── Border System ───────────────────────────── */
-  --border-glass: rgba(255, 255, 255, 0.07);
-  --border-glass-hover: rgba(255, 255, 255, 0.14);
-  --border-glass-active: rgba(255, 255, 255, 0.22);
-
-  /* ── Accent Palette ──────────────────────────── */
-  --color-primary: #8b5cf6;
-  --color-primary-hover: #a78bfa;
-  --color-primary-glow: rgba(139, 92, 246, 0.3);
-  --color-accent: #ec4899;
-  --color-accent-glow: rgba(236, 72, 153, 0.3);
-  --color-secondary: #6366f1;
-  --color-success: #10b981;
-  --color-success-glow: rgba(16, 185, 129, 0.35);
-  --color-danger: #ef4444;
-  --color-danger-glow: rgba(239, 68, 68, 0.3);
-  --color-warning: #f59e0b;
-
-  /* ── Text Hierarchy ──────────────────────────── */
-  --text-main: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
-  --text-ghost: #475569;
-
-  /* ── Radius Scale ────────────────────────────── */
-  --radius-xs: 6px;
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
-  --radius-2xl: 36px;
-  --radius-pill: 9999px;
-
-  /* ── Shadows ─────────────────────────────────── */
-  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 25px rgba(139, 92, 246, 0.2);
-  --shadow-elevated: 0 20px 50px -12px rgba(0, 0, 0, 0.55);
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
-
-  /* ── Transitions ─────────────────────────────── */
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --transition-fast: 0.15s ease;
-  --transition-base: 0.25s ease;
-  --transition-smooth: 0.35s var(--ease-out-expo);
-
-  /* ── Gradients ───────────────────────────────── */
-  --gradient-primary: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
-  --gradient-accent: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #6366f1 100%);
-  --gradient-warm: linear-gradient(135deg, #f97316 0%, #ec4899 100%);
-  --gradient-surface: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%);
+  --bg-card: var(--ink-840);
+  --bg-elevated: var(--ink-840);
+  --border-glass: var(--line);
+  --border-glass-hover: var(--line-strong);
+  --border-glass-active: var(--line-loud);
+  --color-primary: var(--amber);
+  --color-primary-hover: var(--amber-2);
+  --color-primary-glow: var(--amber-dim);
+  --color-accent: var(--amber);
+  --color-accent-glow: var(--amber-dim);
+  --color-secondary: var(--verdigris);
+  --color-success: var(--verdigris);
+  --color-success-glow: var(--verdigris-dim);
+  --color-danger: var(--brick);
+  --color-danger-glow: var(--brick-dim);
+  --color-warning: var(--amber);
+  --primary: var(--amber);
+  --primary-light: var(--amber-2);
+  --text-main: var(--paper);
+  --text-secondary: var(--paper-2);
+  --text-muted: var(--paper-2);
+  --text-dim: var(--paper-3);
+  --text-ghost: var(--paper-4);
+  --radius-xs: var(--r-1);
+  --radius-sm: var(--r-2);
+  --radius-md: var(--r-3);
+  --radius-lg: var(--r-4);
+  --radius-xl: 24px;
+  --radius-2xl: 28px;
+  --radius-pill: var(--r-full);
+  --shadow-glass: var(--shadow-2);
+  --shadow-glow: none;
+  --shadow-elevated: var(--shadow-3);
+  --shadow-card: var(--shadow-2);
+  --ease-out-expo: var(--ease);
+  --ease-spring: var(--ease);
+  --transition-fast: var(--t-1) var(--ease);
+  --transition-base: var(--t-2) var(--ease);
+  --transition-smooth: var(--t-3) var(--ease);
+  --gradient-primary: linear-gradient(180deg, var(--amber-2) 0%, var(--amber) 100%);
+  --gradient-accent: linear-gradient(180deg, var(--amber-2) 0%, var(--amber) 100%);
+  --gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
 }
 
-/* ── Global Reset ──────────────────────────────── */
+/* ── Reset ──────────────────────────────────────── */
 *,
 *::before,
 *::after {
@@ -73,23 +135,23 @@
 }
 
 html {
-  scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: var(--bg-root);
-  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  background-color: var(--ink-900);
+  color: var(--paper);
   min-height: 100vh;
   overflow-x: hidden;
-  line-height: 1.6;
+  line-height: 1.55;
+  letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-/* ── Smooth anchor behavior ────────────────────── */
 a {
   text-decoration: none;
   color: inherit;
@@ -101,7 +163,9 @@ button {
   cursor: pointer;
 }
 
-input, textarea, select {
+input,
+textarea,
+select {
   font-family: inherit;
 }
 
@@ -110,10 +174,37 @@ img {
   display: block;
 }
 
-/* ── Custom Scrollbars ─────────────────────────── */
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* ── Serif voice ────────────────────────────────── */
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.04;
+}
+
+/* ── Catalog label — anything the archive filed ─── */
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper-3);
+}
+
+/* ── Scrollbars ─────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
@@ -121,52 +212,57 @@ img {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: var(--radius-pill);
-  transition: background var(--transition-base);
+  background: rgba(255, 255, 255, 0.09);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: var(--r-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.2);
+  background-clip: content-box;
 }
 
-/* Firefox scrollbar */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
 }
 
-/* ── Selection ─────────────────────────────────── */
 ::selection {
-  background: rgba(139, 92, 246, 0.4);
-  color: #ffffff;
+  background: var(--amber);
+  color: var(--ink-950);
 }
 
-/* ── Focus Visible ─────────────────────────────── */
+/* ── Focus ──────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--amber);
   outline-offset: 2px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-1);
 }
 
-/* ── Utility Animations ────────────────────────── */
+/* ── Motion vocabulary ──────────────────────────── */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-12px); }
+  from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
+  from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
 }
 
@@ -177,14 +273,26 @@ img {
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  50% { transform: translateY(-6px); }
 }
 
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
-  50% { box-shadow: 0 0 20px 4px rgba(139, 92, 246, 0.15); }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ── Reduced motion ─────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

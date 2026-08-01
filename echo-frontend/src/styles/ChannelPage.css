@@ -1,0 +1,1075 @@
+/* ═══════════════════════════════════════════════════════════════
+   Channel page — redesign
+
+   A quiet, dense working surface in the Linear/Notion register:
+   neutral greys carry the page, hairlines do the dividing, and the
+   type is one sans at four sizes. No monospace, no small-caps
+   labels, no bubbles.
+
+   Colour is reserved and semantic, never decorative:
+     amber      = you. Your name on your own messages.
+     verdigris  = the record. The AI console and everything it
+                  filed away — the only saturated thing on screen.
+
+   Every selector here is `ch-`-namespaced and every token is scoped
+   to `.ch-page`, so this file cannot reach the DM panel, the
+   sidebar, or any other surface that shares Channels.css.
+   ═══════════════════════════════════════════════════════════════ */
+
+.ch-page {
+    /* ── Ground: four steps, cool neutral ─────────── */
+    --ch-bg: #0c0c0e;
+    --ch-raised: #121216;
+    --ch-raised-2: #17171c;
+    --ch-raised-3: #1e1e24;
+
+    --ch-line: rgba(255, 255, 255, 0.065);
+    --ch-line-2: rgba(255, 255, 255, 0.11);
+    --ch-line-3: rgba(255, 255, 255, 0.17);
+
+    /* ── Text: three steps, all ≥4.5:1 on --ch-bg ─── */
+    --ch-fg: #ecedef;
+    --ch-fg-2: #a2a6ad;
+    --ch-fg-3: #868a93;
+
+    /* ── You ──────────────────────────────────────── */
+    --ch-you: #e9a23b;
+    --ch-you-dim: rgba(233, 162, 59, 0.12);
+
+    /* ── The record ───────────────────────────────── */
+    --ch-rec: #63c7b2;
+    --ch-rec-soft: #8adecb;
+    --ch-rec-dim: rgba(99, 199, 178, 0.09);
+    --ch-rec-line: rgba(99, 199, 178, 0.24);
+
+    /* ── Trouble ──────────────────────────────────── */
+    --ch-bad: #f08d86;
+    --ch-bad-dim: rgba(224, 100, 92, 0.1);
+    --ch-bad-line: rgba(224, 100, 92, 0.26);
+
+    /* ── Rhythm: 4px base ─────────────────────────── */
+    --ch-r-1: 5px;
+    --ch-r-2: 7px;
+    --ch-r-3: 10px;
+
+    --ch-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* The workspace can show three of these side by side, so "narrow" is a
+       question about this panel, not the window. Note the side effect:
+       container-type implies layout containment, which makes this element the
+       containing block for any position:fixed descendant. The only ones in
+       range are LiveKit's toast and its ≤600px chat/audio buttons, all of
+       which land in the right place scoped to the panel — but a future
+       fullscreen overlay inside the call would need to live outside .ch-page. */
+    container-type: inline-size;
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    background: var(--ch-bg);
+    color: var(--ch-fg);
+    font-family: var(--font-sans);
+    letter-spacing: -0.006em;
+}
+
+.ch-page.ch-embedded {
+    flex: 1;
+    min-height: 0;
+}
+
+/* Floating (non-embedded) variant — kept for parity with the
+   previous markup, which supported an undocked panel. */
+.ch-page:not(.ch-embedded) {
+    position: fixed;
+    right: 380px;
+    bottom: 0;
+    z-index: 1050;
+    width: 360px;
+    height: 520px;
+    border: 1px solid var(--ch-line-2);
+    border-bottom: none;
+    border-radius: var(--ch-r-3) var(--ch-r-3) 0 0;
+    overflow: hidden;
+    box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
+}
+
+/* ═══ Header ══════════════════════════════════════════════════ */
+
+.ch-header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--ch-line);
+    background: var(--ch-bg);
+}
+
+.ch-header-id {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    flex: 1;
+}
+
+.ch-back {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: var(--ch-r-1);
+    background: transparent;
+    color: var(--ch-fg-2);
+    transition: background 0.13s, color 0.13s;
+}
+
+.ch-back:hover {
+    background: var(--ch-raised-2);
+    color: var(--ch-fg);
+}
+
+.ch-hash {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--ch-line-2);
+    border-radius: var(--ch-r-2);
+    background: var(--ch-raised);
+    color: var(--ch-fg-2);
+}
+
+.ch-name {
+    min-width: 0;
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    line-height: 1.25;
+    color: var(--ch-fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ch-members {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ch-fg-3);
+}
+
+.ch-members svg {
+    opacity: 0.75;
+}
+
+.ch-header-actions {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ── Invite code: a real copy control ─────────────── */
+.ch-invite {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 28px;
+    padding: 0 9px;
+    border: 1px solid var(--ch-line-2);
+    border-radius: var(--ch-r-2);
+    background: var(--ch-raised);
+    color: var(--ch-fg-2);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    transition: background 0.13s, border-color 0.13s, color 0.13s;
+}
+
+.ch-invite:hover {
+    background: var(--ch-raised-2);
+    border-color: var(--ch-line-3);
+    color: var(--ch-fg);
+}
+
+.ch-invite-code {
+    letter-spacing: 0.07em;
+    color: var(--ch-fg);
+}
+
+.ch-invite svg {
+    opacity: 0.8;
+}
+
+.ch-invite.is-copied {
+    border-color: var(--ch-rec-line);
+    color: var(--ch-rec);
+}
+
+.ch-invite.is-copied .ch-invite-code {
+    color: var(--ch-rec);
+}
+
+/* ── Header buttons ───────────────────────────────── */
+.ch-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid transparent;
+    border-radius: var(--ch-r-2);
+    background: transparent;
+    color: var(--ch-fg-2);
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: -0.004em;
+    transition: background 0.13s, border-color 0.13s, color 0.13s, opacity 0.13s;
+}
+
+.ch-btn:hover:not(:disabled) {
+    background: var(--ch-raised-2);
+    color: var(--ch-fg);
+}
+
+.ch-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.ch-btn-outline {
+    border-color: var(--ch-line-2);
+    background: var(--ch-raised);
+    color: var(--ch-fg);
+}
+
+.ch-btn-outline:hover:not(:disabled) {
+    border-color: var(--ch-line-3);
+    background: var(--ch-raised-2);
+}
+
+.ch-btn-live {
+    border-color: var(--ch-rec-line);
+    background: var(--ch-rec-dim);
+    color: var(--ch-rec);
+}
+
+.ch-btn-live:hover:not(:disabled) {
+    background: rgba(99, 199, 178, 0.15);
+    color: var(--ch-rec-soft);
+}
+
+.ch-btn-icon {
+    width: 28px;
+    padding: 0;
+    justify-content: center;
+}
+
+.ch-btn-danger:hover:not(:disabled) {
+    background: var(--ch-bad-dim);
+    color: var(--ch-bad);
+}
+
+/* Leave keeps its word while there is room; the icon stands in when
+   the panel is too narrow for labels. */
+.ch-btn-leave-icon {
+    display: none;
+}
+
+/* ═══ Intelligence console ════════════════════════════════════
+   The flagship. A full-bleed band directly under the header, one
+   step brighter than the page, holding the ask field and the
+   memory it draws on. Not a card — the answer inside it is the
+   only bordered block, so nothing nests. */
+
+.ch-intel {
+    flex-shrink: 0;
+    background: var(--ch-raised);
+    border-bottom: 1px solid var(--ch-line-2);
+}
+
+.ch-ask {
+    padding: 14px 14px 13px;
+}
+
+.ch-ask-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.ch-ask-mark {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border: 1px solid var(--ch-rec-line);
+    border-radius: var(--ch-r-1);
+    background: var(--ch-rec-dim);
+    color: var(--ch-rec);
+}
+
+.ch-ask-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    color: var(--ch-fg);
+}
+
+.ch-ask-note {
+    margin-left: auto;
+    font-size: 11.5px;
+    color: var(--ch-fg-3);
+    white-space: nowrap;
+}
+
+.ch-ask-form {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.ch-ask-field {
+    flex: 1;
+    min-width: 0;
+    height: 34px;
+    padding: 0 11px;
+    border: 1px solid var(--ch-line-2);
+    border-radius: var(--ch-r-2);
+    background: var(--ch-bg);
+    color: var(--ch-fg);
+    font-size: 13.5px;
+    letter-spacing: -0.005em;
+    outline: none;
+    transition: border-color 0.14s, background 0.14s;
+}
+
+.ch-ask-field::placeholder {
+    color: var(--ch-fg-3);
+}
+
+.ch-ask-field:focus {
+    border-color: var(--ch-rec-line);
+    background: var(--ch-raised-2);
+}
+
+.ch-ask-field:disabled {
+    opacity: 0.6;
+}
+
+.ch-ask-go {
+    flex-shrink: 0;
+    height: 34px;
+    padding: 0 14px;
+    border: 1px solid var(--ch-rec-line);
+    border-radius: var(--ch-r-2);
+    background: var(--ch-rec-dim);
+    color: var(--ch-rec);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.004em;
+    transition: background 0.14s, color 0.14s, opacity 0.14s;
+}
+
+.ch-ask-go:hover:not(:disabled) {
+    background: rgba(99, 199, 178, 0.17);
+    color: var(--ch-rec-soft);
+}
+
+.ch-ask-go:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+/* ── Starter questions ────────────────────────────── */
+.ch-ask-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.ch-chip {
+    padding: 4px 9px;
+    border: 1px solid var(--ch-line-2);
+    border-radius: var(--ch-r-1);
+    background: transparent;
+    color: var(--ch-fg-2);
+    font-size: 12px;
+    letter-spacing: -0.004em;
+    transition: background 0.13s, border-color 0.13s, color 0.13s;
+}
+
+.ch-chip:hover {
+    border-color: var(--ch-rec-line);
+    background: var(--ch-rec-dim);
+    color: var(--ch-rec);
+}
+
+/* ── Working / failed ─────────────────────────────── */
+.ch-ask-working {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: var(--ch-fg-2);
+}
+
+.ch-pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ch-rec);
+    animation: ch-pulse 1.15s ease-in-out infinite;
+}
+
+@keyframes ch-pulse {
+    0%, 100% { opacity: 0.28; transform: scale(0.82); }
+    50%      { opacity: 1;    transform: scale(1); }
+}
+
+.ch-ask-fail {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 11px;
+    border: 1px solid var(--ch-bad-line);
+    border-radius: var(--ch-r-2);
+    background: var(--ch-bad-dim);
+    color: var(--ch-bad);
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+.ch-ask-fail svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+/* ── The answer — the one authored moment ─────────── */
+.ch-answer {
+    margin-top: 12px;
+    border: 1px solid var(--ch-rec-line);
+    border-radius: var(--ch-r-3);
+    background: var(--ch-rec-dim);
+    animation: ch-answer-in 0.42s var(--ch-ease) both;
+}
+
+@keyframes ch-answer-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+        filter: blur(5px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+        filter: blur(0);
+    }
+}
+
+.ch-answer-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 12px 0;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: -0.002em;
+    color: var(--ch-rec);
+}
+
+.ch-answer-text {
+    margin: 0;
+    padding: 7px 12px 10px;
+    max-width: 70ch;
+    font-size: 13.5px;
+    line-height: 1.62;
+    color: var(--ch-fg);
+    white-space: pre-wrap;
+}
+
+.ch-sources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 0 12px 11px;
+}
+
+.ch-source {
+    padding: 3px 7px;
+    border: 1px solid var(--ch-rec-line);
+    border-radius: var(--ch-r-1);
+    background: rgba(99, 199, 178, 0.07);
+    color: var(--ch-rec);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+}
+
+/* ═══ Channel memory ══════════════════════════════════════════ */
+
+.ch-mem {
+    border-top: 1px solid var(--ch-line);
+}
+
+.ch-mem-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    color: var(--ch-fg-2);
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: -0.004em;
+    text-align: left;
+    transition: background 0.13s, color 0.13s;
+}
+
+.ch-mem-toggle:hover {
+    background: var(--ch-raised-2);
+    color: var(--ch-fg);
+}
+
+.ch-mem-toggle > svg:first-child {
+    color: var(--ch-fg-3);
+}
+
+.ch-mem-chevron {
+    display: inline-flex;
+    margin-left: auto;
+    color: var(--ch-fg-3);
+}
+
+.ch-mem-counts {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: 2px;
+}
+
+.ch-count {
+    padding: 2px 6px;
+    border-radius: var(--ch-r-1);
+    background: var(--ch-raised-3);
+    color: var(--ch-fg-2);
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.ch-count-rec {
+    background: var(--ch-rec-dim);
+    color: var(--ch-rec);
+}
+
+.ch-mem-body {
+    padding: 0 14px 12px;
+}
+
+/* ── Segmented control ────────────────────────────── */
+.ch-seg {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px;
+    border: 1px solid var(--ch-line);
+    border-radius: var(--ch-r-2);
+    background: var(--ch-bg);
+}
+
+.ch-seg-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 9px;
+    border: none;
+    border-radius: var(--ch-r-1);
+    background: transparent;
+    color: var(--ch-fg-3);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: -0.004em;
+    transition: background 0.13s, color 0.13s;
+}
+
+.ch-seg-btn:hover {
+    color: var(--ch-fg);
+}
+
+.ch-seg-btn.is-on {
+    background: var(--ch-raised-3);
+    color: var(--ch-fg);
+}
+
+.ch-seg-spacer {
+    flex: 1;
+}
+
+.ch-seg-refresh {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: var(--ch-r-1);
+    background: transparent;
+    color: var(--ch-fg-3);
+    transition: background 0.13s, color 0.13s, opacity 0.13s;
+}
+
+.ch-seg-refresh:hover:not(:disabled) {
+    background: var(--ch-raised-3);
+    color: var(--ch-fg);
+}
+
+.ch-seg-refresh:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+/* ── Memory list ──────────────────────────────────── */
+.ch-mem-scroll {
+    max-height: 232px;
+    margin-top: 10px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.ch-mem-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.ch-mem-list > li + li {
+    border-top: 1px solid var(--ch-line);
+}
+
+.ch-note {
+    padding: 12px 2px;
+    max-width: 60ch;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--ch-fg-3);
+}
+
+.ch-working {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 2px;
+    font-size: 12.5px;
+    color: var(--ch-fg-2);
+}
+
+/* Decisions */
+.ch-dec {
+    display: flex;
+    gap: 9px;
+    padding: 10px 2px;
+}
+
+.ch-dec-dot {
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    margin-top: 6px;
+    border-radius: 50%;
+    background: var(--ch-rec);
+}
+
+.ch-dec.is-old .ch-dec-dot {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--ch-fg-3);
+}
+
+.ch-dec-text {
+    margin: 0;
+    max-width: 68ch;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ch-fg);
+}
+
+.ch-dec.is-old .ch-dec-text {
+    color: var(--ch-fg-2);
+}
+
+.ch-dec-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+    font-size: 11.5px;
+    color: var(--ch-fg-3);
+}
+
+.ch-tag {
+    padding: 1px 6px;
+    border-radius: var(--ch-r-1);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: -0.002em;
+}
+
+.ch-tag-live {
+    background: var(--ch-rec-dim);
+    color: var(--ch-rec);
+}
+
+.ch-tag-old {
+    background: var(--ch-raised-3);
+    color: var(--ch-fg-2);
+}
+
+/* Transcripts */
+.ch-tr-head {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    width: 100%;
+    padding: 10px 2px;
+    border: none;
+    background: transparent;
+    color: var(--ch-fg);
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: -0.004em;
+    text-align: left;
+    transition: color 0.13s;
+}
+
+.ch-tr-head svg:first-child {
+    color: var(--ch-fg-3);
+}
+
+.ch-tr-head:hover {
+    color: var(--ch-rec);
+}
+
+.ch-tr-text {
+    margin: 0;
+    padding: 0 2px 12px 18px;
+    max-width: 70ch;
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--ch-fg-2);
+    white-space: pre-wrap;
+}
+
+/* ═══ Thread ══════════════════════════════════════════════════ */
+
+.ch-thread {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 0 14px;
+}
+
+.ch-day {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px 8px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--ch-fg-3);
+}
+
+.ch-day::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--ch-line);
+}
+
+.ch-msg {
+    flex-shrink: 0;
+    display: flex;
+    gap: 9px;
+    padding: 3px 16px;
+    transition: background 0.1s;
+}
+
+.ch-msg:hover {
+    background: var(--ch-raised);
+}
+
+.ch-msg.is-lead {
+    margin-top: 9px;
+}
+
+.ch-msg-gutter {
+    flex-shrink: 0;
+    width: 26px;
+    display: flex;
+    justify-content: center;
+}
+
+.ch-msg-avatar {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--ch-r-2);
+    background: var(--ch-raised-3);
+    color: var(--ch-fg-2);
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.ch-msg.is-own .ch-msg-avatar {
+    background: var(--ch-you-dim);
+    color: var(--ch-you);
+}
+
+/* Timestamp rides in the gutter on hover for grouped messages, so
+   the run reads as one block until you go looking. */
+.ch-msg-tick {
+    align-self: center;
+    font-size: 10.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ch-fg-3);
+    opacity: 0;
+    transition: opacity 0.12s;
+}
+
+.ch-msg:hover .ch-msg-tick {
+    opacity: 1;
+}
+
+.ch-msg-main {
+    min-width: 0;
+    flex: 1;
+}
+
+.ch-msg-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 1px;
+}
+
+.ch-msg-who {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.008em;
+    color: var(--ch-fg);
+}
+
+.ch-msg.is-own .ch-msg-who {
+    color: var(--ch-you);
+}
+
+.ch-msg-when {
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ch-fg-3);
+}
+
+.ch-msg-body {
+    max-width: 72ch;
+    font-size: 13.8px;
+    line-height: 1.6;
+    color: var(--ch-fg);
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+/* ── Thread states ────────────────────────────────── */
+.ch-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 6px;
+    padding: 24px 20px;
+}
+
+.ch-state-mark {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    margin-bottom: 4px;
+    border: 1px solid var(--ch-line-2);
+    border-radius: var(--ch-r-2);
+    background: var(--ch-raised);
+    color: var(--ch-fg-3);
+}
+
+.ch-state h4 {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    color: var(--ch-fg);
+}
+
+.ch-state p {
+    max-width: 46ch;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ch-fg-2);
+}
+
+.ch-state.is-bad .ch-state-mark {
+    border-color: var(--ch-bad-line);
+    background: var(--ch-bad-dim);
+    color: var(--ch-bad);
+}
+
+/* ═══ Composer ════════════════════════════════════════════════ */
+
+.ch-composer {
+    flex-shrink: 0;
+    padding: 10px 14px 12px;
+    border-top: 1px solid var(--ch-line);
+    background: var(--ch-bg);
+}
+
+.ch-composer-form {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 4px 4px 12px;
+    border: 1px solid var(--ch-line-2);
+    border-radius: var(--ch-r-3);
+    background: var(--ch-raised);
+    transition: border-color 0.14s, background 0.14s;
+}
+
+.ch-composer-form:focus-within {
+    border-color: var(--ch-line-3);
+    background: var(--ch-raised-2);
+}
+
+.ch-composer-field {
+    flex: 1;
+    min-width: 0;
+    height: 30px;
+    border: none;
+    background: transparent;
+    color: var(--ch-fg);
+    font-size: 13.8px;
+    letter-spacing: -0.005em;
+    outline: none;
+}
+
+.ch-composer-field::placeholder {
+    color: var(--ch-fg-3);
+}
+
+.ch-send {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: var(--ch-r-2);
+    background: var(--ch-raised-3);
+    color: var(--ch-fg-3);
+    transition: background 0.14s, color 0.14s, opacity 0.14s;
+}
+
+.ch-send:not(:disabled) {
+    background: var(--ch-you);
+    color: #1a1206;
+}
+
+.ch-send:not(:disabled):hover {
+    background: #f6c46a;
+}
+
+.ch-send:disabled {
+    cursor: default;
+}
+
+/* ═══ Narrow panel ════════════════════════════════════════════
+   The workspace can put three of these side by side, so width is a
+   container question, not a viewport one. */
+
+@container (max-width: 460px) {
+    .ch-ask-note {
+        display: none;
+    }
+
+    .ch-invite {
+        gap: 5px;
+        padding: 0 8px;
+    }
+
+    .ch-invite-label {
+        display: none;
+    }
+
+    .ch-btn-label {
+        display: none;
+    }
+
+    .ch-btn {
+        width: 28px;
+        padding: 0;
+        justify-content: center;
+    }
+
+    .ch-btn-leave-icon {
+        display: block;
+    }
+
+    .ch-header,
+    .ch-composer {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .ch-ask,
+    .ch-mem-body {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .ch-mem-toggle {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .ch-msg,
+    .ch-day {
+        padding-left: 11px;
+        padding-right: 11px;
+    }
+}
+
+@container (max-width: 330px) {
+    .ch-ask-form {
+        flex-wrap: wrap;
+    }
+
+    .ch-ask-go {
+        width: 100%;
+    }
+}

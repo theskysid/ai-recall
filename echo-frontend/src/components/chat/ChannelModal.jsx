@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { channelService } from '../../services/channelService';
+import Icon from '../ui/Icon';
 import '../../styles/FindFriendsModal.css';
 import '../../styles/Channels.css';
 
@@ -70,7 +71,9 @@ const ChannelModal = ({ onClose, onChannelReady }) => {
                 <div className="ffm-header">
                     <h3 className="ffm-title">Channels</h3>
                     <div className="ffm-header-right">
-                        <button onClick={onClose} className="ffm-close-btn">✕</button>
+                        <button onClick={onClose} className="ffm-close-btn" aria-label="Close">
+                            <Icon name="close" size={14} />
+                        </button>
                     </div>
                 </div>
 
@@ -80,13 +83,15 @@ const ChannelModal = ({ onClose, onChannelReady }) => {
                         className={`ffm-tab ${activeTab === 'create' ? 'active' : ''}`}
                         onClick={() => switchTab('create')}
                     >
-                        ＋ Create
+                        <Icon name="plus" size={13} />
+                        Create
                     </button>
                     <button
                         className={`ffm-tab ${activeTab === 'join' ? 'active' : ''}`}
                         onClick={() => switchTab('join')}
                     >
-                        🔗 Join
+                        <Icon name="link" size={13} />
+                        Join
                     </button>
                 </div>
 
@@ -129,7 +134,7 @@ const ChannelModal = ({ onClose, onChannelReady }) => {
                                 />
                             </div>
                             <button type="submit" disabled={isLoading || !name.trim()} className="channel-submit-btn">
-                                {isLoading ? 'Creating…' : 'Create Channel'}
+                                {isLoading ? 'Creating…' : 'Create channel'}
                             </button>
                         </form>
                     )}
@@ -149,10 +154,10 @@ const ChannelModal = ({ onClose, onChannelReady }) => {
                                     autoFocus
                                     disabled={isLoading}
                                 />
-                                <span className="channel-hint">Ask a member to share the channel's invite code.</span>
+                                <span className="channel-hint">Ask a member for the channel&rsquo;s eight-character invite code.</span>
                             </div>
                             <button type="submit" disabled={isLoading || !inviteCode.trim()} className="channel-submit-btn">
-                                {isLoading ? 'Joining…' : 'Join Channel'}
+                                {isLoading ? 'Joining…' : 'Join channel'}
                             </button>
                         </form>
                     )}

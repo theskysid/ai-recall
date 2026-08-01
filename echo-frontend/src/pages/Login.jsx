@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { authService } from "../services/authService.js";
+import Icon from "../components/ui/Icon";
 import "../styles/Login.css";
 
 const Login = () => {
@@ -113,8 +114,8 @@ const Login = () => {
     <div className="login-container">
       <div className="login-box">
         <div className="login-header">
-          <h1>Login</h1>
-          <p>Welcome back to Echo</p>
+          <h1>Welcome back.</h1>
+          <p>Sign in to pick up where your channels left off.</p>
         </div>
 
         <div className="auth-tabs">
@@ -122,13 +123,15 @@ const Login = () => {
             className={`auth-tab ${activeTab === "password" ? "active" : ""}`}
             onClick={() => handleTabChange("password")}
           >
-            🔒 Password
+            <Icon name="lock" size={14} />
+            Password
           </button>
           <button
             className={`auth-tab ${activeTab === "otp" ? "active" : ""}`}
             onClick={() => handleTabChange("otp")}
           >
-            🔑 OTP
+            <Icon name="key" size={14} />
+            Email code
           </button>
         </div>
 
@@ -233,7 +236,7 @@ const Login = () => {
         {message && (
           <p
             className="auth-message"
-            style={{ color: isSuccess ? "#4CAF50" : "#ff6b6b" }}
+            style={{ color: isSuccess ? "var(--verdigris)" : "var(--brick-2)" }}
           >
             {message}
           </p>

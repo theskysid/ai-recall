@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { conversationService } from '../services/conversationService';
+import Icon from '../components/ui/Icon';
 import '../styles/DirectMessageChat.css';
 
 const DirectMessageChat = ({
@@ -240,15 +241,17 @@ const DirectMessageChat = ({
                 <div className="dm-recipient-info">
                     {onBack && (
                         <button type="button" onClick={onBack} className="mobile-back-button dm-back-btn" aria-label="Back to contacts list">
-                            ←
+                            <Icon name="arrowLeft" size={16} />
                         </button>
                     )}
-                    <div className="dm-avatar">💬</div>
+                    <div className="dm-avatar">{recipientUsername.charAt(0).toUpperCase()}</div>
                     <h3>{recipientUsername}</h3>
                 </div>
-                <button onClick={onClose} className="dm-close-btn">✕</button>
+                <button onClick={onClose} className="dm-close-btn" aria-label="Close chat">
+                    <Icon name="close" size={13} />
+                </button>
             </div>
-                <div className="dm-loading">⏳ Opening secure DM...</div>
+                <div className="dm-loading">Opening your private chat…</div>
             </div>
         );
     }
@@ -260,22 +263,19 @@ const DirectMessageChat = ({
                 <div className="dm-recipient-info">
                     {onBack && (
                         <button type="button" onClick={onBack} className="mobile-back-button dm-back-btn" aria-label="Back to contacts list">
-                            ←
+                            <Icon name="arrowLeft" size={16} />
                         </button>
                     )}
-                    <div className="dm-avatar">✕</div>
+                    <div className="dm-avatar">{recipientUsername.charAt(0).toUpperCase()}</div>
                     <h3>{recipientUsername}</h3>
                 </div>
-                <button onClick={onClose} className="dm-close-btn">✕</button>
+                <button onClick={onClose} className="dm-close-btn" aria-label="Close chat">
+                    <Icon name="close" size={13} />
+                </button>
             </div>
-                <div className="dm-loading" style={{ color: '#d32f2f' }}>
-                    <p>⚠️ {error}</p>
-                    <button
-                        onClick={onClose}
-                        style={{ padding: '6px 14px', borderRadius: '16px', border: 'none', background: '#e0e0e0', cursor: 'pointer' }}
-                    >
-                        Close
-                    </button>
+                <div className="dm-loading">
+                    <p style={{ color: 'var(--brick-2)' }}>{error}</p>
+                    <button onClick={onClose} className="dm-send-btn">Close</button>
                 </div>
             </div>
         );
@@ -287,7 +287,7 @@ const DirectMessageChat = ({
                 <div className="dm-recipient-info">
                     {onBack && (
                         <button type="button" onClick={onBack} className="mobile-back-button dm-back-btn" aria-label="Back to contacts list">
-                            ←
+                            <Icon name="arrowLeft" size={16} />
                         </button>
                     )}
                     <div className="dm-avatar-wrapper">
@@ -299,7 +299,10 @@ const DirectMessageChat = ({
                     <div className="dm-header-titles">
                         <h3>
                             {recipientUsername}
-                            <span className="dm-badge-ephemeral">⚡ DM</span>
+                            <span className="dm-badge-ephemeral">
+                                <Icon name="clock" size={11} />
+                                Expires
+                            </span>
                         </h3>
                     </div>
                 </div>
@@ -309,29 +312,34 @@ const DirectMessageChat = ({
                         className="retention-select"
                         value={retentionPolicy}
                         onChange={handleRetentionChange}
-                        title="Ephemeral Message Retention Policy"
+                        title="How long messages are kept"
+                        aria-label="How long messages are kept"
                     >
-                        <option value="SIX_HOURS">⏳ 6 Hours</option>
-                        <option value="ONE_DAY">🕒 1 Day</option>
-                        <option value="SEVEN_DAYS">📅 7 Days</option>
+                        <option value="SIX_HOURS">Keep 6 hours</option>
+                        <option value="ONE_DAY">Keep 1 day</option>
+                        <option value="SEVEN_DAYS">Keep 7 days</option>
                     </select>
-                    {!onBack && <button onClick={onClose} className="dm-close-btn" title="Close Chat">✕</button>}
+                    {!onBack && (
+                        <button onClick={onClose} className="dm-close-btn" title="Close chat" aria-label="Close chat">
+                            <Icon name="close" size={13} />
+                        </button>
+                    )}
                 </div>
             </div>
 
             <div className="dm-messages-container">
                 <div className="dm-ephemeral-banner">
-                    🔒 Messages auto-delete after{' '}
+                    <Icon name="lock" size={12} />
+                    Messages here are deleted after{' '}
                     <strong>
                         {retentionPolicy === 'SIX_HOURS' ? '6 hours' : retentionPolicy === 'ONE_DAY' ? '1 day' : '7 days'}
                     </strong>
-                    .
                 </div>
 
                 {messages.length === 0 ? (
                     <div className="dm-no-messages">
-                        <p>No messages yet.</p>
-                        <p style={{ fontSize: '12px', color: '#90a4ae' }}>Say hello to start this ephemeral conversation!</p>
+                        <p>Nothing here yet.</p>
+                        <p>Say hello — this conversation clears itself later.</p>
                     </div>
                 ) : (
                     messages.map((msg, index) => {
@@ -345,7 +353,8 @@ const DirectMessageChat = ({
                                 <div className="dm-message-content">{msg.content}</div>
                                 {index === 0 && msg.expiresAt && (
                                     <div className="dm-message-footer" title={`Top message expires at ${new Date(normalizeTimestamp(msg.expiresAt)).toLocaleString()}`}>
-                                        ⏳ {formatExpiryDelta(msg.expiresAt)}
+                                        <Icon name="clock" size={11} />
+                                        {formatExpiryDelta(msg.expiresAt)}
                                     </div>
                                 )}
                             </div>
@@ -355,7 +364,8 @@ const DirectMessageChat = ({
 
                 {isTyping && (
                     <div className="dm-typing-indicator">
-                        ✏️ {recipientUsername} is typing...
+                        <Icon name="pencil" size={11} />
+                        {recipientUsername} is typing
                     </div>
                 )}
                 <div ref={messagesEndRef} />
@@ -365,13 +375,13 @@ const DirectMessageChat = ({
                 <form onSubmit={sendDm} className="dm-form">
                     <input
                         type="text"
-                        placeholder={`Direct message ${recipientUsername}...`}
+                        placeholder={`Message ${recipientUsername}`}
                         value={messageInput}
                         onChange={handleTypingInput}
                         className="dm-input"
                         maxLength={500}
                     />
-                    <button type="submit" disabled={!messageInput.trim()} className="dm-send-btn" title="Send Ephemeral Message">
+                    <button type="submit" disabled={!messageInput.trim()} className="dm-send-btn" title="Send message">
                         Send
                     </button>
                 </form>
