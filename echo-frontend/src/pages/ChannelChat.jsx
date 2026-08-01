@@ -235,7 +235,11 @@ const ChannelChat = ({
                 !lastDate ||
                 date - lastDate > RUN_MS;
 
-            const divider = startsDay ? <div className="ch-day">{dayLabel(date)}</div> : null;
+            const divider = startsDay ? (
+                <div className="ch-day">
+                    <span>{dayLabel(date)}</span>
+                </div>
+            ) : null;
 
             lastDate = date || lastDate;
             lastSender = msg.sender;
@@ -258,6 +262,9 @@ const ChannelChat = ({
                                 <div className="ch-msg-head">
                                     <span className="ch-msg-who">{isOwn ? 'You' : msg.sender}</span>
                                     <span className="ch-msg-when">{formatTime(msg.timestamp)}</span>
+                                    {/* Slot for a per-message status marker. The backend does not
+                                        send one yet, so it stays empty and collapses. */}
+                                    <span className="ch-msg-marks" />
                                 </div>
                             )}
                             <div className="ch-msg-body">{msg.content}</div>

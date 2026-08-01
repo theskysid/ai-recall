@@ -51,6 +51,7 @@
 .channels-list {
     display: flex;
     flex-direction: column;
+    gap: 1px;
 }
 
 .channel-item {
@@ -59,7 +60,7 @@
     align-items: center;
     gap: 0.4rem;
     width: 100%;
-    padding: 0.5rem 0.6rem 0.5rem 0.75rem;
+    padding: 0.58rem 0.6rem 0.58rem 0.75rem;
     border: none;
     border-radius: var(--r-2);
     background: transparent;
@@ -76,10 +77,10 @@
     left: 0;
     top: 50%;
     width: 2px;
-    height: 0;
+    height: 60%;
     background: var(--amber);
-    transform: translateY(-50%);
-    transition: height var(--t-2) var(--ease);
+    transform: translateY(-50%) scaleY(0);
+    transition: transform var(--t-2) var(--ease);
 }
 
 .channel-item:hover {
@@ -94,7 +95,7 @@
 }
 
 .channel-item.active::before {
-    height: 60%;
+    transform: translateY(-50%) scaleY(1);
 }
 
 .channel-item-hash {

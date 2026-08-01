@@ -774,7 +774,11 @@
     white-space: pre-wrap;
 }
 
-/* ═══ Thread ══════════════════════════════════════════════════ */
+/* ═══ Thread ══════════════════════════════════════════════════
+   A document, not a chat log. Every message starts at the same
+   left edge and reads top to bottom: who, when, what. No fills
+   behind text, no alignment by author — the only thing that
+   separates one person from the next is space. */
 
 .ch-thread {
     flex: 1;
@@ -782,20 +786,24 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    padding: 10px 0 14px;
+    padding: 6px 0 22px;
 }
 
+/* Day divider — a ruled line through the page, label centred. */
 .ch-day {
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 16px 8px;
-    font-size: 11.5px;
-    font-weight: 500;
+    gap: 14px;
+    padding: 26px 26px 16px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.075em;
+    text-transform: uppercase;
     color: var(--ch-fg-3);
 }
 
+.ch-day::before,
 .ch-day::after {
     content: '';
     flex: 1;
@@ -803,25 +811,35 @@
     background: var(--ch-line);
 }
 
-.ch-msg {
+.ch-day span {
     flex-shrink: 0;
-    display: flex;
-    gap: 9px;
-    padding: 3px 16px;
-    transition: background 0.1s;
-}
-
-.ch-msg:hover {
+    padding: 3px 11px;
+    border: 1px solid var(--ch-line);
+    border-radius: 999px;
     background: var(--ch-raised);
 }
 
+.ch-msg {
+    flex-shrink: 0;
+    display: flex;
+    gap: 13px;
+    padding: 3px 26px;
+    transition: background 0.1s;
+}
+
+/* Barely there — enough to anchor the hover timestamp, not
+   enough to read as a row. */
+.ch-msg:hover {
+    background: rgba(255, 255, 255, 0.017);
+}
+
 .ch-msg.is-lead {
-    margin-top: 9px;
+    margin-top: 18px;
 }
 
 .ch-msg-gutter {
     flex-shrink: 0;
-    width: 26px;
+    width: 34px;
     display: flex;
     justify-content: center;
 }
@@ -829,13 +847,14 @@
 .ch-msg-avatar {
     display: grid;
     place-items: center;
-    width: 26px;
-    height: 26px;
-    border-radius: var(--ch-r-2);
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
     background: var(--ch-raised-3);
     color: var(--ch-fg-2);
-    font-size: 11.5px;
+    font-size: 12.5px;
     font-weight: 600;
+    letter-spacing: 0.015em;
     line-height: 1;
     text-transform: uppercase;
 }
@@ -863,19 +882,21 @@
 .ch-msg-main {
     min-width: 0;
     flex: 1;
+    padding-top: 1px;
 }
 
 .ch-msg-head {
     display: flex;
     align-items: baseline;
-    gap: 8px;
-    margin-bottom: 1px;
+    flex-wrap: wrap;
+    gap: 4px 9px;
+    margin-bottom: 3px;
 }
 
 .ch-msg-who {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
-    letter-spacing: -0.008em;
+    letter-spacing: -0.011em;
     color: var(--ch-fg);
 }
 
@@ -884,15 +905,28 @@
 }
 
 .ch-msg-when {
-    font-size: 11px;
+    font-size: 11.5px;
     font-variant-numeric: tabular-nums;
     color: var(--ch-fg-3);
 }
 
+/* Reserved slot beside the name for a future per-message marker.
+   Nothing renders into it yet, and it collapses while empty, so
+   filling it later costs no relayout. */
+.ch-msg-marks {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.ch-msg-marks:empty {
+    display: none;
+}
+
 .ch-msg-body {
-    max-width: 72ch;
-    font-size: 13.8px;
-    line-height: 1.6;
+    max-width: 78ch;
+    font-size: 14.5px;
+    line-height: 1.68;
     color: var(--ch-fg);
     overflow-wrap: anywhere;
     white-space: pre-wrap;
@@ -906,7 +940,7 @@
     align-items: flex-start;
     justify-content: center;
     gap: 6px;
-    padding: 24px 20px;
+    padding: 28px 26px;
 }
 
 .ch-state-mark {
@@ -1059,8 +1093,28 @@
 
     .ch-msg,
     .ch-day {
-        padding-left: 11px;
-        padding-right: 11px;
+        padding-left: 13px;
+        padding-right: 13px;
+    }
+
+    /* Three panels side by side leaves no room for the roomy
+       gutter — pull the avatar in rather than the text. */
+    .ch-msg {
+        gap: 10px;
+    }
+
+    .ch-msg-gutter {
+        width: 28px;
+    }
+
+    .ch-msg-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 11.5px;
+    }
+
+    .ch-msg.is-lead {
+        margin-top: 14px;
     }
 }
 
