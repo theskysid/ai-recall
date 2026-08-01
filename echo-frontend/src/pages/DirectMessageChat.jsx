@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { conversationService } from '../services/conversationService';
 import Icon from '../components/ui/Icon';
+import { hueClass } from '../utils/avatarHue';
 import '../styles/DirectMessageChat.css';
 
 const DirectMessageChat = ({
@@ -244,7 +245,7 @@ const DirectMessageChat = ({
                             <Icon name="arrowLeft" size={16} />
                         </button>
                     )}
-                    <div className="dm-avatar">{recipientUsername.charAt(0).toUpperCase()}</div>
+                    <div className={`dm-avatar ${hueClass(recipientUsername)}`}>{recipientUsername.charAt(0).toUpperCase()}</div>
                     <h3>{recipientUsername}</h3>
                 </div>
                 <button onClick={onClose} className="dm-close-btn" aria-label="Close chat">
@@ -266,7 +267,7 @@ const DirectMessageChat = ({
                             <Icon name="arrowLeft" size={16} />
                         </button>
                     )}
-                    <div className="dm-avatar">{recipientUsername.charAt(0).toUpperCase()}</div>
+                    <div className={`dm-avatar ${hueClass(recipientUsername)}`}>{recipientUsername.charAt(0).toUpperCase()}</div>
                     <h3>{recipientUsername}</h3>
                 </div>
                 <button onClick={onClose} className="dm-close-btn" aria-label="Close chat">
@@ -291,7 +292,7 @@ const DirectMessageChat = ({
                         </button>
                     )}
                     <div className="dm-avatar-wrapper">
-                        <div className="dm-avatar">
+                        <div className={`dm-avatar ${hueClass(recipientUsername)}`}>
                             {recipientUsername.charAt(0).toUpperCase()}
                         </div>
                         <div className={`dm-online-badge ${conversation?.otherUserOnline ? 'online' : 'offline'}`} />

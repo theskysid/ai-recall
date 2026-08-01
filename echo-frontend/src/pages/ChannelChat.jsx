@@ -4,6 +4,7 @@ import LiveCallRoom from './LiveCallRoom';
 import AskAiWidget from '../components/chat/AskAiWidget';
 import MemoryPanel from '../components/chat/MemoryPanel';
 import Icon from '../components/ui/Icon';
+import { hueClass } from '../utils/avatarHue';
 import '../styles/ChannelPage.css';
 
 /* The backend sends naive timestamps; treat them as UTC. */
@@ -32,19 +33,6 @@ const dayLabel = (d) => {
 /* Messages from the same person inside this window read as one run. */
 const RUN_MS = 5 * 60 * 1000;
 
-/* A name always gets the same avatar colour, on every device and across
-   reloads. The stored per-user `color` can't do this job — it defaults to
-   one blue for everyone and is arbitrary hex, so white initials on it are
-   not guaranteed to be legible. The six hues in the stylesheet are. */
-const AVATAR_HUES = 6;
-
-const hueOf = (name) => {
-    let h = 0;
-    for (let i = 0; i < (name || '').length; i++) {
-        h = (h * 31 + name.charCodeAt(i)) >>> 0;
-    }
-    return h % AVATAR_HUES;
-};
 
 const ChannelChat = ({
     currentUser,
@@ -265,7 +253,7 @@ const ChannelChat = ({
                         <div className="ch-msg-gutter">
                             {isLead ? (
                                 <span
-                                    className={`ch-msg-avatar hue-${hueOf(isOwn ? currentUser : msg.sender)}`}
+                                    className={`ch-msg-avatar ${hueClass(isOwn ? currentUser : msg.sender)}`}
                                     aria-hidden="true"
                                 >
                                     {(isOwn ? currentUser : msg.sender)?.charAt(0) || '?'}

@@ -168,6 +168,20 @@
   --gradient-surface: linear-gradient(180deg, rgba(16, 24, 40, 0.025), transparent);
 }
 
+/* ── Avatar hues ────────────────────────────────────────────────
+   Assigned by name in utils/avatarHue.js and worn by every avatar
+   in the app. Declared as custom properties rather than as
+   background rules so a consumer opts in explicitly — no
+   specificity race with the element's own class — and can keep its
+   own fallback for the unnamed case. Each value clears 4.5:1
+   against the white initial it carries. */
+.hue-0 { --avatar-hue: #c2410c; --avatar-ink: #fff; }
+.hue-1 { --avatar-hue: #be185d; --avatar-ink: #fff; }
+.hue-2 { --avatar-hue: #047857; --avatar-ink: #fff; }
+.hue-3 { --avatar-hue: #1d4ed8; --avatar-ink: #fff; }
+.hue-4 { --avatar-hue: #6d28d9; --avatar-ink: #fff; }
+.hue-5 { --avatar-hue: #0f766e; --avatar-ink: #fff; }
+
 /* ── Reset ──────────────────────────────────────── */
 *,
 *::before,

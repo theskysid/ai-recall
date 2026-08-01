@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from '../ui/Icon';
+import { hueClass } from '../../utils/avatarHue';
 
 const FriendList = ({ chat, friends, ui, layout, mobile = false }) => {
     const { onlineUsers = new Set(), unreadDms = new Map(), openDmChat } = chat || {};
@@ -67,7 +68,7 @@ const FriendList = ({ chat, friends, ui, layout, mobile = false }) => {
                             onTouchEnd={handleCancelPress}
                         >
                             <div className="tg-avatar-wrapper">
-                                <div className="tg-avatar">
+                                <div className={`tg-avatar ${hueClass(friend.username)}`}>
                                     {friend.username.charAt(0).toUpperCase()}
                                 </div>
                                 {isOnline && <span className="tg-online-dot" />}
@@ -147,7 +148,7 @@ const FriendList = ({ chat, friends, ui, layout, mobile = false }) => {
                         onTouchEnd={handleCancelPress}
                     >
                         <div className="friend-sidebar-user">
-                            <div className="user-avatar friend-avatar">
+                            <div className={`user-avatar friend-avatar ${hueClass(friend.username)}`}>
                                 {friend.username.charAt(0).toUpperCase()}
                             </div>
                             <div className="friend-sidebar-meta">

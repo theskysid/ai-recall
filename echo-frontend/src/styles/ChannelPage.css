@@ -851,23 +851,16 @@
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    background: var(--ch-raised-3);
-    color: #fff;
+    /* Hue comes from the .hue-N class the sender's name earns; the
+       fallback covers a message with no sender. */
+    background: var(--avatar-hue, var(--ch-raised-3));
+    color: var(--avatar-ink, var(--ch-fg-2));
     font-size: 12.5px;
     font-weight: 600;
     letter-spacing: 0.015em;
     line-height: 1;
     text-transform: uppercase;
 }
-
-/* One hue per person, assigned by name in ChannelChat.jsx. Every value
-   here clears 4.5:1 against the white initial it carries. */
-.ch-msg-avatar.hue-0 { background: #c2410c; }
-.ch-msg-avatar.hue-1 { background: #be185d; }
-.ch-msg-avatar.hue-2 { background: #047857; }
-.ch-msg-avatar.hue-3 { background: #1d4ed8; }
-.ch-msg-avatar.hue-4 { background: #6d28d9; }
-.ch-msg-avatar.hue-5 { background: #0f766e; }
 
 /* Timestamp rides in the gutter on hover for grouped messages, so
    the run reads as one block until you go looking. */
