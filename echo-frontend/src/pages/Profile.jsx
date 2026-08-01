@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { authService } from "../services/authService.js";
+import Icon from "../components/ui/Icon";
 import "../styles/Profile.css";
 
 const Profile = () => {
@@ -193,7 +194,8 @@ const Profile = () => {
         {/* ── Message ────────────────────────────────── */}
         {message && (
           <div className={`profile-message ${messageType}`}>
-            {messageType === "success" ? "✓" : "✕"} {message}
+            <Icon name={messageType === "success" ? "check" : "close"} size={15} />
+            {message}
           </div>
         )}
 
@@ -206,7 +208,8 @@ const Profile = () => {
                 className="edit-btn"
                 onClick={() => setIsEditing(true)}
               >
-                ✏️ Edit
+                <Icon name="pencil" size={13} />
+                Edit
               </button>
             )}
           </div>
@@ -299,7 +302,7 @@ const Profile = () => {
               className={`account-card ${profile.email ? "connected" : "disconnected"}`}
             >
               <div className="account-card-header">
-                <span className="account-icon">✉️</span>
+                <span className="account-icon"><Icon name="mail" size={16} /></span>
                 <div className="account-info">
                   <h3>Email</h3>
                   <p>
@@ -309,7 +312,7 @@ const Profile = () => {
                 <span
                   className={`status-badge ${profile.email ? "active" : "inactive"}`}
                 >
-                  {profile.email ? "✓" : "✕"}
+                  <Icon name={profile.email ? "check" : "close"} size={12} strokeWidth={2} />
                 </span>
               </div>
               {profile.email ? (
@@ -407,7 +410,7 @@ const Profile = () => {
               className={`account-card ${profile.googleId ? "connected" : "disconnected"}`}
             >
               <div className="account-card-header">
-                <span className="account-icon">🔵</span>
+                <span className="account-icon">G</span>
                 <div className="account-info">
                   <h3>Google</h3>
                   <p>
@@ -417,7 +420,7 @@ const Profile = () => {
                 <span
                   className={`status-badge ${profile.googleId ? "active" : "inactive"}`}
                 >
-                  {profile.googleId ? "✓" : "✕"}
+                  <Icon name={profile.googleId ? "check" : "close"} size={12} strokeWidth={2} />
                 </span>
               </div>
               {profile.googleId ? (

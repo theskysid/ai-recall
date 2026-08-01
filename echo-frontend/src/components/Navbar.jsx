@@ -30,7 +30,7 @@ const Navbar = () => {
         <nav className={`navbar ${isChatPage ? 'navbar-compact' : ''}`}>
             <div className="navbar-container">
                 <Link to="/" className="navbar-brand" onClick={closeMobileMenu}>
-                    <span className="navbar-brand-text">Echo</span>
+                    <span className="navbar-brand-text">Recall</span>
                 </Link>
 
                 <button

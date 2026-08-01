@@ -1,6 +1,7 @@
 import React from 'react';
 import FriendList from './FriendList';
 import MobileDrawer from './MobileDrawer';
+import Icon from '../ui/Icon';
 import DirectMessageChat from '../../pages/DirectMessageChat';
 
 const MobileLayout = ({ chat, friends, notifications, ui, layout }) => {
@@ -61,30 +62,24 @@ const MobileLayout = ({ chat, friends, notifications, ui, layout }) => {
                         <button
                             className="tg-topbar-compose-btn"
                             onClick={() => setShowFindFriendsModal(true)}
-                            aria-label="New chat / Add friend"
-                            title="Find friends, view requests"
+                            aria-label="Find people and view requests"
+                            title="Find people, view requests"
                         >
                             {incomingRequestsCount > 0 && (
                                 <span className="tg-compose-badge">{incomingRequestsCount}</span>
                             )}
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
-                                <line x1="12" y1="5" x2="12" y2="19" />
-                                <line x1="5" y1="12" x2="19" y2="12" />
-                            </svg>
+                            <Icon name="plus" size={18} />
                         </button>
                     </div>
 
-                    {/* ── Sticky Brand Bar ("Echo" text only) — appears when scrolling down ── */}
+                    {/* ── Sticky wordmark — appears when scrolling down ── */}
                     <div className="tg-sticky-brand-bar" id="tg-sticky-brand-el">
-                        <h2 className="tg-brand-text">Echo</h2>
+                        <h2 className="tg-brand-text">Recall</h2>
                     </div>
 
                     {/* ── Search Bar ── */}
                     <div className="tg-search-bar">
-                        <svg className="tg-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                            <circle cx="11" cy="11" r="8" />
-                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                        </svg>
+                        <Icon name="search" size={15} className="tg-search-icon" />
                         <input
                             type="text"
                             className="tg-search-input"
@@ -103,10 +98,10 @@ const MobileLayout = ({ chat, friends, notifications, ui, layout }) => {
                         {/* Friends */}
                         {friendsList.length === 0 ? (
                             <div className="tg-empty-state">
-                                <div className="tg-empty-icon">👥</div>
-                                <p>No friends yet.</p>
+                                <div className="tg-empty-icon"><Icon name="people" size={22} /></div>
+                                <p>No private chats yet. Find someone to start one.</p>
                                 <button className="tg-empty-add-btn" onClick={() => setShowFindFriendsModal(true)}>
-                                    Find Friends
+                                    Find people
                                 </button>
                             </div>
                         ) : (

@@ -1,11 +1,12 @@
 import React from 'react';
 import Sidebar from './Sidebar';
+import Icon from '../ui/Icon';
 import DirectMessageChat from '../../pages/DirectMessageChat';
 import ChannelChat from '../../pages/ChannelChat';
 
 const DesktopLayout = ({ chat, friends, notifications, ui, layout }) => {
     const { mobileSidebarOpen, setMobileSidebarOpen, gridClass } = layout || {};
-    const { username, activeChannel, onLeaveChannel } = ui || {};
+    const { username, activeChannel, onLeaveChannel, onOpenChannelModal } = ui || {};
     const {
         openChats = [],
         closeDmChat,
@@ -25,7 +26,7 @@ const DesktopLayout = ({ chat, friends, notifications, ui, layout }) => {
                 onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
                 aria-label="Toggle sidebar"
             >
-                {mobileSidebarOpen ? '✕' : '☰'}
+                <Icon name={mobileSidebarOpen ? 'close' : 'more'} size={18} />
             </button>
 
             {/* Sidebar overlay for mobile */}
@@ -41,6 +42,21 @@ const DesktopLayout = ({ chat, friends, notifications, ui, layout }) => {
             />
 
             <div className={`chat-workspace-grid ${gridClass}`}>
+                {!activeChannel && openChats.length === 0 && (
+                    <div className="workspace-empty">
+                        <span className="workspace-empty-mark"><Icon name="archive" size={22} /></span>
+                        <h2>Nothing open.</h2>
+                        <p>
+                            Pick a channel to read its record, or open a private chat with a friend
+                            from the list on the left.
+                        </p>
+                        <button type="button" className="workspace-empty-btn" onClick={onOpenChannelModal}>
+                            <Icon name="plus" size={14} />
+                            New channel
+                        </button>
+                    </div>
+                )}
+
                 {activeChannel && (
                     <div key={`channel-${activeChannel.id}`} className="chat-panel-card">
                         <ChannelChat

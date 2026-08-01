@@ -3,8 +3,34 @@ import { channelService } from '../services/channelService';
 import LiveCallRoom from './LiveCallRoom';
 import AskAiWidget from '../components/chat/AskAiWidget';
 import MemoryPanel from '../components/chat/MemoryPanel';
-import '../styles/DirectMessageChat.css';
-import '../styles/Channels.css';
+import Icon from '../components/ui/Icon';
+import '../styles/ChannelPage.css';
+
+/* The backend sends naive timestamps; treat them as UTC. */
+const parseTs = (timestamp) => {
+    if (!timestamp) return null;
+    let str = typeof timestamp === 'string' ? timestamp : timestamp.toString();
+    if (typeof str === 'string' && !str.endsWith('Z') && !str.includes('+') && !str.includes('GMT')) {
+        str += 'Z';
+    }
+    const d = new Date(str);
+    return isNaN(d.getTime()) ? null : d;
+};
+
+const sameDay = (a, b) =>
+    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+const dayLabel = (d) => {
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    if (sameDay(d, today)) return 'Today';
+    if (sameDay(d, yesterday)) return 'Yesterday';
+    return d.toLocaleDateString([], { month: 'long', day: 'numeric' });
+};
+
+/* Messages from the same person inside this window read as one run. */
+const RUN_MS = 5 * 60 * 1000;
 
 const ChannelChat = ({
     currentUser,
@@ -25,6 +51,7 @@ const ChannelChat = ({
     const [error, setError] = useState('');
     const [isLeaving, setIsLeaving] = useState(false);
     const [inCall, setInCall] = useState(false);
+    const [copiedInvite, setCopiedInvite] = useState(false);
 
     // Leave any active call when switching channels.
     useEffect(() => {
@@ -34,6 +61,7 @@ const ChannelChat = ({
     const messagesEndRef = useRef(null);
     const messageIdsRef = useRef(new Set());
     const isInitialScrollRef = useRef(true);
+    const copyTimerRef = useRef(null);
 
     const scrollToBottom = (behavior = 'smooth') => {
         messagesEndRef.current?.scrollIntoView({ behavior });
@@ -107,6 +135,8 @@ const ChannelChat = ({
         };
     }, [channelId, isConnected, subscribeToChannel, handleIncoming]);
 
+    useEffect(() => () => clearTimeout(copyTimerRef.current), []);
+
     const sendMessage = (e) => {
         e.preventDefault();
         const content = messageInput.trim();
@@ -126,56 +156,183 @@ const ChannelChat = ({
         }
     };
 
-    const formatTime = (timestamp) => {
-        if (!timestamp) return '';
-        let str = typeof timestamp === 'string' ? timestamp : timestamp.toString();
-        if (typeof str === 'string' && !str.endsWith('Z') && !str.includes('+') && !str.includes('GMT')) {
-            str += 'Z';
+    /* navigator.clipboard is undefined on non-secure origins, which this app
+       hits when it is served over plain http. Fall back so the control is
+       never a dead button. */
+    const copyInvite = async () => {
+        const code = channel?.inviteCode;
+        if (!code) return;
+        try {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(code);
+            } else {
+                const scratch = document.createElement('textarea');
+                scratch.value = code;
+                scratch.setAttribute('readonly', '');
+                scratch.style.position = 'fixed';
+                scratch.style.opacity = '0';
+                document.body.appendChild(scratch);
+                scratch.select();
+                document.execCommand('copy');
+                document.body.removeChild(scratch);
+            }
+            setCopiedInvite(true);
+            clearTimeout(copyTimerRef.current);
+            copyTimerRef.current = setTimeout(() => setCopiedInvite(false), 1800);
+        } catch (err) {
+            console.error('Could not copy invite code:', err);
         }
-        const dateObj = new Date(str);
-        if (isNaN(dateObj.getTime())) return '';
-        return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
+
+    const formatTime = (timestamp) => {
+        const d = parseTs(timestamp);
+        return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+    };
+
+    const renderThread = () => {
+        if (isLoading) {
+            return (
+                <div className="ch-state">
+                    <span className="ch-state-mark"><Icon name="archive" size={15} /></span>
+                    <h4>Opening #{channel?.name}</h4>
+                    <p>Reading everything the channel has on file.</p>
+                </div>
+            );
+        }
+
+        if (error) {
+            return (
+                <div className="ch-state is-bad">
+                    <span className="ch-state-mark"><Icon name="alert" size={15} /></span>
+                    <h4>This channel would not open</h4>
+                    <p>{error}</p>
+                </div>
+            );
+        }
+
+        if (messages.length === 0) {
+            return (
+                <div className="ch-state">
+                    <span className="ch-state-mark"><Icon name="message" size={15} /></span>
+                    <h4>Nothing on the record yet</h4>
+                    <p>Post the first message in #{channel?.name}. Everything said here is kept and indexed from now on.</p>
+                </div>
+            );
+        }
+
+        let lastDate = null;
+        let lastSender = null;
+
+        return messages.map((msg, index) => {
+            const date = parseTs(msg.timestamp);
+            const isOwn = msg.sender === currentUser;
+
+            const startsDay = !!date && (!lastDate || !sameDay(date, lastDate));
+            const isLead =
+                startsDay ||
+                msg.sender !== lastSender ||
+                !date ||
+                !lastDate ||
+                date - lastDate > RUN_MS;
+
+            const divider = startsDay ? (
+                <div className="ch-day">
+                    <span>{dayLabel(date)}</span>
+                </div>
+            ) : null;
+
+            lastDate = date || lastDate;
+            lastSender = msg.sender;
+
+            return (
+                <React.Fragment key={msg.id || index}>
+                    {divider}
+                    <div className={`ch-msg ${isLead ? 'is-lead' : ''} ${isOwn ? 'is-own' : ''}`}>
+                        <div className="ch-msg-gutter">
+                            {isLead ? (
+                                <span className="ch-msg-avatar" aria-hidden="true">
+                                    {(isOwn ? currentUser : msg.sender)?.charAt(0) || '?'}
+                                </span>
+                            ) : (
+                                <span className="ch-msg-tick">{formatTime(msg.timestamp)}</span>
+                            )}
+                        </div>
+                        <div className="ch-msg-main">
+                            {isLead && (
+                                <div className="ch-msg-head">
+                                    <span className="ch-msg-who">{isOwn ? 'You' : msg.sender}</span>
+                                    <span className="ch-msg-when">{formatTime(msg.timestamp)}</span>
+                                    {/* Slot for a per-message status marker. The backend does not
+                                        send one yet, so it stays empty and collapses. */}
+                                    <span className="ch-msg-marks" />
+                                </div>
+                            )}
+                            <div className="ch-msg-body">{msg.content}</div>
+                        </div>
+                    </div>
+                </React.Fragment>
+            );
+        });
     };
 
     return (
-        <div className={`dm-chat-window ${isEmbedded ? 'embedded' : ''}`}>
-            <div className="dm-chat-header">
-                <div className="dm-recipient-info">
+        <div className={`ch-page ${isEmbedded ? 'ch-embedded' : ''}`}>
+            <header className="ch-header">
+                <div className="ch-header-id">
                     {onBack && (
-                        <button type="button" onClick={onBack} className="mobile-back-button dm-back-btn" aria-label="Back">
-                            ←
+                        <button type="button" onClick={onBack} className="ch-back" aria-label="Back">
+                            <Icon name="arrowLeft" size={15} />
                         </button>
                     )}
-                    <div className="dm-avatar channel-header-avatar">#</div>
-                    <div className="dm-header-titles">
-                        <h3>
-                            {channel?.name}
-                            <span className="channel-member-badge">👥 {channel?.memberCount ?? ''}</span>
-                        </h3>
-                    </div>
+                    <span className="ch-hash" aria-hidden="true">
+                        <Icon name="hash" size={13} />
+                    </span>
+                    <h3 className="ch-name">{channel?.name}</h3>
+                    {channel?.memberCount != null && (
+                        <span className="ch-members" title={`${channel.memberCount} members`}>
+                            <Icon name="people" size={12} />
+                            {channel.memberCount}
+                        </span>
+                    )}
                 </div>
 
-                <div className="dm-header-actions">
+                <div className="ch-header-actions">
+                    {channel?.inviteCode && (
+                        <button
+                            type="button"
+                            onClick={copyInvite}
+                            className={`ch-invite ${copiedInvite ? 'is-copied' : ''}`}
+                            title="Copy the invite code"
+                        >
+                            <Icon name={copiedInvite ? 'check' : 'link'} size={12} />
+                            <span className="ch-invite-label">{copiedInvite ? 'Copied' : 'Invite'}</span>
+                            <span className="ch-invite-code">{channel.inviteCode}</span>
+                        </button>
+                    )}
                     <button
                         onClick={() => setInCall((v) => !v)}
-                        className={`channel-call-btn ${inCall ? 'active' : ''}`}
+                        className={`ch-btn ${inCall ? 'ch-btn-live' : 'ch-btn-outline'}`}
                         title={inCall ? 'Return to chat' : 'Start or join the channel call'}
                     >
-                        {inCall ? '💬 Chat' : '📹 Call'}
+                        <Icon name={inCall ? 'message' : 'video'} size={13} />
+                        <span className="ch-btn-label">{inCall ? 'Chat' : 'Call'}</span>
                     </button>
                     <button
                         onClick={handleLeave}
                         disabled={isLeaving}
-                        className="channel-leave-btn"
+                        className="ch-btn ch-btn-danger"
                         title="Leave this channel"
                     >
-                        {isLeaving ? 'Leaving…' : 'Leave'}
+                        <span className="ch-btn-label">{isLeaving ? 'Leaving…' : 'Leave'}</span>
+                        <Icon name="logout" size={13} className="ch-btn-leave-icon" />
                     </button>
                     {onClose && !onBack && (
-                        <button onClick={onClose} className="dm-close-btn" title="Close">✕</button>
+                        <button onClick={onClose} className="ch-btn ch-btn-icon" title="Close" aria-label="Close channel">
+                            <Icon name="close" size={13} />
+                        </button>
                     )}
                 </div>
-            </div>
+            </header>
 
             {inCall && (
                 <LiveCallRoom
@@ -186,59 +343,31 @@ const ChannelChat = ({
             )}
 
             {!inCall && (
-                <>
+                <div className="ch-intel">
                     <AskAiWidget channelId={channelId} channelName={channel?.name} />
                     <MemoryPanel channelId={channelId} />
-                </>
+                </div>
             )}
 
-            <div className="dm-messages-container" style={inCall ? { display: 'none' } : undefined}>
-                {channel?.inviteCode && (
-                    <div className="channel-invite-banner">
-                        🔗 Invite code: <strong>{channel.inviteCode}</strong>
-                    </div>
-                )}
-
-                {isLoading ? (
-                    <div className="dm-loading">⏳ Loading channel…</div>
-                ) : error ? (
-                    <div className="dm-loading" style={{ color: 'var(--color-danger)' }}>⚠️ {error}</div>
-                ) : messages.length === 0 ? (
-                    <div className="dm-no-messages">
-                        <p>No messages yet.</p>
-                        <p style={{ fontSize: '12px', color: '#90a4ae' }}>Be the first to post in #{channel?.name}!</p>
-                    </div>
-                ) : (
-                    messages.map((msg, index) => {
-                        const isOwn = msg.sender === currentUser;
-                        return (
-                            <div key={msg.id || index} className={`dm-message ${isOwn ? 'own-message' : 'received-message'}`}>
-                                <div className="dm-message-header">
-                                    <span className="dm-sender-name" style={{ color: msg.color || undefined }}>
-                                        {isOwn ? 'You' : msg.sender}
-                                    </span>
-                                    <span className="dm-timestamp">{formatTime(msg.timestamp)}</span>
-                                </div>
-                                <div className="dm-message-content">{msg.content}</div>
-                            </div>
-                        );
-                    })
-                )}
+            {/* Kept mounted through a call so scroll position and history survive. */}
+            <div className="ch-thread" style={inCall ? { display: 'none' } : undefined}>
+                {renderThread()}
                 <div ref={messagesEndRef} />
             </div>
 
-            <div className="dm-input-container" style={inCall ? { display: 'none' } : undefined}>
-                <form onSubmit={sendMessage} className="dm-form">
+            <div className="ch-composer" style={inCall ? { display: 'none' } : undefined}>
+                <form onSubmit={sendMessage} className="ch-composer-form">
                     <input
                         type="text"
-                        placeholder={`Message #${channel?.name || ''}...`}
+                        placeholder={`Message #${channel?.name || ''}`}
                         value={messageInput}
                         onChange={(e) => setMessageInput(e.target.value)}
-                        className="dm-input"
+                        className="ch-composer-field"
                         maxLength={2000}
+                        aria-label={`Message #${channel?.name || ''}`}
                     />
-                    <button type="submit" disabled={!messageInput.trim()} className="dm-send-btn" title="Send">
-                        Send
+                    <button type="submit" disabled={!messageInput.trim()} className="ch-send" title="Send" aria-label="Send">
+                        <Icon name="send" size={14} />
                     </button>
                 </form>
             </div>

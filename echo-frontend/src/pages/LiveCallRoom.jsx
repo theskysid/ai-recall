@@ -6,6 +6,7 @@ import {
 } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { callService } from '../services/callService';
+import Icon from '../components/ui/Icon';
 import '../styles/Channels.css';
 
 const LiveCallRoom = ({ channelId, channelName, onLeaveCall }) => {
@@ -48,7 +49,7 @@ const LiveCallRoom = ({ channelId, channelName, onLeaveCall }) => {
     if (isLoading) {
         return (
             <div className="channel-call-container">
-                <div className="channel-call-status">⏳ Connecting to call…</div>
+                <div className="channel-call-status">Connecting to the call…</div>
             </div>
         );
     }
@@ -57,7 +58,7 @@ const LiveCallRoom = ({ channelId, channelName, onLeaveCall }) => {
         return (
             <div className="channel-call-container">
                 <div className="channel-call-status channel-call-error">
-                    <p>⚠️ {error || 'Could not start the call'}</p>
+                    <p>{error || 'Could not start the call'}</p>
                     <button className="channel-call-exit-btn" onClick={onLeaveCall}>Back to chat</button>
                 </div>
             </div>
@@ -67,7 +68,10 @@ const LiveCallRoom = ({ channelId, channelName, onLeaveCall }) => {
     return (
         <div className="channel-call-container">
             <div className="channel-call-bar">
-                <span className="channel-call-title">📹 Call · #{channelName}</span>
+                <span className="channel-call-title">
+                    <Icon name="video" size={13} />
+                    Call · #{channelName}
+                </span>
                 <button className="channel-call-exit-btn" onClick={onLeaveCall} title="Return to chat">
                     Back to chat
                 </button>

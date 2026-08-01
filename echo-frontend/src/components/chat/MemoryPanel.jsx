@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { channelService } from '../../services/channelService';
 import { callService } from '../../services/callService';
-import '../../styles/Channels.css';
+import Icon from '../ui/Icon';
+import '../../styles/ChannelPage.css';
 
 const formatTime = (ts) => {
     if (!ts) return '';
@@ -50,83 +51,142 @@ const MemoryPanel = ({ channelId }) => {
         setExpandedId(null);
     }, [channelId]);
 
+    const hasCounts = !collapsed && !isLoading && !error;
+
     return (
-        <div className={`memory-panel ${collapsed ? 'collapsed' : ''}`}>
+        <div className="ch-mem">
             <button
                 type="button"
-                className="memory-panel-header"
+                className="ch-mem-toggle"
                 onClick={() => setCollapsed((v) => !v)}
                 aria-expanded={!collapsed}
             >
-                <span className="memory-panel-title">🧠 Channel Memory</span>
-                <span className="memory-panel-chevron">{collapsed ? '▸' : '▾'}</span>
+                <Icon name="archive" size={13} />
+                Channel memory
+                {hasCounts && (decisions.length > 0 || transcripts.length > 0) && (
+                    <span className="ch-mem-counts">
+                        {decisions.length > 0 && (
+                            <span className="ch-count ch-count-rec">
+                                {decisions.length} decided
+                            </span>
+                        )}
+                        {transcripts.length > 0 && (
+                            <span className="ch-count">
+                                {transcripts.length} transcribed
+                            </span>
+                        )}
+                    </span>
+                )}
+                <span className="ch-mem-chevron">
+                    <Icon name={collapsed ? 'chevronRight' : 'chevronDown'} size={13} />
+                </span>
             </button>
 
             {!collapsed && (
-                <div className="memory-panel-body">
-                    <div className="memory-tabs">
+                <div className="ch-mem-body">
+                    <div className="ch-seg" role="tablist">
                         <button
-                            className={`memory-tab ${tab === 'decisions' ? 'active' : ''}`}
+                            type="button"
+                            role="tab"
+                            aria-selected={tab === 'decisions'}
+                            className={`ch-seg-btn ${tab === 'decisions' ? 'is-on' : ''}`}
                             onClick={() => setTab('decisions')}
                         >
-                            📌 Decisions {decisions.length > 0 && <span className="memory-count">{decisions.length}</span>}
+                            <Icon name="pin" size={12} />
+                            Decisions
                         </button>
                         <button
-                            className={`memory-tab ${tab === 'transcripts' ? 'active' : ''}`}
+                            type="button"
+                            role="tab"
+                            aria-selected={tab === 'transcripts'}
+                            className={`ch-seg-btn ${tab === 'transcripts' ? 'is-on' : ''}`}
                             onClick={() => setTab('transcripts')}
                         >
-                            📝 Transcripts {transcripts.length > 0 && <span className="memory-count">{transcripts.length}</span>}
+                            <Icon name="note" size={12} />
+                            Transcripts
                         </button>
-                        <button className="memory-refresh" onClick={load} title="Refresh" disabled={isLoading}>🔄</button>
+                        <span className="ch-seg-spacer" />
+                        <button
+                            type="button"
+                            className="ch-seg-refresh"
+                            onClick={load}
+                            title="Refresh channel memory"
+                            aria-label="Refresh channel memory"
+                            disabled={isLoading}
+                        >
+                            <Icon name="refresh" size={13} />
+                        </button>
                     </div>
 
                     {isLoading ? (
-                        <div className="memory-status"><span className="ask-ai-spinner" /> Loading…</div>
+                        <div className="ch-working" role="status">
+                            <span className="ch-pulse" />
+                            Opening the record…
+                        </div>
                     ) : error ? (
-                        <div className="ask-ai-error">⚠️ {error}</div>
+                        <div className="ch-ask-fail" role="alert">
+                            <Icon name="alert" size={14} />
+                            {error}
+                        </div>
                     ) : tab === 'decisions' ? (
                         decisions.length === 0 ? (
-                            <div className="memory-empty">No decisions captured yet.</div>
+                            <p className="ch-note">
+                                Nothing decided here yet. Decisions are picked out of the
+                                conversation as the channel settles things.
+                            </p>
                         ) : (
-                            <ul className="memory-list">
-                                {decisions.map((d) => (
-                                    <li key={d.id} className={`decision-item ${d.superseded ? 'superseded' : ''}`}>
-                                        <div className="decision-dot" />
-                                        <div className="decision-body">
-                                            <p className="decision-text">{d.content}</p>
-                                            <div className="decision-meta">
-                                                <span>{formatTime(d.createdAt)}</span>
-                                                {d.superseded
-                                                    ? <span className="decision-badge superseded-badge">Superseded</span>
-                                                    : <span className="decision-badge active-badge">Active</span>}
+                            <div className="ch-mem-scroll">
+                                <ul className="ch-mem-list">
+                                    {decisions.map((d) => (
+                                        <li key={d.id}>
+                                            <div className={`ch-dec ${d.superseded ? 'is-old' : ''}`}>
+                                                <span className="ch-dec-dot" />
+                                                <div>
+                                                    <p className="ch-dec-text">{d.content}</p>
+                                                    <div className="ch-dec-meta">
+                                                        <span>{formatTime(d.createdAt)}</span>
+                                                        <span className={`ch-tag ${d.superseded ? 'ch-tag-old' : 'ch-tag-live'}`}>
+                                                            {d.superseded ? 'Superseded' : 'Active'}
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
                         )
                     ) : (
                         transcripts.length === 0 ? (
-                            <div className="memory-empty">No call transcripts yet.</div>
+                            <p className="ch-note">
+                                No call transcripts yet. Start a call and it will be written
+                                down here when it ends.
+                            </p>
                         ) : (
-                            <ul className="memory-list">
-                                {transcripts.map((t) => {
-                                    const open = expandedId === t.id;
-                                    return (
-                                        <li key={t.id} className="transcript-item">
-                                            <button
-                                                type="button"
-                                                className="transcript-head"
-                                                onClick={() => setExpandedId(open ? null : t.id)}
-                                            >
-                                                <span>📞 Call · {formatTime(t.createdAt)}</span>
-                                                <span className="memory-panel-chevron">{open ? '▾' : '▸'}</span>
-                                            </button>
-                                            {open && <p className="transcript-text">{t.fullTranscript}</p>}
-                                        </li>
-                                    );
-                                })}
-                            </ul>
+                            <div className="ch-mem-scroll">
+                                <ul className="ch-mem-list">
+                                    {transcripts.map((t) => {
+                                        const open = expandedId === t.id;
+                                        return (
+                                            <li key={t.id}>
+                                                <button
+                                                    type="button"
+                                                    className="ch-tr-head"
+                                                    onClick={() => setExpandedId(open ? null : t.id)}
+                                                    aria-expanded={open}
+                                                >
+                                                    <Icon name="phone" size={12} />
+                                                    Call · {formatTime(t.createdAt)}
+                                                    <span className="ch-mem-chevron">
+                                                        <Icon name={open ? 'chevronDown' : 'chevronRight'} size={12} />
+                                                    </span>
+                                                </button>
+                                                {open && <p className="ch-tr-text">{t.fullTranscript}</p>}
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </div>
                         )
                     )}
                 </div>

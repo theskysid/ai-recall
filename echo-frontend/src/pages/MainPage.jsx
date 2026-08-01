@@ -1,155 +1,168 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { authService } from '../services/authService';
+import Icon from '../components/ui/Icon';
 import '../styles/MainPage.css';
+
+/* Each row is a kind of record the app keeps. The code on the rail is
+   the record type, not a step number — nothing here is a sequence. */
+const RECORDS = [
+    {
+        code: 'MSG',
+        title: 'Channels',
+        body: 'Named rooms with an invite code. Every message is kept and indexed, so the channel still knows what was said last month.'
+    },
+    {
+        code: 'CALL',
+        title: 'Calls that write themselves down',
+        body: 'Start a video call from any channel. Speech is transcribed live and the transcript is filed with the channel when the call ends.'
+    },
+    {
+        code: 'DEC',
+        title: 'Decisions, pulled out and dated',
+        body: 'When a channel settles something, it is recorded as a decision. Change your mind later and the old one is marked superseded, not erased.'
+    },
+    {
+        code: 'ASK',
+        title: 'Ask the channel',
+        body: 'Question the memory in plain language. Answers come back with the messages and transcripts they were drawn from.'
+    },
+    {
+        code: 'DM',
+        title: 'Private messages that expire',
+        body: 'One-to-one chat that clears itself after six hours, a day, or a week. You choose the window; nothing is indexed.'
+    }
+];
 
 const MainPage = () => {
     const isAuthenticated = authService.isAuthenticated();
 
+    const primaryCta = isAuthenticated ? (
+        <Link to="/chatarea" className="cta cta-solid">
+            Open your channels
+            <Icon name="arrowUpRight" size={15} />
+        </Link>
+    ) : (
+        <>
+            <Link to="/login" className="cta cta-solid">
+                Sign in
+                <Icon name="arrowUpRight" size={15} />
+            </Link>
+            <Link to="/signup" className="cta cta-quiet">
+                Create an account
+            </Link>
+        </>
+    );
+
     return (
-        <div className="mainpage-container">
-            {/* Top Status Bar / Ticker */}
-            <div className="mainpage-hero-wrapper">
-                <div className="mainpage-top-badge">
-                    <span className="live-indicator-dot"></span>
-                    <span className="badge-text">LIVE · 1,284 IN THE ROOM</span>
-                    <span className="badge-divider">/</span>
-                    <span className="badge-version">ECHO — VOL.07</span>
+        <div className="mainpage">
+            {/* ── Lede ─────────────────────────────────────── */}
+            <header className="lede">
+                <div className="lede-slug">
+                    <span className="lede-slug-dot" />
+                    <span>Recall</span>
+                    <span className="lede-slug-rule" />
+                    <span>Chat with a memory</span>
                 </div>
 
-                <div className="mainpage-hero-grid">
-                    {/* Left Column: Headline & Intro */}
-                    <div className="mainpage-hero-text">
-                        <h1 className="hero-title">
-                            Where the internet <span className="title-gradient">actually talks.</span>
+                <div className="lede-grid">
+                    <div className="lede-copy">
+                        <h1 className="lede-title">
+                            Every conversation
+                            <em> remembers itself.</em>
                         </h1>
-                        <p className="hero-subtitle">
-                            No channels. No threads. No algorithm. Just people talking right now.
+                        <p className="lede-sub">
+                            Recall is team chat that keeps the record. Talk, call, decide — then
+                            ask the channel what happened while you were away.
                         </p>
-                        <div className="hero-cta-group">
-                            {isAuthenticated ? (
-                                <Link to="/chatarea" className="cta-pill-button">
-                                    Go to Chat Area <span className="cta-arrow">↗</span>
-                                </Link>
-                            ) : (
-                                <div className="hero-auth-row">
-                                    <Link to="/login" className="cta-pill-button">
-                                        Enter the Room <span className="cta-arrow">↗</span>
-                                    </Link>
-                                    <Link to="/signup" className="cta-secondary-button">
-                                        Create Account
-                                    </Link>
-                                </div>
-                            )}
-                        </div>
+
+                        <div className="lede-actions">{primaryCta}</div>
+
+                        <dl className="lede-facts">
+                            <div className="fact">
+                                <dt>Embeddings</dt>
+                                <dd>On your own server</dd>
+                            </div>
+                            <div className="fact">
+                                <dt>Transcripts</dt>
+                                <dd>Written during the call</dd>
+                            </div>
+                            <div className="fact">
+                                <dt>Direct messages</dt>
+                                <dd>Deleted on a timer</dd>
+                            </div>
+                        </dl>
                     </div>
 
-                    {/* Right Column: Floating Live Chat Preview Card */}
-                    <div className="mainpage-preview-card">
-                        <div className="preview-card-header">
-                            <div className="preview-title">
-                                <span className="preview-globe-icon">🌐</span>
-                                <span>GLOBAL ROOM</span>
-                            </div>
-                            <div className="preview-dots">
-                                <span></span><span></span><span></span>
-                            </div>
+                    {/* Signature: the product's actual thesis, shown once. */}
+                    <aside className="recall-card" aria-label="Example of asking a channel about its own history">
+                        <div className="recall-card-head">
+                            <span className="recall-card-channel">
+                                <Icon name="hash" size={12} />
+                                product-eng
+                            </span>
+                            <span className="recall-card-tag">Memory</span>
                         </div>
 
-                        <div className="preview-chat-list">
-                            <div className="preview-message-group">
-                                <span className="preview-sender pink-sender">MIRA</span>
-                                <div className="preview-bubble dark-bubble">
-                                    wait you're online rn?
-                                </div>
-                            </div>
-
-                            <div className="preview-message-group own-group">
-                                <span className="preview-sender you-sender">YOU</span>
-                                <div className="preview-bubble purple-bubble">
-                                    always. this room never sleeps.
-                                </div>
-                            </div>
-
-                            <div className="preview-message-group">
-                                <span className="preview-sender blue-sender">KENJI</span>
-                                <div className="preview-bubble dark-bubble">
-                                    same. best 3am energy on the internet.
-                                </div>
-                            </div>
+                        <div className="recall-ask">
+                            <span className="recall-ask-label">You asked</span>
+                            <p>What did we decide about the pricing page?</p>
                         </div>
 
-                        <div className="preview-footer-dots">
-                            <span className="pulse-dot"></span>
-                            <span className="pulse-dot delay-1"></span>
-                            <span className="pulse-dot delay-2"></span>
+                        <div className="recall-answer">
+                            <span className="recall-answer-label">
+                                <Icon name="archive" size={12} />
+                                From the record
+                            </span>
+                            <p>
+                                The team moved the pricing page behind the marketing site and dropped
+                                the third tier. That replaced the earlier plan to ship all three tiers
+                                at launch.
+                            </p>
+                            <div className="recall-sources">
+                                <span className="recall-source">Call · 12 Mar</span>
+                                <span className="recall-source">Decision #14</span>
+                                <span className="recall-source">18 messages</span>
+                            </div>
                         </div>
-                    </div>
+                    </aside>
                 </div>
-            </div>
+            </header>
 
-            {/* Bento Grid Features Section */}
-            <div className="mainpage-bento-section">
-                <div className="bento-section-header">
-                    <span className="section-label">/ WHAT'S INSIDE</span>
-                    <h2 className="section-title">Small app. Big feeling.</h2>
-                    <span className="section-counter">003 FEATURES · 001 ROOM</span>
+            {/* ── The record ───────────────────────────────── */}
+            <section className="ledger">
+                <div className="ledger-head">
+                    <span className="ledger-eyebrow">What it keeps</span>
+                    <h2 className="ledger-title">Five kinds of record.</h2>
                 </div>
 
-                <div className="bento-grid">
-                    <div className="bento-card bento-card-large">
-                        <div className="bento-card-top">
-                            <div className="bento-icon-circle">🌐</div>
-                            <span className="bento-number">01</span>
-                        </div>
-                        <h3>Echo Messaging</h3>
-                        <p>
-                            Chat instantly with everyone online. Messages land in the same room, in the order they were said — no algorithm rearranging your life.
-                        </p>
-                    </div>
+                <ul className="ledger-list">
+                    {RECORDS.map((record) => (
+                        <li key={record.code} className="ledger-row">
+                            <span className="ledger-code">{record.code}</span>
+                            <div className="ledger-body">
+                                <h3>{record.title}</h3>
+                                <p>{record.body}</p>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            </section>
 
-                    <div className="bento-card">
-                        <div className="bento-card-top">
-                            <div className="bento-icon-circle">👥</div>
-                            <span className="bento-number">02</span>
-                        </div>
-                        <h3>Multiple Users</h3>
-                        <p>
-                            See who's around. Join the conversation already in progress.
-                        </p>
-                    </div>
-
-                    <div className="bento-card">
-                        <div className="bento-card-top">
-                            <div className="bento-icon-circle">🔒</div>
-                            <span className="bento-number">03</span>
-                        </div>
-                        <h3>Private Chats</h3>
-                        <p>
-                            Slip into a DM. Just you two, nothing else.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Bottom Call to Action Section */}
-            <div className="mainpage-footer-cta">
-                <span className="cta-sub-label">/ THE DOOR IS OPEN</span>
-                <h2 className="footer-cta-headline">
-                    Come in. Someone's <span className="headline-gradient">already</span> talking about you.
+            {/* ── Close ────────────────────────────────────── */}
+            <section className="closing">
+                <span className="closing-eyebrow">Start a channel</span>
+                <h2 className="closing-title">
+                    Nothing worth saying
+                    <em> should have to be said twice.</em>
                 </h2>
-                <div className="footer-cta-button-wrapper">
-                    {isAuthenticated ? (
-                        <Link to="/chatarea" className="cta-pill-button cta-glow-white">
-                            Go to Chat Area <span className="cta-arrow">↗</span>
-                        </Link>
-                    ) : (
-                        <Link to="/login" className="cta-pill-button cta-glow-white">
-                            Go to Chat Area <span className="cta-arrow">↗</span>
-                        </Link>
-                    )}
+                <div className="closing-actions">
+                    <Link to={isAuthenticated ? '/chatarea' : '/login'} className="cta cta-solid">
+                        {isAuthenticated ? 'Open your channels' : 'Sign in to Recall'}
+                        <Icon name="arrowUpRight" size={15} />
+                    </Link>
                 </div>
-            </div>
+            </section>
         </div>
     );
 };

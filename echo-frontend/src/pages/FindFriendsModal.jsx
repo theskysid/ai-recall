@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { friendService } from '../services/friendService';
+import Icon from '../components/ui/Icon';
 import '../styles/FindFriendsModal.css';
 
 const FindFriendsModal = ({ onClose, onFriendsChange, refreshTrigger }) => {
@@ -118,11 +119,14 @@ const FindFriendsModal = ({ onClose, onFriendsChange, refreshTrigger }) => {
                         <button
                             onClick={() => loadRequests(true)}
                             className={`ffm-refresh-btn ${isRefreshing ? 'spin' : ''}`}
-                            title="Refresh"
+                            title="Refresh requests"
+                            aria-label="Refresh requests"
                         >
-                            🔄
+                            <Icon name="refresh" size={14} />
                         </button>
-                        <button onClick={onClose} className="ffm-close-btn">✕</button>
+                        <button onClick={onClose} className="ffm-close-btn" aria-label="Close">
+                            <Icon name="close" size={14} />
+                        </button>
                     </div>
                 </div>
 
@@ -132,13 +136,15 @@ const FindFriendsModal = ({ onClose, onFriendsChange, refreshTrigger }) => {
                         className={`ffm-tab ${activeTab === 'search' ? 'active' : ''}`}
                         onClick={() => setActiveTab('search')}
                     >
-                        🔍 Search
+                        <Icon name="search" size={13} />
+                        Search
                     </button>
                     <button
                         className={`ffm-tab ${activeTab === 'incoming' ? 'active' : ''}`}
                         onClick={() => { setActiveTab('incoming'); loadRequests(); }}
                     >
-                        📥 Incoming
+                        <Icon name="inbox" size={13} />
+                        Requests
                         {incomingRequests.length > 0 && (
                             <span className="ffm-tab-badge">{incomingRequests.length}</span>
                         )}
@@ -147,7 +153,8 @@ const FindFriendsModal = ({ onClose, onFriendsChange, refreshTrigger }) => {
                         className={`ffm-tab ${activeTab === 'rejected' ? 'active' : ''}`}
                         onClick={() => { setActiveTab('rejected'); loadRequests(); }}
                     >
-                        🚫 Rejected
+                        <Icon name="ban" size={13} />
+                        Declined
                         {rejectedRequests.length > 0 && (
                             <span className="ffm-tab-badge">{rejectedRequests.length}</span>
                         )}
@@ -167,12 +174,10 @@ const FindFriendsModal = ({ onClose, onFriendsChange, refreshTrigger }) => {
                         <div className="ffm-tab-content">
                             <form onSubmit={handleSearch} className="ffm-search-form">
                                 <div className="ffm-search-wrap">
-                                    <svg className="ffm-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                                        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-                                    </svg>
+                                    <Icon name="search" size={15} className="ffm-search-icon" />
                                     <input
                                         type="text"
-                                        placeholder="Search by username…"
+                                        placeholder="Search by username"
                                         value={searchQuery}
                                         onChange={e => setSearchQuery(e.target.value)}
                                         className="ffm-search-input"
@@ -186,8 +191,8 @@ const FindFriendsModal = ({ onClose, onFriendsChange, refreshTrigger }) => {
 
                             {searchResults.length === 0 ? (
                                 <div className="ffm-empty">
-                                    <span className="ffm-empty-icon">🔍</span>
-                                    <p>Search for people to add as friends</p>
+                                    <span className="ffm-empty-icon"><Icon name="search" size={20} /></span>
+                                    <p>Search a username to send a friend request.</p>
                                 </div>
                             ) : (
                                 searchResults.map(user => (
@@ -201,13 +206,13 @@ const FindFriendsModal = ({ onClose, onFriendsChange, refreshTrigger }) => {
                                         </div>
                                         <div className="ffm-person-action">
                                             {user.friendshipStatus === 'ACCEPTED' && (
-                                                <span className="ffm-badge-friends">✓ Friends</span>
+                                                <span className="ffm-badge-friends">Friends</span>
                                             )}
                                             {user.friendshipStatus === 'PENDING_OUTGOING' && (
-                                                <span className="ffm-badge-pending">Sent</span>
+                                                <span className="ffm-badge-pending">Request sent</span>
                                             )}
                                             {user.friendshipStatus === 'PENDING_INCOMING' && (
-                                                <span className="ffm-badge-pending">Check Incoming</span>
+                                                <span className="ffm-badge-pending">In requests</span>
                                             )}
                                             {(user.friendshipStatus === 'NONE' || !user.friendshipStatus) && (
                                                 <button onClick={() => handleSendRequest(user.username)} className="ffm-btn-add">
@@ -226,14 +231,14 @@ const FindFriendsModal = ({ onClose, onFriendsChange, refreshTrigger }) => {
                         <div className="ffm-tab-content">
                             {incomingRequests.length === 0 ? (
                                 <div className="ffm-empty">
-                                    <span className="ffm-empty-icon">📭</span>
-                                    <p>No pending friend requests</p>
-                                    <button onClick={() => loadRequests(true)} className="ffm-btn-refresh">🔄 Refresh</button>
+                                    <span className="ffm-empty-icon"><Icon name="inbox" size={20} /></span>
+                                    <p>No one is waiting on you.</p>
+                                    <button onClick={() => loadRequests(true)} className="ffm-btn-refresh">Refresh</button>
                                 </div>
                             ) : (
                                 incomingRequests.map(req => (
                                     <div key={req.id} className="ffm-person-row">
-                                        <div className="ffm-person-avatar" style={{ background: 'linear-gradient(135deg,#667eea,#764ba2)' }}>
+                                        <div className="ffm-person-avatar">
                                             {req.requesterUsername.charAt(0).toUpperCase()}
                                         </div>
                                         <div className="ffm-person-info">
@@ -241,8 +246,22 @@ const FindFriendsModal = ({ onClose, onFriendsChange, refreshTrigger }) => {
                                             <span className="ffm-person-sub">Wants to be friends</span>
                                         </div>
                                         <div className="ffm-person-action ffm-action-row">
-                                            <button onClick={() => handleAcceptRequest(req.id, req.requesterUsername)} className="ffm-btn-accept">✓</button>
-                                            <button onClick={() => handleRejectRequest(req.id)} className="ffm-btn-reject">✕</button>
+                                            <button
+                                                onClick={() => handleAcceptRequest(req.id, req.requesterUsername)}
+                                                className="ffm-btn-accept"
+                                                title="Accept"
+                                                aria-label={`Accept request from ${req.requesterUsername}`}
+                                            >
+                                                <Icon name="check" size={15} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleRejectRequest(req.id)}
+                                                className="ffm-btn-reject"
+                                                title="Decline"
+                                                aria-label={`Decline request from ${req.requesterUsername}`}
+                                            >
+                                                <Icon name="close" size={15} />
+                                            </button>
                                         </div>
                                     </div>
                                 ))
@@ -255,13 +274,13 @@ const FindFriendsModal = ({ onClose, onFriendsChange, refreshTrigger }) => {
                         <div className="ffm-tab-content">
                             {rejectedRequests.length === 0 ? (
                                 <div className="ffm-empty">
-                                    <span className="ffm-empty-icon">✅</span>
-                                    <p>No rejected requests</p>
+                                    <span className="ffm-empty-icon"><Icon name="check" size={20} /></span>
+                                    <p>Nothing declined.</p>
                                 </div>
                             ) : (
                                 rejectedRequests.map(req => (
                                     <div key={req.id} className="ffm-person-row">
-                                        <div className="ffm-person-avatar" style={{ background: 'linear-gradient(135deg,#ef4444,#b91c1c)' }}>
+                                        <div className="ffm-person-avatar">
                                             {req.addresseeUsername.charAt(0).toUpperCase()}
                                         </div>
                                         <div className="ffm-person-info">
