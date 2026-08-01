@@ -360,7 +360,7 @@
     border: 1px solid var(--line);
     border-left: 2px solid var(--line-strong);
     border-radius: 0 var(--r-2) var(--r-2) 0;
-    background: rgba(255, 255, 255, 0.015);
+    background: rgba(16, 24, 40, 0.028);
     transition: border-color var(--transition-base);
 }
 

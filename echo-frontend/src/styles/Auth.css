@@ -22,7 +22,7 @@
     inset: 0;
     background-image: repeating-linear-gradient(
         to bottom,
-        rgba(255, 255, 255, 0.016) 0 1px,
+        rgba(16, 24, 40, 0.013) 0 1px,
         transparent 1px 34px
     );
     -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(0, 0, 0, 0.9), transparent 75%);
@@ -169,7 +169,7 @@
     border: 1px solid var(--line);
     border-left: 2px solid var(--amber);
     border-radius: 0 var(--r-2) var(--r-2) 0;
-    background: rgba(255, 255, 255, 0.015);
+    background: rgba(16, 24, 40, 0.028);
     animation: slideDown var(--t-3) var(--ease) both;
 }
 
@@ -261,7 +261,7 @@
     padding: 0.7rem 0.9rem;
     border: 1px solid var(--line);
     border-radius: var(--r-2);
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(16, 24, 40, 0.028);
     font-size: 0.86rem;
     animation: slideDown var(--t-2) var(--ease) both;
 }

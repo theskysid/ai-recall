@@ -24,7 +24,7 @@
     inset: -1px calc(var(--gutter) * -1) 0;
     background-image: repeating-linear-gradient(
         to bottom,
-        rgba(255, 255, 255, 0.022) 0 1px,
+        rgba(16, 24, 40, 0.016) 0 1px,
         transparent 1px 34px
     );
     -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 82%);
@@ -352,7 +352,7 @@
 }
 
 .ledger-row:hover {
-    background: rgba(255, 255, 255, 0.022);
+    background: rgba(16, 24, 40, 0.028);
 }
 
 .ledger-code {

@@ -2,14 +2,15 @@
    Channel page — redesign
 
    A quiet, dense working surface in the Linear/Notion register:
-   neutral greys carry the page, hairlines do the dividing, and the
-   type is one sans at four sizes. No monospace, no small-caps
-   labels, no bubbles.
+   a white reading column, tinted chrome, hairlines doing the
+   dividing, and one sans at four sizes. No monospace, no
+   small-caps labels, no bubbles.
 
    Colour is reserved and semantic, never decorative:
-     amber      = you. Your name on your own messages.
-     verdigris  = the record. The AI console and everything it
-                  filed away — the only saturated thing on screen.
+     --ch-you  = you. Your name on your own messages, and any
+                 primary action.
+     --ch-rec  = the record. The AI console and everything it
+                 filed away — the only saturated thing on screen.
 
    Every selector here is `ch-`-namespaced and every token is scoped
    to `.ch-page`, so this file cannot reach the DM panel, the
@@ -17,35 +18,35 @@
    ═══════════════════════════════════════════════════════════════ */
 
 .ch-page {
-    /* ── Ground: four steps, cool neutral ─────────── */
-    --ch-bg: #0c0c0e;
-    --ch-raised: #121216;
-    --ch-raised-2: #17171c;
-    --ch-raised-3: #1e1e24;
+    /* ── Ground: white reading surface, tinted chrome ─ */
+    --ch-bg: #ffffff;
+    --ch-raised: #f7f8fa;
+    --ch-raised-2: #eef0f4;
+    --ch-raised-3: #e2e6ec;
 
-    --ch-line: rgba(255, 255, 255, 0.065);
-    --ch-line-2: rgba(255, 255, 255, 0.11);
-    --ch-line-3: rgba(255, 255, 255, 0.17);
+    --ch-line: rgba(16, 24, 40, 0.08);
+    --ch-line-2: rgba(16, 24, 40, 0.13);
+    --ch-line-3: rgba(16, 24, 40, 0.2);
 
     /* ── Text: three steps, all ≥4.5:1 on --ch-bg ─── */
-    --ch-fg: #ecedef;
-    --ch-fg-2: #a2a6ad;
-    --ch-fg-3: #868a93;
+    --ch-fg: #15181d;
+    --ch-fg-2: #576070;
+    --ch-fg-3: #6b7280;
 
     /* ── You ──────────────────────────────────────── */
-    --ch-you: #e9a23b;
-    --ch-you-dim: rgba(233, 162, 59, 0.12);
+    --ch-you: #1560e0;
+    --ch-you-dim: rgba(27, 110, 243, 0.1);
 
     /* ── The record ───────────────────────────────── */
-    --ch-rec: #63c7b2;
-    --ch-rec-soft: #8adecb;
-    --ch-rec-dim: rgba(99, 199, 178, 0.09);
-    --ch-rec-line: rgba(99, 199, 178, 0.24);
+    --ch-rec: #067a55;
+    --ch-rec-soft: #045c40;
+    --ch-rec-dim: rgba(14, 159, 110, 0.09);
+    --ch-rec-line: rgba(14, 159, 110, 0.26);
 
     /* ── Trouble ──────────────────────────────────── */
-    --ch-bad: #f08d86;
-    --ch-bad-dim: rgba(224, 100, 92, 0.1);
-    --ch-bad-line: rgba(224, 100, 92, 0.26);
+    --ch-bad: #dc2b2b;
+    --ch-bad-dim: rgba(220, 43, 43, 0.07);
+    --ch-bad-line: rgba(220, 43, 43, 0.24);
 
     /* ── Rhythm: 4px base ─────────────────────────── */
     --ch-r-1: 5px;
@@ -92,7 +93,7 @@
     border-bottom: none;
     border-radius: var(--ch-r-3) var(--ch-r-3) 0 0;
     overflow: hidden;
-    box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 24px 56px -20px rgba(16, 24, 40, 0.22);
 }
 
 /* ═══ Header ══════════════════════════════════════════════════ */
@@ -264,7 +265,7 @@
 }
 
 .ch-btn-live:hover:not(:disabled) {
-    background: rgba(99, 199, 178, 0.15);
+    background: rgba(14, 159, 110, 0.16);
     color: var(--ch-rec-soft);
 }
 
@@ -383,7 +384,7 @@
 }
 
 .ch-ask-go:hover:not(:disabled) {
-    background: rgba(99, 199, 178, 0.17);
+    background: rgba(14, 159, 110, 0.17);
     color: var(--ch-rec-soft);
 }
 
@@ -513,7 +514,7 @@
     padding: 3px 7px;
     border: 1px solid var(--ch-rec-line);
     border-radius: var(--ch-r-1);
-    background: rgba(99, 199, 178, 0.07);
+    background: rgba(14, 159, 110, 0.07);
     color: var(--ch-rec);
     font-size: 11.5px;
     font-weight: 500;
@@ -830,7 +831,7 @@
 /* Barely there — enough to anchor the hover timestamp, not
    enough to read as a row. */
 .ch-msg:hover {
-    background: rgba(255, 255, 255, 0.017);
+    background: rgba(16, 24, 40, 0.022);
 }
 
 .ch-msg.is-lead {
@@ -851,7 +852,7 @@
     height: 34px;
     border-radius: 50%;
     background: var(--ch-raised-3);
-    color: var(--ch-fg-2);
+    color: #fff;
     font-size: 12.5px;
     font-weight: 600;
     letter-spacing: 0.015em;
@@ -859,10 +860,14 @@
     text-transform: uppercase;
 }
 
-.ch-msg.is-own .ch-msg-avatar {
-    background: var(--ch-you-dim);
-    color: var(--ch-you);
-}
+/* One hue per person, assigned by name in ChannelChat.jsx. Every value
+   here clears 4.5:1 against the white initial it carries. */
+.ch-msg-avatar.hue-0 { background: #c2410c; }
+.ch-msg-avatar.hue-1 { background: #be185d; }
+.ch-msg-avatar.hue-2 { background: #047857; }
+.ch-msg-avatar.hue-3 { background: #1d4ed8; }
+.ch-msg-avatar.hue-4 { background: #6d28d9; }
+.ch-msg-avatar.hue-5 { background: #0f766e; }
 
 /* Timestamp rides in the gutter on hover for grouped messages, so
    the run reads as one block until you go looking. */
@@ -1031,11 +1036,11 @@
 
 .ch-send:not(:disabled) {
     background: var(--ch-you);
-    color: #1a1206;
+    color: #ffffff;
 }
 
 .ch-send:not(:disabled):hover {
-    background: #f6c46a;
+    background: var(--ch-you-2, #1257ce);
 }
 
 .ch-send:disabled {
