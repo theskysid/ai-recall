@@ -53,4 +53,12 @@ public interface MemoryVectorRepository extends JpaRepository<MemoryVector, UUID
             "LIMIT 3", nativeQuery = true)
     List<MemoryVector> findTopDecisionsByChannel(@Param("channelId") Long channelId,
                                                  @Param("embedding") String embedding);
+
+    /**
+     * All decisions for a channel (both active and superseded), newest first —
+     * for the decision timeline/history UI.
+     */
+    @Query("SELECT m FROM MemoryVector m WHERE m.channelId = :channelId AND m.isDecision = true " +
+            "ORDER BY m.createdAt DESC")
+    List<MemoryVector> findDecisionsByChannel(@Param("channelId") Long channelId);
 }

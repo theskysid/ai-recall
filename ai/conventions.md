@@ -27,15 +27,28 @@
 ## External APIs, config & async
 
 - External-service creds read from env via `application.yml` → `@Value`
-  (e.g. `livekit.api-key`, `deepgram.api-key`); blank defaults (`:}`) so the
-  app starts unconfigured and fails cleanly at request time.
-- External HTTP calls use `java.net.http.HttpClient` (Deepgram); LiveKit uses
-  its SDK. New env vars must be added to `.env.example`.
-- Background work uses `@Async` (`@EnableAsync` on the app class); embedding
-  ingestion runs off the request/broadcast thread and only logs on failure.
+  (e.g. `livekit.api-key`, `deepgram.api-key`, `spring.ai.groq.api-key`); blank
+  defaults (`:}`) so the app starts unconfigured and fails cleanly at request time.
+- External HTTP calls use `java.net.http.HttpClient` (Deepgram) or an SDK
+  (LiveKit). New env vars must be added to `.env.example`.
+- **LLM** is injected as the `ChatLanguageModel` interface; the concrete bean
+  lives in `config/LlmConfig` (`langchain4j-open-ai` → Groq base URL). Services
+  stay provider-agnostic. LLM calls (decision extraction, supersession, RAG
+  answer) are wrapped in try/catch and fall back safely (raw context / `false`).
+- Background work uses `@Async` (`@EnableAsync` on the app class); embedding +
+  decision ingestion runs off the request/broadcast thread and only logs on
+  failure. LLM calls inside it are synchronous so the DB ends up consistent.
 - pgvector: `float[]` fields mapped via the custom `memory/entity/VectorType`
   `UserType`; similarity search uses native `@Query` with `<->` / `<=>` and
   `CAST(:vec AS vector)`, always filtered by `channel_id` first.
+
+## Schema gotcha (ddl-auto on populated tables)
+
+`ddl-auto: update` cannot add a `NOT NULL` column to a table that already has
+rows unless it has a DB default. For new non-null columns give a
+`columnDefinition` with a default (e.g.
+`@Column(columnDefinition = "boolean not null default false")`), or `ALTER TABLE`
+manually. pgvector's `vector` extension is never created by `ddl-auto`.
 
 ## Error handling
 

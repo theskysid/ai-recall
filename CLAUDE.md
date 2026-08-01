@@ -3,8 +3,9 @@
 **Recall** (codebase: Echo Messaging) — a real-time chat + AI-memory app:
 Spring Boot (Java 21) backend + React (Vite) frontend, over WebSocket
 (STOMP/SockJS), PostgreSQL 16 + pgvector. Channels support text chat, LiveKit
-video calls, Deepgram transcription, and RAG search over a local-embedding
-vector memory.
+video calls, Deepgram transcription, and RAG Q&A over a vector memory
+(local MiniLM embeddings + Groq/Llama 3 answer synthesis). REST reference for
+the AI endpoints: [echo-backend/RAG_API_DOCS.md](echo-backend/RAG_API_DOCS.md).
 
 ## Read before making changes
 
@@ -56,6 +57,12 @@ Ports: frontend `5173`, backend `8080`, Postgres `5433`.
 - DB schema is managed by Hibernate `ddl-auto: update` — new `@Entity`
   classes auto-create tables; there is no migration tool. pgvector needs
   `CREATE EXTENSION IF NOT EXISTS vector;` run once (not created by `ddl-auto`).
+  A new `NOT NULL` column on a populated table needs a DB default in its
+  `columnDefinition`, or `ddl-auto` silently skips it.
+- AI features need keys in `.env`: `GROQ_API_KEY` (RAG answers + decisions),
+  `LIVEKIT_*` (calls), `DEEPGRAM_API_KEY` (transcription). Embeddings are local
+  (MiniLM) and need no key. The backend runtime Docker image must stay glibc-
+  based (`eclipse-temurin:21-jre`) — ONNX for MiniLM won't load on alpine.
 
 
 ## Output Constraints 

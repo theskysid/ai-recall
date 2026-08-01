@@ -8,5 +8,13 @@ export const callService = {
     getCallToken: async (channelId) => {
         const response = await api.get(`/api/channels/${channelId}/call-token`);
         return response.data;
+    },
+
+    /**
+     * List saved call transcripts for a channel (most recent first).
+     */
+    getTranscripts: async (channelId) => {
+        const response = await api.get(`/api/channels/${channelId}/transcripts`);
+        return response.data;
     }
 };

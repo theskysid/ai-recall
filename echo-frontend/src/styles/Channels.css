@@ -402,6 +402,209 @@
     padding: 2px 9px;
 }
 
+/* ── Channel Memory panel (decisions timeline + transcripts) ── */
+.memory-panel {
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border-glass);
+    background: var(--bg-surface-glass-light);
+}
+
+.memory-panel-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.memory-panel-chevron {
+    color: var(--text-dim);
+    font-size: 0.7rem;
+}
+
+.memory-panel-body {
+    padding: 0 14px 12px;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.memory-tabs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 8px;
+}
+
+.memory-tab {
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.memory-tab.active {
+    color: var(--text-main);
+    background: var(--bg-surface-glass-light);
+    border-color: var(--border-glass);
+}
+
+.memory-count {
+    font-size: 0.64rem;
+    font-weight: 700;
+    color: var(--color-primary-hover);
+    background: var(--color-primary-glow);
+    border-radius: var(--radius-pill);
+    padding: 0 6px;
+}
+
+.memory-refresh {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.memory-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    padding: 6px 0;
+}
+
+.memory-empty {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    padding: 8px 0;
+}
+
+.memory-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Decisions — vertical timeline */
+.decision-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.decision-dot {
+    width: 9px;
+    height: 9px;
+    margin-top: 5px;
+    border-radius: 50%;
+    background: var(--color-success);
+    box-shadow: 0 0 8px var(--color-success-glow);
+    flex-shrink: 0;
+}
+
+.decision-item.superseded .decision-dot {
+    background: var(--text-dim);
+    box-shadow: none;
+}
+
+.decision-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.decision-text {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 0.86rem;
+    line-height: 1.5;
+}
+
+.decision-item.superseded .decision-text {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--text-ghost);
+}
+
+.decision-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 3px;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+}
+
+.decision-badge {
+    border-radius: var(--radius-pill);
+    padding: 1px 8px;
+    font-weight: 700;
+    font-size: 0.66rem;
+    border: 1px solid;
+}
+
+.active-badge {
+    color: var(--color-success);
+    background: var(--color-success-glow);
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+.superseded-badge {
+    color: var(--text-muted);
+    background: var(--bg-surface-glass-light);
+    border-color: var(--border-glass);
+}
+
+/* Transcripts — collapsible entries */
+.transcript-item {
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.transcript-head {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.transcript-text {
+    margin: 0;
+    padding: 0 10px 10px;
+    color: var(--text-main);
+    font-size: 0.84rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+}
+
 /* ── Call button + video room ── */
 .channel-call-btn {
     padding: 6px 14px;

@@ -47,5 +47,13 @@ export const channelService = {
     ask: async (channelId, query) => {
         const response = await api.get(`/api/channels/${channelId}/ask`, { params: { q: query } });
         return response.data;
+    },
+
+    /**
+     * List extracted decisions for a channel (active + superseded), newest first.
+     */
+    getDecisions: async (channelId) => {
+        const response = await api.get(`/api/channels/${channelId}/decisions`);
+        return response.data;
     }
 };

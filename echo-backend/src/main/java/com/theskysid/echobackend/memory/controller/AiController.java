@@ -2,20 +2,26 @@ package com.theskysid.echobackend.memory.controller;
 
 import com.theskysid.echobackend.auth.service.AuthenticationService;
 import com.theskysid.echobackend.channel.service.ChannelService;
+import com.theskysid.echobackend.memory.dto.DecisionDTO;
 import com.theskysid.echobackend.memory.dto.RagContextDTO;
+import com.theskysid.echobackend.memory.entity.MemoryVector;
+import com.theskysid.echobackend.memory.repository.MemoryVectorRepository;
 import com.theskysid.echobackend.memory.service.RagService;
 import com.theskysid.echobackend.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/channels")
@@ -26,6 +32,9 @@ public class AiController {
 
     @Autowired
     private ChannelService channelService;
+
+    @Autowired
+    private MemoryVectorRepository memoryVectorRepository;
 
     @Autowired
     private AuthenticationService authenticationService;
@@ -57,5 +66,44 @@ public class AiController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    /**
+     * GET /api/channels/{channelId}/decisions — list extracted decisions for the
+     * channel (active + superseded), newest first, for the timeline UI. Members only.
+     */
+    @GetMapping("/{channelId}/decisions")
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> decisions(@PathVariable Long channelId, Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+        }
+        try {
+            User currentUser = authenticationService.resolveAuthenticatedUser(authentication.getName());
+
+            if (!channelService.isMember(currentUser, channelId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "You are not a member of this channel"));
+            }
+
+            List<DecisionDTO> decisions = memoryVectorRepository.findDecisionsByChannel(channelId).stream()
+                    .map(this::toDecisionDTO)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(decisions);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    private DecisionDTO toDecisionDTO(MemoryVector v) {
+        return DecisionDTO.builder()
+                .id(v.getId())
+                .channelId(v.getChannelId())
+                .content(v.getContent())
+                .sourceType(v.getSourceType() == null ? null : v.getSourceType().name())
+                .sourceId(v.getSourceId())
+                .superseded(v.getSupersedesId() != null)
+                .createdAt(v.getCreatedAt())
+                .build();
     }
 }

@@ -21,7 +21,10 @@ public class DecisionService {
             "You classify text. Reply with exactly one word: YES or NO. " +
             "Reply YES only if the text states a final, concrete project or technical decision. Otherwise NO.";
 
-    private static final String SUPERSEDE_SYSTEM = "Reply with exactly one word: YES or NO.";
+    private static final String SUPERSEDE_SYSTEM =
+            "You decide whether a new decision overrides an older one. " +
+            "Answer with exactly one word: YES or NO. " +
+            "Answer YES if the new decision replaces, reverses, or contradicts the old decision; otherwise NO.";
 
     @Autowired
     private ChatLanguageModel chatLanguageModel;
@@ -101,11 +104,11 @@ public class DecisionService {
         try {
             String answer = chatLanguageModel.generate(List.of(
                     SystemMessage.from(SUPERSEDE_SYSTEM),
-                    UserMessage.from("New decision: \"" + newDecision + "\"\n"
-                            + "Old decision: \"" + oldDecision + "\"\n"
-                            + "Does the new decision replace or contradict the old one?")
+                    UserMessage.from("Old decision: \"" + oldDecision + "\"\n"
+                            + "New decision: \"" + newDecision + "\"\n"
+                            + "Does the new decision replace, reverse, or contradict the old decision? Answer YES or NO.")
             )).content().text();
-            return isYes(answer);
+            return isAffirmative(answer);
         } catch (Exception e) {
             logger.warn("Supersession check failed: {}", e.getMessage());
             return false;
@@ -114,6 +117,22 @@ public class DecisionService {
 
     private boolean isYes(String answer) {
         return answer != null && answer.trim().toUpperCase().startsWith("YES");
+    }
+
+    /**
+     * Lenient affirmative check — small models often answer with a synonym
+     * ("Contradict.", "Replaces") instead of a bare YES.
+     */
+    private boolean isAffirmative(String answer) {
+        if (answer == null) {
+            return false;
+        }
+        String a = answer.trim().toUpperCase();
+        if (a.startsWith("NO") || a.contains("INDEPENDENT") || a.contains("UNRELATED") || a.contains("NOT ")) {
+            return false;
+        }
+        return a.startsWith("YES") || a.contains("YES") || a.contains("SUPERSED")
+                || a.contains("REPLACE") || a.contains("CONTRADICT") || a.contains("REVERSE");
     }
 
     private String toVectorLiteral(float[] vector) {
