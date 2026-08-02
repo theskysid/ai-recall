@@ -22,7 +22,7 @@
     inset: 0;
     background-image: repeating-linear-gradient(
         to bottom,
-        rgba(255, 255, 255, 0.016) 0 1px,
+        rgba(16, 24, 40, 0.013) 0 1px,
         transparent 1px 34px
     );
     -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(0, 0, 0, 0.9), transparent 75%);
@@ -80,8 +80,7 @@
     font-family: var(--font-mono);
     font-size: 0.7rem;
     font-weight: 500;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     color: var(--paper-3);
     transition: color var(--transition-base);
 }
@@ -169,7 +168,7 @@
     border: 1px solid var(--line);
     border-left: 2px solid var(--amber);
     border-radius: 0 var(--r-2) var(--r-2) 0;
-    background: rgba(255, 255, 255, 0.015);
+    background: rgba(16, 24, 40, 0.028);
     animation: slideDown var(--t-3) var(--ease) both;
 }
 
@@ -209,8 +208,7 @@
     padding: 0;
     font-family: var(--font-mono);
     font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     color: var(--amber);
     border-bottom: 1px solid var(--amber-line);
     transition: color var(--transition-base), border-color var(--transition-base);
@@ -239,8 +237,7 @@
     font-family: var(--font-mono);
     font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     transition: background var(--transition-base), color var(--transition-base);
 }
 
@@ -261,7 +258,7 @@
     padding: 0.7rem 0.9rem;
     border: 1px solid var(--line);
     border-radius: var(--r-2);
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(16, 24, 40, 0.028);
     font-size: 0.86rem;
     animation: slideDown var(--t-2) var(--ease) both;
 }

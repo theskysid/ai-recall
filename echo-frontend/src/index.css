@@ -1,60 +1,111 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
-
 /* ═══════════════════════════════════════════════════════════════
-   Recall — "Archive Ink"
+   Recall — light workspace
 
-   The product is a chat app that keeps a record: channels, calls,
-   transcripts, decisions, and a memory you can question. So the
-   interface is built like a well-kept archive rather than a
-   dashboard — warm ink ground, hairline rules, a serif for voice,
-   a monospace for anything the system filed away.
+   A chat app that keeps a record: channels, calls, transcripts,
+   decisions, and a memory you can question. The interface is a
+   quiet document — white reading surface, tinted chrome, hairline
+   rules, and colour used only where it carries meaning.
 
-   Two accents carry meaning, not decoration:
-     amber      = people. Actions you take, words you said.
-     verdigris  = the record. Anything the machine remembered.
+   Three roles, not decoration:
+     accent   = interactive. Buttons, the open channel, your own
+                name on a message.
+     record   = what the machine filed away. The AI console,
+                decisions, transcripts.
+     alarm    = destructive or failed.
+
+   ── On the token names ─────────────────────────────────────────
+   The role tokens below are the real system. Everything under
+   "Compatibility" maps the previous dark-theme names onto them so
+   the fifteen stylesheets built on those names keep resolving.
+   Read `--ink-*` as "ground", `--paper-*` as "text", `--amber` as
+   "accent", `--verdigris` as "record" — the values are light now,
+   the roles never changed.
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
   /* ── Ground ─────────────────────────────────── */
-  --ink-950: #08080a;
-  --ink-900: #0c0c0e;
-  --ink-870: #111114;
-  --ink-840: #16161a;
-  --ink-800: #1c1c21;
-  --ink-760: #26262c;
+  --bg: #ffffff;
+  --bg-sunk: #f4f6f8;
+  --chrome: #f7f8fa;
+  --raised: #eef0f4;
+  --raised-2: #e5e8ee;
+  --raised-3: #d9dde5;
 
-  --line: rgba(255, 255, 255, 0.075);
-  --line-strong: rgba(255, 255, 255, 0.14);
-  --line-loud: rgba(255, 255, 255, 0.22);
+  --rule: rgba(16, 24, 40, 0.09);
+  --rule-strong: rgba(16, 24, 40, 0.15);
+  --rule-loud: rgba(16, 24, 40, 0.24);
 
-  /* ── Paper (text) ───────────────────────────── */
-  --paper: #efebe4;
-  --paper-2: #b4aea5;
-  --paper-3: #7c766d;
-  --paper-4: #514c46;
+  /* ── Text ───────────────────────────────────── */
+  --text: #15181d;
+  --text-2: #576070;
+  --text-3: #6b7280;
+  --text-4: #949cab;
 
-  /* ── People ─────────────────────────────────── */
-  --amber: #e9a23b;
-  --amber-2: #f6c46a;
-  --amber-dim: rgba(233, 162, 59, 0.13);
-  --amber-line: rgba(233, 162, 59, 0.32);
+  /* ── Interactive ────────────────────────────── */
+  --accent: #1560e0;
+  --accent-2: #1257ce;
+  --accent-dim: rgba(27, 110, 243, 0.09);
+  --accent-line: rgba(27, 110, 243, 0.28);
+  --accent-wash: #e3edfe;
 
   /* ── The record ─────────────────────────────── */
-  --verdigris: #63c7b2;
-  --verdigris-2: #8adecb;
-  --verdigris-dim: rgba(99, 199, 178, 0.12);
-  --verdigris-line: rgba(99, 199, 178, 0.3);
+  --record: #0e9f6e;
+  --record-2: #057a55;
+  --record-dim: rgba(14, 159, 110, 0.1);
+  --record-line: rgba(14, 159, 110, 0.28);
 
   /* ── Alarm ──────────────────────────────────── */
-  --brick: #e0645c;
-  --brick-2: #f08d86;
-  --brick-dim: rgba(224, 100, 92, 0.12);
-  --brick-line: rgba(224, 100, 92, 0.32);
+  --alarm: #dc2b2b;
+  --alarm-2: #b91c1c;
+  --alarm-dim: rgba(220, 43, 43, 0.08);
+  --alarm-line: rgba(220, 43, 43, 0.26);
 
-  /* ── Type ───────────────────────────────────── */
-  --font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
-  --font-sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* ── Compatibility: dark-theme names, light values ─────────── */
+  --ink-950: var(--bg);
+  --ink-900: var(--bg);
+  --ink-870: var(--chrome);
+  --ink-840: var(--raised);
+  --ink-800: var(--raised-2);
+  --ink-760: var(--raised-3);
+
+  --line: var(--rule);
+  --line-strong: var(--rule-strong);
+  --line-loud: var(--rule-loud);
+
+  --paper: var(--text);
+  --paper-2: var(--text-2);
+  --paper-3: var(--text-3);
+  --paper-4: var(--text-4);
+
+  --amber: var(--accent);
+  --amber-2: var(--accent-2);
+  --amber-dim: var(--accent-dim);
+  --amber-line: var(--accent-line);
+
+  --verdigris: var(--record);
+  --verdigris-2: var(--record-2);
+  --verdigris-dim: var(--record-dim);
+  --verdigris-line: var(--record-line);
+
+  --brick: var(--alarm);
+  --brick-2: var(--alarm-2);
+  --brick-dim: var(--alarm-dim);
+  --brick-line: var(--alarm-line);
+
+  /* ── Type ───────────────────────────────────────────────────
+     One face, the platform's own. The workspace is a tool, and a
+     tool should read like the OS it runs in — it also costs no
+     download and cannot arrive late.
+
+     --font-display and --font-mono resolve here too. They are kept
+     as names because ~90 selectors across nine stylesheets ask for
+     them; pointing them at the same stack retires the serif
+     wordmark and the monospace chrome in one place. Genuine code —
+     an invite code, a key — uses --font-code. ───────────────── */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-display: var(--font-sans);
+  --font-mono: var(--font-sans);
+  --font-code: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* ── Radius — crisp, not pillowy ────────────── */
   --r-1: 4px;
@@ -63,10 +114,10 @@
   --r-4: 18px;
   --r-full: 999px;
 
-  /* ── Depth ──────────────────────────────────── */
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
-  --shadow-2: 0 10px 28px -12px rgba(0, 0, 0, 0.7);
-  --shadow-3: 0 28px 70px -24px rgba(0, 0, 0, 0.8);
+  /* ── Depth — on white, shadow is the only lift ─ */
+  --shadow-1: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-2: 0 8px 24px -10px rgba(16, 24, 40, 0.16);
+  --shadow-3: 0 24px 56px -20px rgba(16, 24, 40, 0.22);
 
   /* ── Motion ─────────────────────────────────── */
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -77,10 +128,10 @@
   /* ── Legacy aliases ─────────────────────────────────────────
      Older selectors and a few inline styles still reference these
      names. Mapping them keeps everything on one palette. ────── */
-  --bg-root: var(--ink-900);
-  --bg-surface: var(--ink-870);
-  --bg-surface-glass: rgba(17, 17, 20, 0.9);
-  --bg-surface-glass-light: rgba(255, 255, 255, 0.04);
+  --bg-root: var(--bg);
+  --bg-surface: var(--chrome);
+  --bg-surface-glass: rgba(255, 255, 255, 0.86);
+  --bg-surface-glass-light: rgba(16, 24, 40, 0.035);
   --bg-card: var(--ink-840);
   --bg-elevated: var(--ink-840);
   --border-glass: var(--line);
@@ -120,10 +171,24 @@
   --transition-fast: var(--t-1) var(--ease);
   --transition-base: var(--t-2) var(--ease);
   --transition-smooth: var(--t-3) var(--ease);
-  --gradient-primary: linear-gradient(180deg, var(--amber-2) 0%, var(--amber) 100%);
-  --gradient-accent: linear-gradient(180deg, var(--amber-2) 0%, var(--amber) 100%);
-  --gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+  --gradient-primary: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%);
+  --gradient-accent: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%);
+  --gradient-surface: linear-gradient(180deg, rgba(16, 24, 40, 0.025), transparent);
 }
+
+/* ── Avatar hues ────────────────────────────────────────────────
+   Assigned by name in utils/avatarHue.js and worn by every avatar
+   in the app. Declared as custom properties rather than as
+   background rules so a consumer opts in explicitly — no
+   specificity race with the element's own class — and can keep its
+   own fallback for the unnamed case. Each value clears 4.5:1
+   against the white initial it carries. */
+.hue-0 { --avatar-hue: #c2410c; --avatar-ink: #fff; }
+.hue-1 { --avatar-hue: #be185d; --avatar-ink: #fff; }
+.hue-2 { --avatar-hue: #047857; --avatar-ink: #fff; }
+.hue-3 { --avatar-hue: #1d4ed8; --avatar-ink: #fff; }
+.hue-4 { --avatar-hue: #6d28d9; --avatar-ink: #fff; }
+.hue-5 { --avatar-hue: #0f766e; --avatar-ink: #fff; }
 
 /* ── Reset ──────────────────────────────────────── */
 *,
@@ -141,8 +206,8 @@ html {
 body {
   font-family: var(--font-sans);
   font-size: 15px;
-  background-color: var(--ink-900);
-  color: var(--paper);
+  background-color: var(--bg);
+  color: var(--text);
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.55;
@@ -212,30 +277,30 @@ h4 {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.09);
+  background: rgba(16, 24, 40, 0.17);
   border: 3px solid transparent;
   background-clip: content-box;
   border-radius: var(--r-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(16, 24, 40, 0.3);
   background-clip: content-box;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+  scrollbar-color: rgba(16, 24, 40, 0.2) transparent;
 }
 
 ::selection {
-  background: var(--amber);
-  color: var(--ink-950);
+  background: var(--accent-wash);
+  color: var(--text);
 }
 
 /* ── Focus ──────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid var(--amber);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: var(--r-1);
 }

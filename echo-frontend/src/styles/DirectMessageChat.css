@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════
    Message panel — shared by direct messages and channels.
-   Your words carry the warm accent; everything the system
-   filed away carries the cool one.
+   A document, like the channel thread: no bubbles, no alignment
+   by author. Your own name carries the accent.
    ═══════════════════════════════════════════════════════ */
 
 .dm-chat-window {
@@ -68,7 +68,7 @@
 }
 
 .dm-back-btn:active {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(16, 24, 40, 0.065);
 }
 
 .dm-avatar-wrapper {
@@ -84,8 +84,8 @@
     justify-content: center;
     border: 1px solid var(--line-strong);
     border-radius: var(--r-2);
-    background: var(--ink-840);
-    color: var(--amber);
+    background: var(--avatar-hue, var(--ink-840));
+    color: var(--avatar-ink, var(--amber));
     font-family: var(--font-display);
     font-size: 1.15rem;
     line-height: 1;
@@ -201,8 +201,8 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 0.7rem;
-    padding: 1.1rem;
+    gap: 1.05rem;
+    padding: 1.15rem 1.25rem 1.4rem;
 }
 
 .dm-loading,
@@ -245,37 +245,27 @@
     font-weight: 500;
 }
 
+/* A record, like the channel thread — every message starts at the same
+   left edge. Who said it is the name, not the side it sits on. */
 .dm-message {
-    max-width: 78%;
     display: flex;
     flex-direction: column;
     animation: rise var(--t-2) var(--ease);
 }
 
-.dm-message.own-message {
-    align-self: flex-end;
-    align-items: flex-end;
-}
-
-.dm-message.received-message {
-    align-self: flex-start;
-}
-
 .dm-message-header {
     display: flex;
     align-items: baseline;
-    gap: 0.55rem;
-    margin-bottom: 0.25rem;
-    padding: 0 0.15rem;
+    flex-wrap: wrap;
+    gap: 0.15rem 0.5rem;
+    margin-bottom: 0.15rem;
 }
 
 .dm-sender-name {
-    font-family: var(--font-mono);
-    font-size: 0.61rem;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--paper-3);
+    font-size: 0.87rem;
+    font-weight: 600;
+    letter-spacing: -0.011em;
+    color: var(--paper);
 }
 
 .dm-message.own-message .dm-sender-name {
@@ -283,44 +273,28 @@
 }
 
 .dm-timestamp {
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    color: var(--paper-4);
+    font-size: 0.72rem;
+    color: var(--paper-3);
     font-variant-numeric: tabular-nums;
 }
 
 .dm-message-content {
-    padding: 0.55rem 0.8rem;
+    max-width: 74ch;
     font-size: 0.92rem;
-    line-height: 1.5;
+    line-height: 1.62;
+    color: var(--paper);
     word-wrap: break-word;
     overflow-wrap: anywhere;
-}
-
-.dm-message.received-message .dm-message-content {
-    background: var(--ink-840);
-    border: 1px solid var(--line);
-    border-radius: var(--r-3) var(--r-3) var(--r-3) var(--r-1);
-    color: var(--paper);
-}
-
-.dm-message.own-message .dm-message-content {
-    background: var(--amber-dim);
-    border: 1px solid var(--amber-line);
-    border-radius: var(--r-3) var(--r-3) var(--r-1) var(--r-3);
-    color: var(--paper);
+    white-space: pre-wrap;
 }
 
 .dm-message-footer {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
     gap: 0.3rem;
-    margin-top: 0.25rem;
-    padding: 0 0.15rem;
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    color: var(--paper-4);
+    margin-top: 0.2rem;
+    font-size: 0.68rem;
+    color: var(--paper-3);
 }
 
 .dm-typing-indicator {
@@ -385,8 +359,7 @@
     font-family: var(--font-mono);
     font-size: 0.66rem;
     font-weight: 600;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     transition: background var(--transition-base), color var(--transition-base),
         border-color var(--transition-base);
 }
@@ -410,11 +383,7 @@
     }
 
     .dm-messages-container {
-        padding: 0.9rem 0.7rem;
-    }
-
-    .dm-message {
-        max-width: 88%;
+        padding: 0.95rem 0.8rem 1.2rem;
     }
 
     .dm-input-container {

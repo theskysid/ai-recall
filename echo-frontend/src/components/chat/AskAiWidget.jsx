@@ -19,6 +19,7 @@ const AskAiWidget = ({ channelId, channelName }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [asked, setAsked] = useState(false);
+    const [open, setOpen] = useState(false);
 
     const ask = async (q) => {
         if (!q || channelId == null || isLoading) return;
@@ -47,14 +48,39 @@ const AskAiWidget = ({ channelId, channelName }) => {
 
     const showStarters = !isLoading && !error && !asked;
 
+    /* Collapsed, this is a single button in the corner of the thread; the
+       panel is the same markup, just revealed. Nothing about the request
+       path changes with it. */
+    if (!open) {
+        return (
+            <button
+                type="button"
+                className="ch-ask-fab"
+                onClick={() => setOpen(true)}
+                aria-expanded={false}
+            >
+                <Icon name="sparkle" size={15} />
+                Ask Recall
+            </button>
+        );
+    }
+
     return (
         <div className="ch-ask">
             <div className="ch-ask-top">
                 <span className="ch-ask-mark">
                     <Icon name="sparkle" size={12} />
                 </span>
-                <span className="ch-ask-title">Ask this channel</span>
+                <span className="ch-ask-title">Ask Recall</span>
                 <span className="ch-ask-note">Answers cite what they came from</span>
+                <button
+                    type="button"
+                    className="ch-ask-close"
+                    onClick={() => setOpen(false)}
+                    aria-label="Close Ask Recall"
+                >
+                    <Icon name="close" size={13} />
+                </button>
             </div>
 
             <form onSubmit={handleAsk} className="ch-ask-form">

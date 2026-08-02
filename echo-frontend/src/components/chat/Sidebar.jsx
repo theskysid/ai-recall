@@ -1,6 +1,7 @@
 import React from 'react';
 import FriendList from './FriendList';
 import Icon from '../ui/Icon';
+import { hueClass } from '../../utils/avatarHue';
 import '../../styles/Channels.css';
 
 const Sidebar = ({ chat, friends, ui, layout }) => {
@@ -22,7 +23,6 @@ const Sidebar = ({ chat, friends, ui, layout }) => {
         longPressTimerRef,
         isLongPressTriggeredRef,
         username,
-        userColor,
         channels = [],
         activeChannelId,
         onSelectChannel,
@@ -144,7 +144,7 @@ const Sidebar = ({ chat, friends, ui, layout }) => {
                                         }
                                     }}
                                 >
-                                    <div className="user-avatar" style={user === username ? { backgroundColor: userColor, color: 'var(--ink-950)' } : undefined}>
+                                    <div className={`user-avatar ${hueClass(user)}`}>
                                         {user.charAt(0).toUpperCase()}
                                     </div>
                                     <span>{user}</span>

@@ -41,7 +41,7 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(8, 8, 10, 0.7);
+    background: rgba(16, 24, 40, 0.38);
     z-index: 45;
     animation: fadeIn var(--t-2) var(--ease);
 }
@@ -131,7 +131,7 @@
 }
 
 .sidebar-refresh-icon:hover {
-    background: rgba(255, 255, 255, 0.045);
+    background: rgba(16, 24, 40, 0.045);
     color: var(--paper);
 }
 
@@ -159,8 +159,7 @@
     font-family: var(--font-mono);
     font-size: 0.64rem;
     font-weight: 500;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     color: var(--paper-3);
     transition: color var(--transition-base);
 }
@@ -214,8 +213,7 @@
     font-family: var(--font-mono);
     font-size: 0.66rem;
     font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     transition: border-color var(--transition-base), color var(--transition-base),
         background var(--transition-base);
 }
@@ -272,11 +270,11 @@
 
 .friend-sidebar-item:hover,
 .user-item:hover:not(.current-user) {
-    background: rgba(255, 255, 255, 0.035);
+    background: rgba(16, 24, 40, 0.045);
 }
 
 .friend-sidebar-item.menu-active {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(16, 24, 40, 0.045);
     border-color: var(--line-strong);
 }
 
@@ -309,8 +307,7 @@
 .friend-sidebar-status {
     font-family: var(--font-mono);
     font-size: 0.62rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     color: var(--paper-4);
 }
 
@@ -346,16 +343,16 @@
     justify-content: center;
     border-radius: var(--r-2);
     border: 1px solid var(--line-strong);
-    background: var(--ink-800);
-    color: var(--paper);
+    background: var(--avatar-hue, var(--ink-800));
+    color: var(--avatar-ink, var(--paper));
     font-family: var(--font-mono);
     font-size: 0.78rem;
     font-weight: 600;
 }
 
 .friend-avatar {
-    background: var(--ink-800);
-    color: var(--amber);
+    background: var(--avatar-hue, var(--ink-800));
+    color: var(--avatar-ink, var(--amber));
 }
 
 .user-item span {
@@ -366,8 +363,7 @@
 .you-label {
     font-family: var(--font-mono);
     font-size: 0.6rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     color: var(--amber);
     margin-left: 0.35rem;
 }
@@ -421,7 +417,7 @@
 }
 
 .friend-menu-trigger-btn:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(16, 24, 40, 0.065);
     color: var(--paper);
 }
 
@@ -454,8 +450,7 @@
     font-family: var(--font-mono);
     font-size: 0.62rem;
     font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     white-space: nowrap;
     transition: background var(--transition-base);
 }
@@ -483,7 +478,7 @@
 }
 
 .close-menu-btn:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(16, 24, 40, 0.065);
     color: var(--paper);
 }
 
@@ -561,8 +556,7 @@
     font-family: var(--font-mono);
     font-size: 0.66rem;
     font-weight: 600;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     transition: background var(--transition-base), border-color var(--transition-base),
         color var(--transition-base);
 }
@@ -643,7 +637,7 @@
 }
 
 .mobile-back-button:active {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(16, 24, 40, 0.065);
 }
 
 /* ── Top bar ───────────────────────────────────── */
@@ -698,7 +692,7 @@
 
 .tg-topbar-menu-btn:active,
 .tg-topbar-compose-btn:active {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(16, 24, 40, 0.065);
 }
 
 .tg-hamburger-line {
@@ -747,7 +741,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(12, 12, 14, 0.95);
+    background: rgba(255, 255, 255, 0.94);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--line);
@@ -843,7 +837,7 @@
 
 .tg-chat-row:active,
 .tg-chat-row.tg-menu-open {
-    background: rgba(255, 255, 255, 0.045);
+    background: rgba(16, 24, 40, 0.045);
 }
 
 .tg-avatar-wrapper {
@@ -859,8 +853,8 @@
     justify-content: center;
     border: 1px solid var(--line-strong);
     border-radius: var(--r-2);
-    background: var(--ink-840);
-    color: var(--amber);
+    background: var(--avatar-hue, var(--ink-840));
+    color: var(--avatar-ink, var(--amber));
     font-family: var(--font-display);
     font-size: 1.35rem;
     line-height: 1;
@@ -978,7 +972,7 @@
 }
 
 .tg-ctx-item:active {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(16, 24, 40, 0.065);
 }
 
 .tg-ctx-item.tg-ctx-danger {
@@ -1022,8 +1016,7 @@
     font-family: var(--font-mono);
     font-size: 0.68rem;
     font-weight: 600;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
 }
 
 .tg-empty-add-btn:active {
@@ -1035,7 +1028,7 @@
     position: fixed;
     inset: 0;
     z-index: 1000;
-    background: rgba(8, 8, 10, 0.72);
+    background: rgba(16, 24, 40, 0.4);
     animation: fadeIn var(--t-2) var(--ease);
 }
 
@@ -1133,7 +1126,7 @@
 
 .tg-drawer-item:hover,
 .tg-drawer-item:active {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(16, 24, 40, 0.045);
 }
 
 .tg-drawer-item-icon {

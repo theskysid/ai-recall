@@ -4,6 +4,7 @@ import LiveCallRoom from './LiveCallRoom';
 import AskAiWidget from '../components/chat/AskAiWidget';
 import MemoryPanel from '../components/chat/MemoryPanel';
 import Icon from '../components/ui/Icon';
+import { hueClass } from '../utils/avatarHue';
 import '../styles/ChannelPage.css';
 
 /* The backend sends naive timestamps; treat them as UTC. */
@@ -31,6 +32,7 @@ const dayLabel = (d) => {
 
 /* Messages from the same person inside this window read as one run. */
 const RUN_MS = 5 * 60 * 1000;
+
 
 const ChannelChat = ({
     currentUser,
@@ -250,7 +252,10 @@ const ChannelChat = ({
                     <div className={`ch-msg ${isLead ? 'is-lead' : ''} ${isOwn ? 'is-own' : ''}`}>
                         <div className="ch-msg-gutter">
                             {isLead ? (
-                                <span className="ch-msg-avatar" aria-hidden="true">
+                                <span
+                                    className={`ch-msg-avatar ${hueClass(isOwn ? currentUser : msg.sender)}`}
+                                    aria-hidden="true"
+                                >
                                     {(isOwn ? currentUser : msg.sender)?.charAt(0) || '?'}
                                 </span>
                             ) : (
@@ -288,6 +293,11 @@ const ChannelChat = ({
                         <Icon name="hash" size={13} />
                     </span>
                     <h3 className="ch-name">{channel?.name}</h3>
+                    {channel?.description && (
+                        <span className="ch-desc" title={channel.description}>
+                            {channel.description}
+                        </span>
+                    )}
                     {channel?.memberCount != null && (
                         <span className="ch-members" title={`${channel.memberCount} members`}>
                             <Icon name="people" size={12} />

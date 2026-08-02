@@ -84,14 +84,14 @@
 }
 
 .channel-item:hover {
-    background: rgba(255, 255, 255, 0.035);
+    background: rgba(16, 24, 40, 0.045);
     color: var(--paper);
 }
 
 .channel-item.active {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--paper);
-    font-weight: 500;
+    background: var(--accent-wash);
+    color: var(--accent-2);
+    font-weight: 600;
 }
 
 .channel-item.active::before {
@@ -186,7 +186,7 @@
 }
 
 .channel-code-input {
-    font-family: var(--font-mono);
+    font-family: var(--font-code);
     font-size: 1.15rem;
     font-weight: 500;
     letter-spacing: 0.42em;
@@ -210,8 +210,7 @@
     font-family: var(--font-mono);
     font-size: 0.7rem;
     font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     transition: background var(--transition-base), color var(--transition-base);
 }
 
@@ -253,8 +252,7 @@
     font-family: var(--font-mono);
     font-size: 0.62rem;
     font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     transition: background var(--transition-base), border-color var(--transition-base),
         color var(--transition-base);
 }
@@ -327,7 +325,7 @@
 
 .ask-ai-header:hover,
 .memory-panel-header:hover {
-    background: rgba(255, 255, 255, 0.025);
+    background: rgba(16, 24, 40, 0.028);
     color: var(--paper);
 }
 
@@ -339,8 +337,7 @@
     font-family: var(--font-mono);
     font-size: 0.63rem;
     font-weight: 500;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
 }
 
 .ask-ai-title svg,
@@ -400,8 +397,7 @@
     font-family: var(--font-mono);
     font-size: 0.64rem;
     font-weight: 600;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     transition: background var(--transition-base), color var(--transition-base);
 }
 
@@ -513,8 +509,7 @@
     font-family: var(--font-mono);
     font-size: 0.62rem;
     font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     transition: color var(--transition-base);
 }
 
@@ -577,7 +572,7 @@
 }
 
 .memory-refresh:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(16, 24, 40, 0.045);
     color: var(--paper);
 }
 
@@ -721,7 +716,7 @@
 }
 
 .transcript-head:hover {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(16, 24, 40, 0.045);
     color: var(--paper);
 }
 
@@ -762,8 +757,7 @@
     font-family: var(--font-mono);
     font-size: 0.66rem;
     font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     color: var(--paper-2);
 }
 
@@ -780,8 +774,7 @@
     font-family: var(--font-mono);
     font-size: 0.62rem;
     font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
     transition: background var(--transition-base), border-color var(--transition-base),
         color var(--transition-base);
 }

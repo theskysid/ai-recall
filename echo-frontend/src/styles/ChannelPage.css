@@ -2,14 +2,15 @@
    Channel page — redesign
 
    A quiet, dense working surface in the Linear/Notion register:
-   neutral greys carry the page, hairlines do the dividing, and the
-   type is one sans at four sizes. No monospace, no small-caps
-   labels, no bubbles.
+   a white reading column, tinted chrome, hairlines doing the
+   dividing, and one sans at four sizes. No monospace, no
+   small-caps labels, no bubbles.
 
    Colour is reserved and semantic, never decorative:
-     amber      = you. Your name on your own messages.
-     verdigris  = the record. The AI console and everything it
-                  filed away — the only saturated thing on screen.
+     --ch-you  = you. Your name on your own messages, and any
+                 primary action.
+     --ch-rec  = the record. The AI console and everything it
+                 filed away — the only saturated thing on screen.
 
    Every selector here is `ch-`-namespaced and every token is scoped
    to `.ch-page`, so this file cannot reach the DM panel, the
@@ -17,35 +18,35 @@
    ═══════════════════════════════════════════════════════════════ */
 
 .ch-page {
-    /* ── Ground: four steps, cool neutral ─────────── */
-    --ch-bg: #0c0c0e;
-    --ch-raised: #121216;
-    --ch-raised-2: #17171c;
-    --ch-raised-3: #1e1e24;
+    /* ── Ground: white reading surface, tinted chrome ─ */
+    --ch-bg: #ffffff;
+    --ch-raised: #f7f8fa;
+    --ch-raised-2: #eef0f4;
+    --ch-raised-3: #e2e6ec;
 
-    --ch-line: rgba(255, 255, 255, 0.065);
-    --ch-line-2: rgba(255, 255, 255, 0.11);
-    --ch-line-3: rgba(255, 255, 255, 0.17);
+    --ch-line: rgba(16, 24, 40, 0.08);
+    --ch-line-2: rgba(16, 24, 40, 0.13);
+    --ch-line-3: rgba(16, 24, 40, 0.2);
 
     /* ── Text: three steps, all ≥4.5:1 on --ch-bg ─── */
-    --ch-fg: #ecedef;
-    --ch-fg-2: #a2a6ad;
-    --ch-fg-3: #868a93;
+    --ch-fg: #15181d;
+    --ch-fg-2: #576070;
+    --ch-fg-3: #6b7280;
 
     /* ── You ──────────────────────────────────────── */
-    --ch-you: #e9a23b;
-    --ch-you-dim: rgba(233, 162, 59, 0.12);
+    --ch-you: #1560e0;
+    --ch-you-dim: rgba(27, 110, 243, 0.1);
 
     /* ── The record ───────────────────────────────── */
-    --ch-rec: #63c7b2;
-    --ch-rec-soft: #8adecb;
-    --ch-rec-dim: rgba(99, 199, 178, 0.09);
-    --ch-rec-line: rgba(99, 199, 178, 0.24);
+    --ch-rec: #067a55;
+    --ch-rec-soft: #045c40;
+    --ch-rec-dim: rgba(14, 159, 110, 0.09);
+    --ch-rec-line: rgba(14, 159, 110, 0.26);
 
     /* ── Trouble ──────────────────────────────────── */
-    --ch-bad: #f08d86;
-    --ch-bad-dim: rgba(224, 100, 92, 0.1);
-    --ch-bad-line: rgba(224, 100, 92, 0.26);
+    --ch-bad: #dc2b2b;
+    --ch-bad-dim: rgba(220, 43, 43, 0.07);
+    --ch-bad-line: rgba(220, 43, 43, 0.24);
 
     /* ── Rhythm: 4px base ─────────────────────────── */
     --ch-r-1: 5px;
@@ -92,7 +93,7 @@
     border-bottom: none;
     border-radius: var(--ch-r-3) var(--ch-r-3) 0 0;
     overflow: hidden;
-    box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 24px 56px -20px rgba(16, 24, 40, 0.22);
 }
 
 /* ═══ Header ══════════════════════════════════════════════════ */
@@ -157,6 +158,24 @@
     text-overflow: ellipsis;
 }
 
+/* The channel's own description, set when it was created. First thing
+   to go when the panel narrows — the name and the actions matter more. */
+.ch-desc {
+    min-width: 0;
+    flex: 1;
+    font-size: 12.5px;
+    color: var(--ch-fg-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ch-desc::before {
+    content: '·';
+    margin-right: 7px;
+    color: var(--ch-line-3);
+}
+
 .ch-members {
     flex-shrink: 0;
     display: inline-flex;
@@ -202,7 +221,9 @@
 }
 
 .ch-invite-code {
-    letter-spacing: 0.07em;
+    font-family: var(--font-code);
+    font-size: 11.5px;
+    letter-spacing: 0.05em;
     color: var(--ch-fg);
 }
 
@@ -264,7 +285,7 @@
 }
 
 .ch-btn-live:hover:not(:disabled) {
-    background: rgba(99, 199, 178, 0.15);
+    background: rgba(14, 159, 110, 0.16);
     color: var(--ch-rec-soft);
 }
 
@@ -297,8 +318,51 @@
     border-bottom: 1px solid var(--ch-line-2);
 }
 
+/* Ask Recall sits over the thread, not in a band above it: a single
+   button until it is wanted, the same panel markup once it is. Both
+   anchor to .ch-page, which is already positioned. */
+.ch-ask-fab {
+    position: absolute;
+    right: 18px;
+    bottom: 72px;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 40px;
+    padding: 0 17px;
+    border: none;
+    border-radius: 999px;
+    background: var(--ch-you);
+    color: #fff;
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: -0.006em;
+    box-shadow: 0 6px 20px -6px rgba(21, 96, 224, 0.5);
+    transition: background 0.14s, transform 0.14s, box-shadow 0.14s;
+}
+
+.ch-ask-fab:hover {
+    background: #1257ce;
+    transform: translateY(-1px);
+    box-shadow: 0 11px 26px -8px rgba(21, 96, 224, 0.55);
+}
+
 .ch-ask {
-    padding: 14px 14px 13px;
+    position: absolute;
+    right: 18px;
+    bottom: 72px;
+    z-index: 6;
+    width: min(440px, calc(100% - 36px));
+    max-height: min(62vh, 520px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 14px;
+    border: 1px solid var(--ch-line-2);
+    border-radius: var(--ch-r-3);
+    background: var(--ch-bg);
+    box-shadow: 0 22px 52px -18px rgba(16, 24, 40, 0.32);
+    animation: ch-answer-in 0.26s var(--ch-ease) both;
 }
 
 .ch-ask-top {
@@ -306,6 +370,24 @@
     align-items: center;
     gap: 8px;
     margin-bottom: 10px;
+}
+
+.ch-ask-close {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    margin-left: 2px;
+    border: none;
+    border-radius: var(--ch-r-1);
+    background: transparent;
+    color: var(--ch-fg-3);
+    transition: background 0.13s, color 0.13s;
+}
+
+.ch-ask-close:hover {
+    background: var(--ch-raised-2);
+    color: var(--ch-fg);
 }
 
 .ch-ask-mark {
@@ -383,7 +465,7 @@
 }
 
 .ch-ask-go:hover:not(:disabled) {
-    background: rgba(99, 199, 178, 0.17);
+    background: rgba(14, 159, 110, 0.17);
     color: var(--ch-rec-soft);
 }
 
@@ -513,7 +595,7 @@
     padding: 3px 7px;
     border: 1px solid var(--ch-rec-line);
     border-radius: var(--ch-r-1);
-    background: rgba(99, 199, 178, 0.07);
+    background: rgba(14, 159, 110, 0.07);
     color: var(--ch-rec);
     font-size: 11.5px;
     font-weight: 500;
@@ -523,7 +605,7 @@
 /* ═══ Channel memory ══════════════════════════════════════════ */
 
 .ch-mem {
-    border-top: 1px solid var(--ch-line);
+    border-top: none;
 }
 
 .ch-mem-toggle {
@@ -830,7 +912,7 @@
 /* Barely there — enough to anchor the hover timestamp, not
    enough to read as a row. */
 .ch-msg:hover {
-    background: rgba(255, 255, 255, 0.017);
+    background: rgba(16, 24, 40, 0.022);
 }
 
 .ch-msg.is-lead {
@@ -850,18 +932,15 @@
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    background: var(--ch-raised-3);
-    color: var(--ch-fg-2);
+    /* Hue comes from the .hue-N class the sender's name earns; the
+       fallback covers a message with no sender. */
+    background: var(--avatar-hue, var(--ch-raised-3));
+    color: var(--avatar-ink, var(--ch-fg-2));
     font-size: 12.5px;
     font-weight: 600;
     letter-spacing: 0.015em;
     line-height: 1;
     text-transform: uppercase;
-}
-
-.ch-msg.is-own .ch-msg-avatar {
-    background: var(--ch-you-dim);
-    color: var(--ch-you);
 }
 
 /* Timestamp rides in the gutter on hover for grouped messages, so
@@ -1031,11 +1110,11 @@
 
 .ch-send:not(:disabled) {
     background: var(--ch-you);
-    color: #1a1206;
+    color: #ffffff;
 }
 
 .ch-send:not(:disabled):hover {
-    background: #f6c46a;
+    background: var(--ch-you-2, #1257ce);
 }
 
 .ch-send:disabled {
@@ -1074,16 +1153,29 @@
         display: block;
     }
 
+    .ch-desc {
+        display: none;
+    }
+
     .ch-header,
     .ch-composer {
         padding-left: 10px;
         padding-right: 10px;
     }
 
-    .ch-ask,
     .ch-mem-body {
         padding-left: 10px;
         padding-right: 10px;
+    }
+
+    .ch-ask,
+    .ch-ask-fab {
+        right: 11px;
+        bottom: 66px;
+    }
+
+    .ch-ask {
+        width: calc(100% - 22px);
     }
 
     .ch-mem-toggle {
