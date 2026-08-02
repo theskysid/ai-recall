@@ -111,160 +111,204 @@ const Login = () => {
     message.toLowerCase().includes("sent");
 
   return (
-    <div className="login-container">
-      <div className="login-box">
-        <div className="login-header">
-          <h1>Welcome back.</h1>
-          <p>Sign in to pick up where your channels left off.</p>
-        </div>
+    <div className="login-container nb">
+      <div className="fl-bind" aria-hidden="true" />
 
-        <div className="auth-tabs">
-          <button
-            className={`auth-tab ${activeTab === "password" ? "active" : ""}`}
-            onClick={() => handleTabChange("password")}
-          >
-            <Icon name="lock" size={14} />
-            Password
-          </button>
-          <button
-            className={`auth-tab ${activeTab === "otp" ? "active" : ""}`}
-            onClick={() => handleTabChange("otp")}
-          >
-            <Icon name="key" size={14} />
-            Email code
-          </button>
-        </div>
+      <div className="fl-sheet nb-sheet">
+        <div className="login-box">
+          <div className="login-header">
+            <h1>Welcome back.</h1>
+            <p>Sign in to pick up where your channels left off.</p>
+          </div>
 
-        {activeTab === "password" && (
-          <form onSubmit={handlePasswordLogin} className="login-form">
-            <input
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="auth-input"
-              maxLength={20}
-              required
-              disabled={isLoading}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="auth-input"
-              maxLength={20}
-              required
-              disabled={isLoading}
-            />
-            <button
-              type="submit"
-              disabled={!username.trim() || !password.trim() || isLoading}
-              className="auth-submit-btn"
-            >
-              {isLoading ? "Logging in..." : "Login"}
-            </button>
-          </form>
-        )}
+          <div className="fl-col">
+            <div className="auth-tabs">
+              <button
+                type="button"
+                aria-pressed={activeTab === "password"}
+                className={`auth-tab ${activeTab === "password" ? "active" : ""}`}
+                onClick={() => handleTabChange("password")}
+              >
+                <Icon name="lock" size={13} />
+                Password
+              </button>
+              <button
+                type="button"
+                aria-pressed={activeTab === "otp"}
+                className={`auth-tab ${activeTab === "otp" ? "active" : ""}`}
+                onClick={() => handleTabChange("otp")}
+              >
+                <Icon name="key" size={13} />
+                Email code
+              </button>
+            </div>
 
-        {activeTab === "otp" && (
-          <form
-            onSubmit={otpSent ? handleVerifyOtp : handleSendOtp}
-            className="login-form"
-          >
-            <input
-              type="email"
-              placeholder="Email"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              className="auth-input"
-              required
-              disabled={isLoading || otpSent}
-            />
-            {otpSent && (
-              <div className="otp-section">
-                <p className="otp-label">
-                  Enter the 6-digit code sent to your email
-                </p>
-                <input
-                  type="text"
-                  placeholder="Enter OTP"
-                  value={otp}
-                  onChange={(e) =>
-                    setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
-                  }
-                  className="auth-input otp-input"
-                  maxLength={6}
-                  required
-                  disabled={isLoading}
-                  autoFocus
-                />
-                {countdown > 0 ? (
-                  <p className="otp-countdown">
-                    Resend OTP in <span>{countdown}s</span>
-                  </p>
-                ) : (
-                  <button
-                    type="button"
-                    className="resend-btn"
-                    onClick={handleSendOtp}
+            {activeTab === "password" && (
+              <form onSubmit={handlePasswordLogin} className="login-form">
+                <div className="fl-field">
+                  <label className="fl-label" htmlFor="login-username">
+                    Username
+                  </label>
+                  <input
+                    id="login-username"
+                    name="username"
+                    type="text"
+                    autoComplete="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="fl-input"
+                    maxLength={20}
+                    required
                     disabled={isLoading}
-                  >
-                    Resend OTP
-                  </button>
+                  />
+                </div>
+                <div className="fl-field">
+                  <label className="fl-label" htmlFor="login-password">
+                    Password
+                  </label>
+                  <input
+                    id="login-password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="fl-input"
+                    maxLength={20}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={!username.trim() || !password.trim() || isLoading}
+                  aria-busy={isLoading}
+                  className="auth-submit-btn"
+                >
+                  {isLoading ? "Logging in..." : "Login"}
+                </button>
+              </form>
+            )}
+
+            {activeTab === "otp" && (
+              <form
+                onSubmit={otpSent ? handleVerifyOtp : handleSendOtp}
+                className="login-form"
+              >
+                <div className="fl-field">
+                  <label className="fl-label" htmlFor="login-email">
+                    Email
+                  </label>
+                  <input
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    className="fl-input"
+                    required
+                    disabled={isLoading || otpSent}
+                  />
+                </div>
+                {otpSent && (
+                  <div className="otp-section">
+                    <div className="fl-field">
+                      <label className="fl-label" htmlFor="login-otp">
+                        Enter the 6-digit code sent to your email
+                      </label>
+                      <input
+                        id="login-otp"
+                        name="otp"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        value={otp}
+                        onChange={(e) =>
+                          setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                        }
+                        className="fl-input otp-input"
+                        maxLength={6}
+                        required
+                        disabled={isLoading}
+                        autoFocus
+                      />
+                    </div>
+                    {countdown > 0 ? (
+                      <p className="otp-countdown">
+                        Resend OTP in <span>{countdown}s</span>
+                      </p>
+                    ) : (
+                      <button
+                        type="button"
+                        className="resend-btn"
+                        onClick={handleSendOtp}
+                        disabled={isLoading}
+                      >
+                        Resend OTP
+                      </button>
+                    )}
+                  </div>
+                )}
+                <button
+                  type="submit"
+                  disabled={
+                    otpSent
+                      ? otp.length !== 6 || isLoading
+                      : !identifier.trim() || isLoading
+                  }
+                  aria-busy={isLoading}
+                  className="auth-submit-btn"
+                >
+                  {isLoading
+                    ? "Please wait..."
+                    : otpSent
+                    ? "Verify & Login"
+                    : "Send OTP"}
+                </button>
+              </form>
+            )}
+
+            {message && (
+              <div
+                className={`fl-note ${isSuccess ? "is-ok" : "is-error"}`}
+                role={isSuccess ? "status" : "alert"}
+              >
+                <p className="fl-note-text">{message}</p>
+                {!isSuccess && (
+                  <p className="fl-note-fix">
+                    You are not signed in yet. Check the entries above and try
+                    again, or use the other sign-in method.
+                  </p>
                 )}
               </div>
             )}
-            <button
-              type="submit"
-              disabled={
-                otpSent
-                  ? otp.length !== 6 || isLoading
-                  : !identifier.trim() || isLoading
-              }
-              className="auth-submit-btn"
-            >
-              {isLoading
-                ? "Please wait..."
-                : otpSent
-                ? "Verify & Login"
-                : "Send OTP"}
-            </button>
-          </form>
-        )}
 
-        {message && (
-          <p
-            className="auth-message"
-            style={{ color: isSuccess ? "var(--verdigris)" : "var(--brick-2)" }}
-          >
-            {message}
-          </p>
-        )}
+            <div className="auth-divider">
+              <span>or</span>
+            </div>
 
-        <div className="auth-divider">
-          <span>or</span>
-        </div>
+            <div className="google-btn-wrapper">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setMessage("Google sign-in failed")}
+                theme="outline"
+                size="large"
+                width="100%"
+                text="signin_with"
+                shape="rectangular"
+              />
+            </div>
 
-        <div className="google-btn-wrapper">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => setMessage("Google sign-in failed")}
-            theme="outline"
-            size="large"
-            width="100%"
-            text="signin_with"
-            shape="pill"
-          />
-        </div>
-
-        <div className="toggle-auth">
-          <p>
-            Don't have an account?
-            <a href="/signup" className="toggle-auth-btn">
-              Sign up
-            </a>
-          </p>
+            <div className="toggle-auth">
+              <p>
+                Don't have an account?
+                <a href="/signup" className="toggle-auth-btn">
+                  Sign up
+                </a>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

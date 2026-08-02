@@ -176,6 +176,97 @@
   --gradient-surface: linear-gradient(180deg, rgba(16, 24, 40, 0.025), transparent);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   The notebook — public surfaces only (landing, sign-in, sign-up)
+
+   One bound laboratory notebook: pre-printed quadrille sheet, entries
+   in iron-gall ink, oxblood cloth binding, and a red stamp reserved
+   for corrections and the witness mark. The notebook's first rule is
+   the product's third principle — you never erase, you rule one line
+   through and initial it — so a superseded decision is drawn here the
+   way a lab strikes a reading.
+
+   Scoped to `.nb`. The workspace tokens above are untouched: the chat
+   surfaces keep resolving exactly as they did. ═══════════════════ */
+
+/* Archivo: one grotesque with a live width axis (62–125%), which is
+   how printed stationery actually works — the rubric compresses, the
+   entry runs normal, the heading extends. Self-hosted so the sheet's
+   lettering cannot arrive late or vary by platform. */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 400 800;
+  font-stretch: 62% 125%;
+  font-display: swap;
+  src: url('/fonts/archivo-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 400 800;
+  font-stretch: 62% 125%;
+  font-display: swap;
+  src: url('/fonts/archivo-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+.nb {
+  /* ── The sheet ─── cold engineering stock, never cream ─────── */
+  --nb-sheet: #f4f7f6;
+  --nb-sheet-2: #e9efed;
+  --nb-sheet-3: #dde5e2;
+
+  /* Pre-printed quadrille, sea green, two weights of rule */
+  --nb-grid: rgba(24, 92, 78, 0.05);
+  --nb-grid-major: rgba(24, 92, 78, 0.10);
+  --nb-rule: rgba(20, 32, 43, 0.13);
+  --nb-rule-strong: rgba(20, 32, 43, 0.24);
+
+  /* ── Iron-gall ink ─────────────────────────────────────────── */
+  --nb-ink: #14202b;
+  --nb-ink-2: #3d5163;
+  --nb-ink-3: #59707f;
+
+  /* ── Oxblood binding — a field, not an accent ──────────────── */
+  --nb-bind: #6d1f28;
+  --nb-bind-2: #57171f;
+  --nb-bind-ink: #f0e2df;
+
+  /* ── Correction stamp — struck lines, witness marks, actions ─ */
+  --nb-stamp: #c3301d;
+  --nb-stamp-2: #a2240f;
+  --nb-stamp-dim: rgba(195, 48, 29, 0.08);
+  --nb-stamp-line: rgba(195, 48, 29, 0.3);
+
+  /* ── Countersigned — what the record has verified ──────────── */
+  --nb-seal: #1c6b52;
+  --nb-seal-dim: rgba(28, 107, 82, 0.09);
+  --nb-seal-line: rgba(28, 107, 82, 0.28);
+
+  --nb-face: 'Archivo', var(--font-sans);
+  --nb-line: 34px;
+
+  color: var(--nb-ink);
+  font-family: var(--nb-face);
+}
+
+/* The pre-printed quadrille itself. Any element that is a sheet wears
+   this; the major rule every fourth line is what an engineering pad
+   does, and it gives the page a measure to hang entries on. */
+.nb-sheet {
+  background-color: var(--nb-sheet);
+  background-image:
+    repeating-linear-gradient(to bottom, var(--nb-grid) 0 1px, transparent 1px var(--nb-line)),
+    repeating-linear-gradient(to right, var(--nb-grid) 0 1px, transparent 1px var(--nb-line));
+}
+
 /* ── Avatar hues ────────────────────────────────────────────────
    Assigned by name in utils/avatarHue.js and worn by every avatar
    in the app. Declared as custom properties rather than as
@@ -183,12 +274,35 @@
    specificity race with the element's own class — and can keep its
    own fallback for the unnamed case. Each value clears 4.5:1
    against the white initial it carries. */
-.hue-0 { --avatar-hue: #c2410c; --avatar-ink: #fff; }
-.hue-1 { --avatar-hue: #be185d; --avatar-ink: #fff; }
-.hue-2 { --avatar-hue: #047857; --avatar-ink: #fff; }
-.hue-3 { --avatar-hue: #1d4ed8; --avatar-ink: #fff; }
-.hue-4 { --avatar-hue: #6d28d9; --avatar-ink: #fff; }
-.hue-5 { --avatar-hue: #0f766e; --avatar-ink: #fff; }
+.hue-0 {
+  --avatar-hue: #c2410c;
+  --avatar-ink: #fff;
+}
+
+.hue-1 {
+  --avatar-hue: #be185d;
+  --avatar-ink: #fff;
+}
+
+.hue-2 {
+  --avatar-hue: #047857;
+  --avatar-ink: #fff;
+}
+
+.hue-3 {
+  --avatar-hue: #1d4ed8;
+  --avatar-ink: #fff;
+}
+
+.hue-4 {
+  --avatar-hue: #6d28d9;
+  --avatar-ink: #fff;
+}
+
+.hue-5 {
+  --avatar-hue: #0f766e;
+  --avatar-ink: #fff;
+}
 
 /* ── Reset ──────────────────────────────────────── */
 *,
@@ -307,51 +421,106 @@ h4 {
 
 /* ── Motion vocabulary ──────────────────────────── */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.97); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 @keyframes pulseGlow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.55; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.55;
+  }
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ── Reduced motion ─────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

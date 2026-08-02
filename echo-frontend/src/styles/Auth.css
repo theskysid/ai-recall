@@ -1,72 +1,135 @@
 /* ═══════════════════════════════════════════════════════
-   Auth — sign in / create account.
-   One column on ruled ground. Serif heading, monospace
-   labels, fields that read like a filled-in card.
+   Auth — the notebook's FLYLEAF.
+   The inscription page at the front of a bound book, where
+   the owner writes who it belongs to before the first entry.
+   Oxblood binding at the left, quadrille sheet at the right,
+   and fields that are ruled fill-in lines, not boxes.
    Shared by Login.css and Signup.css.
    ═══════════════════════════════════════════════════════ */
 
 .login-container,
 .signup-container {
-    position: relative;
+    --bind-w: 46px;
+    display: grid;
+    grid-template-columns: var(--bind-w) 1fr;
     min-height: calc(100vh - 64px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: clamp(2.5rem, 8vw, 5rem) 1.15rem 4rem;
+    background: var(--nb-sheet);
 }
 
-.login-container::before,
-.signup-container::before {
+/* ── The binding ───────────────────────────────────
+   The same spine the landing page is bound with: a field of
+   oxblood cloth, two staggered rows of stitching, and a
+   gutter shadow falling onto the sheet. z-index so the
+   shadow lands on the paper rather than under it. */
+.fl-bind {
+    position: relative;
+    z-index: 1;
+    background-color: var(--nb-bind);
+    background-image: linear-gradient(to right,
+            var(--nb-bind-2) 0%,
+            var(--nb-bind) 42%,
+            var(--nb-bind) 66%,
+            var(--nb-bind-2) 100%);
+    box-shadow: 7px 0 20px -6px rgba(20, 32, 43, 0.42);
+    pointer-events: none;
+}
+
+.fl-bind::after {
     content: '';
     position: absolute;
     inset: 0;
-    background-image: repeating-linear-gradient(
-        to bottom,
-        rgba(16, 24, 40, 0.013) 0 1px,
-        transparent 1px 34px
-    );
-    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(0, 0, 0, 0.9), transparent 75%);
-    mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(0, 0, 0, 0.9), transparent 75%);
-    pointer-events: none;
+    background-image:
+        repeating-linear-gradient(to bottom,
+            rgba(240, 226, 223, 0.42) 0 13px,
+            rgba(240, 226, 223, 0) 13px 27px),
+        repeating-linear-gradient(to bottom,
+            rgba(240, 226, 223, 0.42) 0 13px,
+            rgba(240, 226, 223, 0) 13px 27px);
+    background-size: 1.5px 100%, 1.5px 100%;
+    background-position: 31% 0, 69% 13px;
+    background-repeat: no-repeat, no-repeat;
+}
+
+/* ── The sheet ─────────────────────────────────── */
+.fl-sheet {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(2.5rem, 7vw, 5rem) clamp(1.25rem, 4vw, 3.5rem) 4rem;
 }
 
 .login-box,
 .signup-box {
-    position: relative;
     width: 100%;
     max-width: 27rem;
+    margin: 0 auto;
     animation: rise var(--t-3) var(--ease) both;
 }
 
-/* ── Heading ───────────────────────────────────── */
+/* Wide viewports: the flyleaf composes as an inscription page
+   — the statement written across the left of the measure, the
+   fill-in lines ruled off to its right. Same 1080px measure the
+   landing's pages use, so the two surfaces set to one grid. */
+@media (min-width: 1024px) {
+
+    .login-box,
+    .signup-box {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 30rem;
+        gap: 0 clamp(2.5rem, 5vw, 4.5rem);
+        align-items: start;
+        max-width: 1080px;
+    }
+
+    .login-header,
+    .signup-header {
+        margin-bottom: 0;
+        padding-top: 0.4rem;
+    }
+
+    .login-header h1,
+    .signup-header h1 {
+        font-size: clamp(3rem, 3.6vw, 3.6rem);
+    }
+
+    .fl-col {
+        padding-left: clamp(2.5rem, 5vw, 4.5rem);
+        border-left: 1px solid var(--nb-rule);
+    }
+}
+
+/* ── Inscription ───────────────────────────────── */
 .login-header,
 .signup-header {
-    margin-bottom: 2rem;
+    margin-bottom: 2.6rem;
 }
 
 .login-header h1,
 .signup-header h1 {
-    font-family: var(--font-display);
-    font-weight: 400;
-    font-size: clamp(2.1rem, 6vw, 2.75rem);
-    line-height: 1.05;
-    letter-spacing: -0.025em;
-    color: var(--paper);
-    margin-bottom: 0.5rem;
+    font-family: var(--nb-face);
+    font-weight: 780;
+    font-stretch: 115%;
+    font-size: clamp(2.2rem, 6vw, 3rem);
+    line-height: 1.02;
+    letter-spacing: -0.032em;
+    color: var(--nb-ink);
+    margin-bottom: 0.7rem;
 }
 
 .login-header p,
 .signup-header p {
-    font-size: 0.94rem;
-    color: var(--paper-2);
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--nb-ink-2);
+    max-width: 34ch;
 }
 
-/* ── Method switch ─────────────────────────────── */
+/* ── Method switch (sign-in only) ──────────────── */
 .auth-tabs {
     display: flex;
-    gap: 1.5rem;
-    border-bottom: 1px solid var(--line);
-    margin-bottom: 1.75rem;
+    gap: 1.75rem;
+    border-bottom: 1px solid var(--nb-rule);
+    margin-bottom: 2.2rem;
 }
 
 .auth-tab {
@@ -76,22 +139,20 @@
     gap: 0.45rem;
     background: none;
     border: none;
-    padding: 0 0 0.75rem;
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    font-weight: 500;
-    letter-spacing: -0.005em;
-    color: var(--paper-3);
-    transition: color var(--transition-base);
-}
-
-.auth-tab svg {
-    color: var(--paper-4);
+    padding: 0 0 0.7rem;
+    font-family: var(--nb-face);
+    font-size: 11px;
+    font-weight: 600;
+    font-stretch: 68%;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--nb-ink-3);
+    cursor: pointer;
     transition: color var(--transition-base);
 }
 
 .auth-tab:hover {
-    color: var(--paper-2);
+    color: var(--nb-ink-2);
 }
 
 .auth-tab::after {
@@ -100,62 +161,96 @@
     left: 0;
     right: 0;
     bottom: -1px;
-    height: 1px;
-    background: var(--amber);
+    height: 2px;
+    background: var(--nb-ink);
     transform: scaleX(0);
     transform-origin: left;
     transition: transform var(--t-2) var(--ease);
 }
 
 .auth-tab.active {
-    color: var(--paper);
-}
-
-.auth-tab.active svg {
-    color: var(--amber);
+    color: var(--nb-ink);
 }
 
 .auth-tab.active::after {
     transform: scaleX(1);
 }
 
-/* ── Form ──────────────────────────────────────── */
+.auth-tab:focus-visible {
+    outline: 2px solid var(--nb-stamp);
+    outline-offset: 3px;
+}
+
+/* ── The form: ruled fill-in lines ─────────────── */
 .login-form,
 .signup-form {
     display: flex;
     flex-direction: column;
-    gap: 0.7rem;
+    gap: 1.5rem;
 }
 
-.auth-input {
+.fl-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.fl-label {
+    font-family: var(--nb-face);
+    font-size: 11px;
+    font-weight: 600;
+    font-stretch: 68%;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--nb-ink-3);
+    transition: color var(--transition-base);
+}
+
+.fl-field:focus-within .fl-label {
+    color: var(--nb-ink);
+}
+
+/* The pen meets the line: no box, no radius, one ruled
+   baseline that darkens and takes the stamp on focus. */
+.fl-input {
     width: 100%;
-    background: var(--ink-870);
-    border: 1px solid var(--line);
-    border-radius: var(--r-2);
-    padding: 0.85rem 0.95rem;
-    font-size: 0.95rem;
-    color: var(--paper);
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--nb-rule-strong);
+    border-radius: 0;
+    padding: 0.5rem 0.1rem 0.55rem;
+    font-family: var(--nb-face);
+    font-size: 1.05rem;
+    line-height: 1.4;
+    color: var(--nb-ink);
     outline: none;
-    transition: border-color var(--transition-base), background var(--transition-base),
-        box-shadow var(--transition-base);
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
 }
 
-.auth-input::placeholder {
-    color: var(--paper-4);
+.fl-input::placeholder {
+    color: var(--nb-ink-3);
 }
 
-.auth-input:hover:not(:disabled) {
-    border-color: var(--line-strong);
+.fl-input:hover:not(:disabled) {
+    border-bottom-color: var(--nb-ink-3);
 }
 
-.auth-input:focus {
-    border-color: var(--amber);
-    background: var(--ink-840);
-    box-shadow: 0 0 0 3px var(--amber-dim);
+/* Thickening is drawn with a shadow, so the line gains
+   weight without shifting the field. */
+.fl-input:focus {
+    border-bottom-color: var(--nb-stamp);
+    box-shadow: 0 1px 0 0 var(--nb-stamp);
 }
 
-.auth-input:disabled {
-    opacity: 0.55;
+.fl-input:focus-visible {
+    outline: 2px solid var(--nb-stamp);
+    outline-offset: 4px;
+    border-radius: 2px;
+}
+
+.fl-input:disabled {
+    color: var(--nb-ink-3);
+    border-bottom-style: dashed;
     cursor: not-allowed;
 }
 
@@ -163,42 +258,30 @@
 .otp-section {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
-    padding: 1rem;
-    border: 1px solid var(--line);
-    border-left: 2px solid var(--amber);
-    border-radius: 0 var(--r-2) var(--r-2) 0;
-    background: rgba(16, 24, 40, 0.028);
+    gap: 1rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--nb-rule);
     animation: slideDown var(--t-3) var(--ease) both;
 }
 
-.otp-label {
-    font-family: var(--font-mono);
-    font-size: 0.63rem;
-    font-weight: 500;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--paper-3);
-}
-
 .otp-input {
-    font-family: var(--font-mono);
-    font-size: 1.35rem;
-    font-weight: 500;
-    letter-spacing: 0.5em;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.42em;
+    font-variant-numeric: tabular-nums;
+    text-indent: 0.42em;
     text-align: center;
-    text-indent: 0.5em;
 }
 
 .otp-countdown {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--paper-3);
+    font-size: 0.85rem;
+    color: var(--nb-ink-2);
 }
 
 .otp-countdown span {
-    color: var(--amber);
+    color: var(--nb-stamp);
     font-variant-numeric: tabular-nums;
+    font-weight: 600;
 }
 
 .resend-btn {
@@ -206,61 +289,114 @@
     background: none;
     border: none;
     padding: 0;
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    letter-spacing: -0.005em;
-    color: var(--amber);
-    border-bottom: 1px solid var(--amber-line);
+    font-family: var(--nb-face);
+    font-size: 0.85rem;
+    color: var(--nb-ink-2);
+    border-bottom: 1px solid var(--nb-rule-strong);
+    cursor: pointer;
     transition: color var(--transition-base), border-color var(--transition-base);
 }
 
 .resend-btn:hover:not(:disabled) {
-    color: var(--amber-2);
-    border-color: var(--amber-2);
+    color: var(--nb-stamp);
+    border-bottom-color: var(--nb-stamp);
+}
+
+.resend-btn:focus-visible {
+    outline: 2px solid var(--nb-stamp);
+    outline-offset: 3px;
 }
 
 .resend-btn:disabled {
-    color: var(--paper-4);
-    border-color: transparent;
+    color: var(--nb-ink-3);
+    border-bottom-color: transparent;
     cursor: not-allowed;
 }
 
-/* ── Submit ────────────────────────────────────── */
+/* ── The stamped action ────────────────────────── */
 .auth-submit-btn {
-    margin-top: 0.35rem;
+    margin-top: 0.5rem;
     width: 100%;
-    padding: 0.95rem 1.25rem;
-    border: 1px solid transparent;
-    border-radius: var(--r-2);
-    background: var(--amber);
-    color: var(--ink-950);
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: -0.005em;
-    transition: background var(--transition-base), color var(--transition-base);
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--nb-stamp);
+    border-radius: 0;
+    background: var(--nb-stamp);
+    color: var(--nb-sheet);
+    font-family: var(--nb-face);
+    font-size: 12px;
+    font-weight: 700;
+    font-stretch: 80%;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background var(--transition-base), border-color var(--transition-base),
+        box-shadow var(--transition-base), transform var(--transition-base);
 }
 
 .auth-submit-btn:hover:not(:disabled) {
-    background: var(--amber-2);
+    background: var(--nb-stamp-2);
+    border-color: var(--nb-stamp-2);
+    box-shadow: 2px 3px 0 rgba(20, 32, 43, 0.16);
 }
 
+.auth-submit-btn:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: 1px 1px 0 rgba(20, 32, 43, 0.16);
+}
+
+.auth-submit-btn:focus-visible {
+    outline: 2px solid var(--nb-ink);
+    outline-offset: 3px;
+}
+
+/* Not yet inked: the block waits as an unstamped outline —
+   the same dashed vocabulary the unfilled rules use — rather
+   than going dead grey. */
 .auth-submit-btn:disabled {
     background: transparent;
-    border-color: var(--line);
-    color: var(--paper-4);
+    border: 1px dashed var(--nb-stamp-line);
+    color: var(--nb-ink-2);
     cursor: not-allowed;
 }
 
-/* ── Message ───────────────────────────────────── */
-.auth-message {
-    margin-top: 1rem;
-    padding: 0.7rem 0.9rem;
-    border: 1px solid var(--line);
-    border-radius: var(--r-2);
-    background: rgba(16, 24, 40, 0.028);
-    font-size: 0.86rem;
+/* Working: the block reads as struck through with its own
+   rule while the request is out. */
+.auth-submit-btn[aria-busy='true'] {
+    background: var(--nb-sheet-2);
+    border: 1px solid var(--nb-stamp-line);
+    color: var(--nb-stamp);
+}
+
+/* ── Margin correction ─────────────────────────────
+   The notebook's own vocabulary for "this was wrong":
+   written in the stamp, in the margin, never erased. */
+.fl-note {
+    margin-top: 1.6rem;
+    padding: 0.1rem 0 0.1rem 0.85rem;
+    border-left: 1px solid var(--nb-stamp-line);
     animation: slideDown var(--t-2) var(--ease) both;
+}
+
+.fl-note p {
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.fl-note-text {
+    color: var(--nb-stamp);
+}
+
+.fl-note-fix {
+    margin-top: 0.25rem;
+    color: var(--nb-ink-2);
+}
+
+.fl-note.is-ok {
+    border-left-color: var(--nb-seal-line);
+}
+
+.fl-note.is-ok .fl-note-text {
+    color: var(--nb-seal);
 }
 
 /* ── Divider ───────────────────────────────────── */
@@ -268,12 +404,14 @@
     display: flex;
     align-items: center;
     gap: 0.9rem;
-    margin: 1.6rem 0;
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
+    margin: 2rem 0 1.4rem;
+    font-family: var(--nb-face);
+    font-size: 11px;
+    font-weight: 600;
+    font-stretch: 68%;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--paper-4);
+    color: var(--nb-ink-3);
 }
 
 .auth-divider::before,
@@ -281,7 +419,7 @@
     content: '';
     flex: 1;
     height: 1px;
-    background: var(--line);
+    background: var(--nb-rule);
 }
 
 /* ── Google ────────────────────────────────────── */
@@ -291,33 +429,72 @@
     color-scheme: light;
 }
 
-.google-btn-wrapper > div {
+.google-btn-wrapper>div {
     width: 100% !important;
 }
 
-/* ── Footer link ───────────────────────────────── */
+/* ── The other page ────────────────────────────── */
 .toggle-auth {
-    margin-top: 1.9rem;
-    padding-top: 1.3rem;
-    border-top: 1px solid var(--line);
-    text-align: center;
-    font-size: 0.88rem;
-    color: var(--paper-3);
+    margin-top: 2.4rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--nb-rule);
+    font-size: 0.92rem;
+    color: var(--nb-ink-2);
 }
 
 .toggle-auth-btn {
     margin-left: 0.4rem;
-    color: var(--paper);
-    border-bottom: 1px solid var(--amber-line);
+    color: var(--nb-ink);
+    font-weight: 600;
+    border-bottom: 1px solid var(--nb-rule-strong);
     transition: color var(--transition-base), border-color var(--transition-base);
 }
 
 .toggle-auth-btn:hover {
-    color: var(--amber-2);
-    border-color: var(--amber-2);
+    color: var(--nb-stamp);
+    border-bottom-color: var(--nb-stamp);
 }
 
-@media (max-width: 480px) {
+.toggle-auth-btn:focus-visible {
+    outline: 2px solid var(--nb-stamp);
+    outline-offset: 3px;
+}
+
+/* ── The binding becomes a head band ───────────── */
+@media (max-width: 767px) {
+
+    .login-container,
+    .signup-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: 26px 1fr;
+    }
+
+    .fl-bind {
+        background-image: linear-gradient(to bottom,
+                var(--nb-bind-2) 0%,
+                var(--nb-bind) 42%,
+                var(--nb-bind) 66%,
+                var(--nb-bind-2) 100%);
+        box-shadow: 0 7px 18px -6px rgba(20, 32, 43, 0.42);
+    }
+
+    .fl-bind::after {
+        background-image:
+            repeating-linear-gradient(to right,
+                rgba(240, 226, 223, 0.42) 0 13px,
+                rgba(240, 226, 223, 0) 13px 27px),
+            repeating-linear-gradient(to right,
+                rgba(240, 226, 223, 0.42) 0 13px,
+                rgba(240, 226, 223, 0) 13px 27px);
+        background-size: 100% 1.5px, 100% 1.5px;
+        background-position: 0 31%, 13px 69%;
+    }
+
+    .fl-sheet {
+        align-items: flex-start;
+        padding: 2.5rem 1.15rem 3.5rem;
+    }
+
     .login-container,
     .signup-container {
         min-height: calc(100vh - 58px);

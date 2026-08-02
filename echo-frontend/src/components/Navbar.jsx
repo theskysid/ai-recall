@@ -11,6 +11,9 @@ const Navbar = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const isChatPage = location.pathname === '/chatarea';
+    // The notebook treatment is public-surface only. /chatarea and /profile keep
+    // the incumbent masthead untouched.
+    const isNotebookPage = ['/', '/login', '/signup'].includes(location.pathname);
 
     const handleLogout = async () => {
         try {
@@ -27,7 +30,7 @@ const Navbar = () => {
     const closeMobileMenu = () => setMobileMenuOpen(false);
 
     return (
-        <nav className={`navbar ${isChatPage ? 'navbar-compact' : ''}`}>
+        <nav className={`navbar ${isChatPage ? 'navbar-compact' : ''} ${isNotebookPage ? 'nb navbar--notebook' : ''}`}>
             <div className="navbar-container">
                 <Link to="/" className="navbar-brand" onClick={closeMobileMenu}>
                     <span className="navbar-brand-text">Recall</span>

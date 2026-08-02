@@ -353,11 +353,11 @@
     right: 18px;
     bottom: 72px;
     z-index: 6;
-    width: min(440px, calc(100% - 36px));
+    display: flex;
+    flex-direction: column;
+    width: min(360px, calc(100% - 36px));
     max-height: min(62vh, 520px);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding: 14px;
+    padding: 12px;
     border: 1px solid var(--ch-line-2);
     border-radius: var(--ch-r-3);
     background: var(--ch-bg);
@@ -369,7 +369,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 9px;
 }
 
 .ch-ask-close {
@@ -377,7 +377,7 @@
     place-items: center;
     width: 24px;
     height: 24px;
-    margin-left: 2px;
+    margin-left: auto;
     border: none;
     border-radius: var(--ch-r-1);
     background: transparent;
@@ -409,11 +409,37 @@
     color: var(--ch-fg);
 }
 
-.ch-ask-note {
-    margin-left: auto;
-    font-size: 11.5px;
-    color: var(--ch-fg-3);
-    white-space: nowrap;
+/* ── The conversation ─────────────────────────────── */
+.ch-ask-log {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    margin-bottom: 10px;
+}
+
+/* The first block in the log has the header's margin above it already. */
+.ch-ask-log> :first-child,
+.ch-ask-log>*:first-child> :first-child {
+    margin-top: 0;
+}
+
+.ch-ask-blank-text {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--ch-fg-2);
+}
+
+/* Your question — a quiet line, so the answer stays the loud thing. */
+.ch-ask-q {
+    margin: 14px 0 0;
+    padding: 7px 10px;
+    border-radius: var(--ch-r-2);
+    background: var(--ch-raised-2);
+    color: var(--ch-fg);
+    font-size: 13px;
+    line-height: 1.5;
 }
 
 .ch-ask-form {
@@ -479,7 +505,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-top: 10px;
+    margin-top: 8px;
 }
 
 .ch-chip {
@@ -518,8 +544,17 @@
 }
 
 @keyframes ch-pulse {
-    0%, 100% { opacity: 0.28; transform: scale(0.82); }
-    50%      { opacity: 1;    transform: scale(1); }
+
+    0%,
+    100% {
+        opacity: 0.28;
+        transform: scale(0.82);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .ch-ask-fail {
@@ -556,6 +591,7 @@
         transform: translateY(6px);
         filter: blur(5px);
     }
+
     to {
         opacity: 1;
         transform: none;
@@ -629,7 +665,7 @@
     color: var(--ch-fg);
 }
 
-.ch-mem-toggle > svg:first-child {
+.ch-mem-toggle>svg:first-child {
     color: var(--ch-fg-3);
 }
 
@@ -740,7 +776,7 @@
     padding: 0;
 }
 
-.ch-mem-list > li + li {
+.ch-mem-list>li+li {
     border-top: 1px solid var(--ch-line);
 }
 
@@ -1126,10 +1162,6 @@
    container question, not a viewport one. */
 
 @container (max-width: 460px) {
-    .ch-ask-note {
-        display: none;
-    }
-
     .ch-invite {
         gap: 5px;
         padding: 0 8px;
