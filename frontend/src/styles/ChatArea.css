@@ -824,6 +824,133 @@
     flex-direction: column;
 }
 
+/* ── Section headers (Channels / Direct messages) ── */
+.tg-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.15rem 1rem 0.5rem;
+}
+
+.tg-section-title {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--paper-4);
+}
+
+.tg-section-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    background: transparent;
+    color: var(--paper-3);
+    transition: background var(--transition-base), color var(--transition-base),
+        border-color var(--transition-base);
+}
+
+.tg-section-add:active {
+    background: var(--ink-840);
+    color: var(--amber);
+    border-color: var(--amber);
+}
+
+.tg-section-empty {
+    padding: 0.35rem 1rem 0.85rem;
+    font-size: 0.86rem;
+    line-height: 1.5;
+    color: var(--paper-4);
+}
+
+/* ── Channel row ── */
+.tg-channel-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--transition-base);
+}
+
+.tg-channel-row:active {
+    background: rgba(16, 24, 40, 0.045);
+}
+
+/* Active marker matches the desktop channel list (Channels.css .channel-item):
+   a 2px amber spine at 60% height, not a full-height stripe. */
+.tg-channel-row.is-active {
+    background: var(--ink-870);
+}
+
+.tg-channel-row.is-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 2px;
+    height: 60%;
+    background: var(--amber);
+    transform: translateY(-50%);
+}
+
+.tg-channel-tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-2);
+    background: var(--ink-840);
+    color: var(--amber);
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.tg-channel-meta {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.tg-channel-name {
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: var(--paper);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tg-channel-sub {
+    font-size: 0.8rem;
+    color: var(--paper-4);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tg-channel-chev {
+    flex-shrink: 0;
+    color: var(--paper-4);
+}
+
 .tg-chat-row {
     position: relative;
     display: flex;

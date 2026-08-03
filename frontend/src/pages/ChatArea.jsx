@@ -33,13 +33,17 @@ const ChatArea = () => {
 
     // Responsive Mobile State
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
-    const [mobileActiveViewRaw, setMobileActiveViewRaw] = useState('list'); // 'list' | 'dm'
+    const [mobileActiveViewRaw, setMobileActiveViewRaw] = useState('list'); // 'list' | 'dm' | 'channel'
 
+    // Both an open DM and an open channel are pushed onto history, so the
+    // hardware/browser Back button returns to the list instead of leaving
+    // the app.
     const setMobileActiveView = useCallback((newView) => {
         setMobileActiveViewRaw(newView);
-        if (newView === 'dm') {
+        const hash = window.location.hash;
+        if (newView === 'dm' || newView === 'channel') {
             window.history.pushState({ mobileView: newView }, '', `#${newView}`);
-        } else if (newView === 'list' && window.location.hash === '#dm') {
+        } else if (newView === 'list' && (hash === '#dm' || hash === '#channel')) {
             window.history.back();
         }
     }, []);
@@ -50,6 +54,8 @@ const ChatArea = () => {
         const handlePopState = () => {
             if (window.location.hash === '#dm') {
                 setMobileActiveViewRaw('dm');
+            } else if (window.location.hash === '#channel') {
+                setMobileActiveViewRaw('channel');
             } else {
                 setMobileActiveViewRaw('list');
             }
@@ -172,12 +178,14 @@ const ChatArea = () => {
         }
     }, [isMobile]);
 
-    // Add a newly created/joined channel to the sidebar immediately and select it.
+    // Add a newly created/joined channel to the sidebar immediately and select
+    // it. On mobile there is no persistent sidebar, so open its feed directly.
     const handleChannelReady = useCallback((channel) => {
         if (!channel) return;
         upsertChannel(channel);
         setActiveChannelId(channel.id);
-    }, [upsertChannel]);
+        if (isMobile) setMobileActiveView('channel');
+    }, [upsertChannel, isMobile, setMobileActiveView]);
 
     // Leave a channel: call the API, drop it from the sidebar, clear the active view.
     const handleLeaveChannel = useCallback(async (channelId) => {

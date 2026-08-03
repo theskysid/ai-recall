@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { channelService } from '../../services/channelService';
 import Icon from '../ui/Icon';
-import { LiquidButton } from '../ui/liquid-glass-button';
 import '../../styles/ChannelPage.css';
 
 /* Starter questions as [chip label, query sent]. The label stays short so
@@ -63,16 +62,15 @@ const AskAiWidget = ({ channelId, channelName }) => {
        path changes with it. */
     if (!open) {
         return (
-            <LiquidButton
+            <button
                 type="button"
-                size="sm"
+                className="ch-ask-fab"
                 onClick={() => setOpen(true)}
                 aria-expanded={false}
-                className="absolute right-[18px] bottom-[72px] z-[5]"
             >
                 <Icon name="sparkle" size={15} />
                 Ask Recall
-            </LiquidButton>
+            </button>
         );
     }
 
