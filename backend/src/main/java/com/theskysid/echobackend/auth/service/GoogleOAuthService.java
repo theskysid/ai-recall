@@ -63,7 +63,7 @@ public class GoogleOAuthService {
                 User newUser = new User();
                 newUser.setGoogleId(googleId);
                 newUser.setEmail(IdentifierNormalizer.normalizeEmail(email));
-                newUser.setUsername(name != null ? name : email);
+                newUser.setUsername(availableUsername(name, email));
                 newUser.setAuthProvider(AuthProvider.GOOGLE);
                 return userRepository.save(newUser);
             });
@@ -75,6 +75,28 @@ public class GoogleOAuthService {
         } catch (Exception e) {
             throw new RuntimeException("Google authentication failed: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * users.username is UNIQUE, but a Google display name is not — two people
+     * called "Alex Kumar", or a name already taken by an email signup, would
+     * fail the insert. Fall back to the email local-part, then a numeric suffix.
+     */
+    private String availableUsername(String name, String email) {
+        String base = IdentifierNormalizer.normalizeUsername(name);
+        if (base.isBlank()) {
+            base = IdentifierNormalizer.normalizeEmail(email).split("@")[0];
+        }
+        if (base.isBlank()) {
+            base = "user";
+        }
+        // ponytail: check-then-insert races if two signups land at once; the
+        // UNIQUE constraint still catches it. Retry loop only if that shows up.
+        String candidate = base;
+        for (int i = 2; userRepository.findByUsernameIgnoreCase(candidate).isPresent(); i++) {
+            candidate = base + i;
+        }
+        return candidate;
     }
 
     public record GoogleAuthResult(String token, UserDTO userDTO) {
