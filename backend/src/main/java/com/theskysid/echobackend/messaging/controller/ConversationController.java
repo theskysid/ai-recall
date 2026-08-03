@@ -60,7 +60,7 @@ public class ConversationController {
                     .collect(Collectors.toList());
             return ResponseEntity.ok(dtos);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
@@ -84,7 +84,7 @@ public class ConversationController {
                     .map(this::toDirectMessageDTO);
             return ResponseEntity.ok(messagePage);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
@@ -125,7 +125,7 @@ public class ConversationController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid retention policy. Must be SIX_HOURS, ONE_DAY, or SEVEN_DAYS"));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
@@ -148,7 +148,7 @@ public class ConversationController {
             Conversation conversation = directMessageService.getOrCreateConversation(currentUser, friend);
             return ResponseEntity.ok(toConversationDTO(conversation, currentUser));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 

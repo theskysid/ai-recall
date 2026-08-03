@@ -64,7 +64,7 @@ public class AiController {
                     "answer", result.getAnswer() == null ? "" : result.getAnswer(),
                     "sourceIds", result.getSourceIds()));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
@@ -91,7 +91,7 @@ public class AiController {
                     .collect(Collectors.toList());
             return ResponseEntity.ok(decisions);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 

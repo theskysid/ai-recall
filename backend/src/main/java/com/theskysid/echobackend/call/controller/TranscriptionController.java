@@ -78,7 +78,7 @@ public class TranscriptionController {
 
             return ResponseEntity.ok(toDTO(saveAndIngest(channel, request.getAudioUrl(), transcript)));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
@@ -120,7 +120,7 @@ public class TranscriptionController {
         } catch (IOException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Could not read the uploaded recording"));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
@@ -165,7 +165,7 @@ public class TranscriptionController {
                     .collect(Collectors.toList());
             return ResponseEntity.ok(transcripts);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 

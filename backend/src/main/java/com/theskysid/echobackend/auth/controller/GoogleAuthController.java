@@ -44,7 +44,7 @@ public class GoogleAuthController {
                     .body(result.userDTO());
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 }

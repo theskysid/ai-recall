@@ -123,7 +123,7 @@ public class FriendshipController {
                     .collect(Collectors.toList());
             return ResponseEntity.ok(results);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
@@ -140,7 +140,7 @@ public class FriendshipController {
             Friendship friendship = friendshipService.sendFriendRequest(currentUser, request.getAddresseeUsername());
             return ResponseEntity.ok(toFriendshipDTO(friendship));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
@@ -157,7 +157,7 @@ public class FriendshipController {
             Friendship friendship = friendshipService.acceptFriendRequest(currentUser, id);
             return ResponseEntity.ok(toFriendshipDTO(friendship));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
@@ -174,7 +174,7 @@ public class FriendshipController {
             Friendship friendship = friendshipService.rejectFriendRequest(currentUser, id);
             return ResponseEntity.ok(toFriendshipDTO(friendship));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
@@ -191,7 +191,7 @@ public class FriendshipController {
             friendshipService.cancelFriendRequest(currentUser, id);
             return ResponseEntity.ok(Map.of("message", "Friend request cancelled"));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
@@ -208,7 +208,7 @@ public class FriendshipController {
             friendshipService.removeFriend(currentUser, id);
             return ResponseEntity.ok(Map.of("message", "Friend removed"));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 

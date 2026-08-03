@@ -120,7 +120,7 @@ public class ProfileController {
             emailOtpService.sendOtp(normalizedEmail);
             return ResponseEntity.ok(Map.of("message", "OTP sent to " + normalizedEmail));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
@@ -148,7 +148,7 @@ public class ProfileController {
             User saved = userRepository.save(user);
             return ResponseEntity.ok(toDTO(saved));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
@@ -180,7 +180,7 @@ public class ProfileController {
             User saved = userRepository.save(user);
             return ResponseEntity.ok(toDTO(saved));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Google verification failed"));
         }

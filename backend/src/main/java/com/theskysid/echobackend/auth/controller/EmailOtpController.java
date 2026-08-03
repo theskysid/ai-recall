@@ -45,7 +45,7 @@ public class EmailOtpController {
             return ResponseEntity.ok(Map.of("message", "OTP sent to " + normalizedEmail));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
@@ -75,7 +75,7 @@ public class EmailOtpController {
                     .body(loginResponse.getUserDTO());
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 }

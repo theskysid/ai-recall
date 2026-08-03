@@ -68,7 +68,7 @@ public class AuthController {
                     .header(HttpHeaders.SET_COOKIE, responseCookie.toString())
                     .body(signupResponse.getUserDTO());
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 

@@ -61,7 +61,7 @@ public class ChannelController {
             Channel channel = channelService.createChannel(currentUser, request.getName(), request.getDescription());
             return ResponseEntity.ok(toChannelDTO(channel, currentUser, channel.getCreatedAt()));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
@@ -79,7 +79,7 @@ public class ChannelController {
             Channel channel = channelService.joinChannel(currentUser, request.getInviteCode());
             return ResponseEntity.ok(toChannelDTO(channel, currentUser, LocalDateTime.now()));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
@@ -96,7 +96,7 @@ public class ChannelController {
             channelService.leaveChannel(currentUser, id);
             return ResponseEntity.ok(Map.of("message", "Left channel"));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
@@ -116,7 +116,7 @@ public class ChannelController {
                     .collect(Collectors.toList());
             return ResponseEntity.ok(messages);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
     }
 
