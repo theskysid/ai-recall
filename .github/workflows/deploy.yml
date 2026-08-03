@@ -68,12 +68,16 @@ jobs:
             set -e
             cd ${{ secrets.EC2_APP_DIR }}
 
+            # keep compose file / db init scripts in sync with the repo
+            git pull --ff-only
+
             # tag currently deployed, for rollback
             PREV=$(grep -s '^APP_TAG=' .env | cut -d= -f2)
             PREV=${PREV:-latest}
 
             umask 077
             cat > .env <<'ENVEOF'
+            DOMAIN=${{ vars.DOMAIN }}
             DB_NAME=recall
             DB_USER=postgres
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}

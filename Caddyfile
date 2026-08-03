@@ -1,0 +1,5 @@
+{$DOMAIN} {
+	# frontend nginx already proxies /api, /auth and /ws to the backend,
+	# so everything is one origin behind one certificate.
+	reverse_proxy frontend:80
+}

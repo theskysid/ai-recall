@@ -1,5 +1,7 @@
 volumes:
   postgres_data:
+  caddy_data:
+  caddy_config:
 
 services:
   postgres:
@@ -13,7 +15,7 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d
@@ -30,7 +32,7 @@ services:
     env_file:
       - ./.env
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,7 +47,21 @@ services:
     image: theskysid/echo-messaging-frontend:${APP_TAG:-latest}
     container_name: echo-frontend
     restart: unless-stopped
-    ports:
-      - "5173:80"
     depends_on:
       - app
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: echo-caddy
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
