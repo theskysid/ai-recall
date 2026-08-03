@@ -4,3 +4,8 @@
 
 *.pem
 *.key
+
+.log
+
+.vscode/
+.idea/

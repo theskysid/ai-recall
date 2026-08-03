@@ -24,7 +24,7 @@ services:
       timeout: 5s
 
   app:
-    image: theskysid/echo-messaging-app:latest
+    image: theskysid/echo-messaging-app:${APP_TAG:-latest}
     container_name: echo-backend
     restart: unless-stopped
     env_file:
@@ -42,7 +42,7 @@ services:
       start_period: 40s
 
   frontend:
-    image: theskysid/echo-messaging-frontend:latest
+    image: theskysid/echo-messaging-frontend:${APP_TAG:-latest}
     container_name: echo-frontend
     restart: unless-stopped
     ports:

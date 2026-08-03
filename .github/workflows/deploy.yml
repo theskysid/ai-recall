@@ -1,0 +1,118 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run lint
+        working-directory: frontend
+
+  deploy:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/echo-messaging-app:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/echo-messaging-app:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/echo-messaging-frontend:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/echo-messaging-frontend:latest
+          build-args: |
+            VITE_API_URL=${{ vars.VITE_API_URL }}
+            VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to EC2 (health-gated, auto-rollback)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd ${{ secrets.EC2_APP_DIR }}
+
+            # tag currently deployed, for rollback
+            PREV=$(grep -s '^APP_TAG=' .env | cut -d= -f2)
+            PREV=${PREV:-latest}
+
+            umask 077
+            cat > .env <<'ENVEOF'
+            DB_NAME=recall
+            DB_USER=postgres
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/recall
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_EXPIRATION=3600000
+            ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            MAIL_HOST=smtp.gmail.com
+            MAIL_PORT=587
+            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
+            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+            LIVEKIT_URL=${{ secrets.LIVEKIT_URL }}
+            LIVEKIT_API_KEY=${{ secrets.LIVEKIT_API_KEY }}
+            LIVEKIT_API_SECRET=${{ secrets.LIVEKIT_API_SECRET }}
+            LIVEKIT_TOKEN_TTL_MINUTES=60
+            DEEPGRAM_API_KEY=${{ secrets.DEEPGRAM_API_KEY }}
+            GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
+            GROQ_MODEL=llama-3.1-8b-instant
+            VITE_API_URL=${{ vars.VITE_API_URL }}
+            VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            VITE_LIVEKIT_URL=${{ secrets.LIVEKIT_URL }}
+            ENVEOF
+            echo "APP_TAG=${{ github.sha }}" >> .env
+
+            docker compose pull
+            docker compose up -d
+
+            # wait up to 2 min for the backend to report healthy
+            for i in $(seq 1 24); do
+              if curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
+                echo "healthy"
+                docker image prune -f
+                exit 0
+              fi
+              sleep 5
+            done
+
+            echo "health check failed — rolling back to $PREV"
+            sed -i "s/^APP_TAG=.*/APP_TAG=$PREV/" .env
+            docker compose up -d
+            exit 1

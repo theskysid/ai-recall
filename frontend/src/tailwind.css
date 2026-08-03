@@ -1,0 +1,96 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Tailwind — scoped in, Preflight left out.
+
+   The app already ships its own reset in index.css (box-sizing, zeroed
+   margins, button/a/img rules). Tailwind's Preflight would redo all of
+   that globally and restyle every existing component, so we import ONLY
+   the theme (design tokens) and utilities layers and skip preflight. No
+   existing surface is touched; the utility classes exist for the shadcn
+   buttons that need them.
+
+   Cascade: utilities sit in @layer utilities. Unlayered app CSS (index.css
+   and the per-surface files) beats layered CSS, so nothing here can
+   override an existing rule — it can only paint elements the app never
+   styled, i.e. the new buttons.
+   ═══════════════════════════════════════════════════════════════════ */
+
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* shadcn token bridge: bg-primary etc. resolve to --color-primary, which
+   we point at the button's OWN --sc-* tokens below.
+
+   Namespaced deliberately: the app already defines --primary (var(--amber))
+   and --accent (#1560e0, used across the UI) in index.css. Reusing those
+   raw names here would override the app's globally — tailwind.css loads
+   after index.css — and repaint every existing component. --sc-* can never
+   collide, so nothing outside these buttons is touched. */
+@theme inline {
+  --color-background: var(--sc-background);
+  --color-foreground: var(--sc-foreground);
+  --color-card: var(--sc-card);
+  --color-card-foreground: var(--sc-card-foreground);
+  --color-popover: var(--sc-popover);
+  --color-popover-foreground: var(--sc-popover-foreground);
+  --color-primary: var(--sc-primary);
+  --color-primary-foreground: var(--sc-primary-foreground);
+  --color-secondary: var(--sc-secondary);
+  --color-secondary-foreground: var(--sc-secondary-foreground);
+  --color-muted: var(--sc-muted);
+  --color-muted-foreground: var(--sc-muted-foreground);
+  --color-accent: var(--sc-accent);
+  --color-accent-foreground: var(--sc-accent-foreground);
+  --color-destructive: var(--sc-destructive);
+  --color-destructive-foreground: var(--sc-destructive-foreground);
+  --color-border: var(--sc-border);
+  --color-input: var(--sc-input);
+  --color-ring: var(--sc-ring);
+}
+
+/* Light — notebook coherent: ink on sheet, seal-green focus, stamp-red
+   destructive. */
+:root {
+  --sc-background: #ffffff;
+  --sc-foreground: #14202b;
+  --sc-card: #ffffff;
+  --sc-card-foreground: #14202b;
+  --sc-popover: #ffffff;
+  --sc-popover-foreground: #14202b;
+  --sc-primary: #14202b;
+  --sc-primary-foreground: #f4f7f6;
+  --sc-secondary: #e9efed;
+  --sc-secondary-foreground: #14202b;
+  --sc-muted: #e9efed;
+  --sc-muted-foreground: #59707f;
+  --sc-accent: #e9efed;
+  --sc-accent-foreground: #14202b;
+  --sc-destructive: #c3301d;
+  --sc-destructive-foreground: #ffffff;
+  --sc-border: #d5dedb;
+  --sc-input: #d5dedb;
+  --sc-ring: #1c6b52;
+}
+
+.dark {
+  --sc-background: #0c0c0e;
+  --sc-foreground: #f4f7f6;
+  --sc-card: #141418;
+  --sc-card-foreground: #f4f7f6;
+  --sc-popover: #141418;
+  --sc-popover-foreground: #f4f7f6;
+  --sc-primary: #f4f7f6;
+  --sc-primary-foreground: #14202b;
+  --sc-secondary: #1e1e24;
+  --sc-secondary-foreground: #f4f7f6;
+  --sc-muted: #1e1e24;
+  --sc-muted-foreground: #a2acb5;
+  --sc-accent: #26262d;
+  --sc-accent-foreground: #f4f7f6;
+  --sc-destructive: #e5544a;
+  --sc-destructive-foreground: #0c0c0e;
+  --sc-border: #2a2a32;
+  --sc-input: #2a2a32;
+  --sc-ring: #3d9c7f;
+}
