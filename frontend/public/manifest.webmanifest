@@ -1,0 +1,16 @@
+{
+  "name": "Recall — chat with a memory",
+  "short_name": "Recall",
+  "description": "Team chat that keeps the record. Channels, calls that transcribe themselves, and a memory you can question.",
+  "start_url": "/chatarea",
+  "scope": "/",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#0c0c0e",
+  "theme_color": "#0c0c0e",
+  "icons": [
+    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "maskable" }
+  ]
+}

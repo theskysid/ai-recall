@@ -7,8 +7,10 @@ import Profile from "./pages/Profile";
 import ProtectedRoute from './components/ProtectedRoute';
 import SessionGuard from './components/SessionGuard';
 import Chat from "./pages/ChatArea.jsx";
+import useMobileFullscreen from './hooks/useMobileFullscreen';
 
 function App() {
+    useMobileFullscreen();
     return (
         <Router>
             <div className="App">
