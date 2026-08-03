@@ -110,7 +110,11 @@ jobs:
             for i in $(seq 1 24); do
               if curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
                 echo "healthy"
-                docker image prune -f
+                # SHA-tagged images are never dangling, so plain prune leaves
+                # them forever. -a with a 7d cutoff keeps the running images
+                # and the recent rollback targets, drops the rest.
+                docker image prune -af --filter "until=168h"
+                df -h /
                 exit 0
               fi
               sleep 5

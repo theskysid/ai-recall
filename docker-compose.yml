@@ -3,11 +3,21 @@ volumes:
   caddy_data:
   caddy_config:
 
+# json-file logs are unbounded by default — cap them so a chatty container
+# can't fill the instance disk.
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
 services:
   postgres:
     image: pgvector/pgvector:pg16
     container_name: echo-postgres
     restart: unless-stopped
+    <<: *logging
     env_file:
       - ./.env
     environment:
@@ -29,6 +39,7 @@ services:
     image: theskysid/echo-messaging-app:${APP_TAG:-latest}
     container_name: echo-backend
     restart: unless-stopped
+    <<: *logging
     env_file:
       - ./.env
     ports:
@@ -47,6 +58,7 @@ services:
     image: theskysid/echo-messaging-frontend:${APP_TAG:-latest}
     container_name: echo-frontend
     restart: unless-stopped
+    <<: *logging
     depends_on:
       - app
 
@@ -54,6 +66,7 @@ services:
     image: caddy:2-alpine
     container_name: echo-caddy
     restart: unless-stopped
+    <<: *logging
     env_file:
       - ./.env
     ports:
