@@ -78,14 +78,15 @@ public class GoogleOAuthService {
     }
 
     /**
-     * users.username is UNIQUE, but a Google display name is not — two people
-     * called "Alex Kumar", or a name already taken by an email signup, would
-     * fail the insert. Fall back to the email local-part, then a numeric suffix.
+     * users.username is UNIQUE, but neither an email local-part nor a Google
+     * display name is — a name already taken by an earlier signup would fail
+     * the insert. Prefer the local-part (never contains whitespace), fall back
+     * to the display name with whitespace stripped, then a numeric suffix.
      */
     private String availableUsername(String name, String email) {
-        String base = IdentifierNormalizer.normalizeUsername(name);
+        String base = IdentifierNormalizer.normalizeEmail(email).split("@")[0];
         if (base.isBlank()) {
-            base = IdentifierNormalizer.normalizeEmail(email).split("@")[0];
+            base = IdentifierNormalizer.stripWhitespace(name);
         }
         if (base.isBlank()) {
             base = "user";

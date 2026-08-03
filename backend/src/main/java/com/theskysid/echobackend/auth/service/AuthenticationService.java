@@ -53,6 +53,9 @@ public class AuthenticationService {
         if (username == null || username.isBlank()) {
             throw new RuntimeException("Username is required");
         }
+        if (IdentifierNormalizer.hasWhitespace(username)) {
+            throw new RuntimeException("Username cannot contain spaces");
+        }
         if (registerRequestDTO.getPassword() == null || registerRequestDTO.getPassword().isBlank()) {
             throw new RuntimeException("Password is required");
         }
@@ -104,6 +107,9 @@ public class AuthenticationService {
 
         if (username == null || username.isBlank()) {
             throw new RuntimeException("Username is required");
+        }
+        if (IdentifierNormalizer.hasWhitespace(username)) {
+            throw new RuntimeException("Username cannot contain spaces");
         }
         if (identifier == null || identifier.isBlank()) {
             throw new RuntimeException("Email is required");

@@ -89,6 +89,9 @@ public class ProfileController {
         }
         if (request.getUsername() != null && !request.getUsername().trim().isEmpty()) {
             String newUsername = request.getUsername().trim();
+            if (IdentifierNormalizer.hasWhitespace(newUsername)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Username cannot contain spaces"));
+            }
             if (!newUsername.equalsIgnoreCase(user.getUsername())) {
                 if (userRepository.findByUsernameIgnoreCase(newUsername).isPresent()) {
                     return ResponseEntity.badRequest().body(Map.of("error", "Username already taken"));

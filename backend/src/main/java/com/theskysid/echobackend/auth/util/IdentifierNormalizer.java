@@ -19,6 +19,16 @@ public final class IdentifierNormalizer {
         return normalizeIdentifier(username);
     }
 
+    /** Usernames address people in chat and URLs, so no internal whitespace. */
+    public static boolean hasWhitespace(String value) {
+        return value != null && value.chars().anyMatch(Character::isWhitespace);
+    }
+
+    /** Strips whitespace instead of rejecting — for names we derive, not names a user typed. */
+    public static String stripWhitespace(String value) {
+        return value == null ? "" : value.replaceAll("\\s+", "");
+    }
+
     public static String normalizeEmail(String email) {
         return normalizeIdentifier(email).toLowerCase(Locale.ROOT);
     }
