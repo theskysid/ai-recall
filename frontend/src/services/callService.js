@@ -11,6 +11,15 @@ export const callService = {
     },
 
     /**
+     * How many people are in this channel's call right now.
+     * Returns { active, participants }.
+     */
+    getCallStatus: async (channelId) => {
+        const response = await api.get(`/api/channels/${channelId}/call-status`);
+        return response.data;
+    },
+
+    /**
      * List saved call transcripts for a channel (most recent first).
      */
     getTranscripts: async (channelId) => {

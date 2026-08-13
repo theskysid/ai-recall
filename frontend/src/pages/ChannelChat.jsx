@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { channelService } from '../services/channelService';
+import { callService } from '../services/callService';
 import LiveCallRoom from './LiveCallRoom';
 import AskAiWidget from '../components/chat/AskAiWidget';
 import MemoryPanel from '../components/chat/MemoryPanel';
@@ -53,12 +54,37 @@ const ChannelChat = ({
     const [error, setError] = useState('');
     const [isLeaving, setIsLeaving] = useState(false);
     const [inCall, setInCall] = useState(false);
+    const [callParticipants, setCallParticipants] = useState(0);
     const [copiedInvite, setCopiedInvite] = useState(false);
 
     // Leave any active call when switching channels.
     useEffect(() => {
         setInCall(false);
     }, [channelId]);
+
+    // Poll so people sitting in the chat can see a call is running and join it.
+    // LiveKit only knows this server-side, and nothing pushes it over STOMP —
+    // a 10s poll of one small endpoint is cheaper than wiring up webhooks.
+    useEffect(() => {
+        if (!channelId || inCall) {
+            setCallParticipants(0);
+            return undefined;
+        }
+        let isMounted = true;
+        const check = () => callService
+            .getCallStatus(channelId)
+            .then((status) => {
+                if (isMounted) setCallParticipants(status?.participants || 0);
+            })
+            .catch(() => {}); // a failed poll just leaves the bar hidden
+
+        check();
+        const timer = setInterval(check, 10000);
+        return () => {
+            isMounted = false;
+            clearInterval(timer);
+        };
+    }, [channelId, inCall]);
 
     const messagesEndRef = useRef(null);
     const messageIdsRef = useRef(new Set());
@@ -350,6 +376,24 @@ const ChannelChat = ({
                     channelName={channel?.name}
                     onLeaveCall={() => setInCall(false)}
                 />
+            )}
+
+            {!inCall && callParticipants > 0 && (
+                <div className="ch-callbar">
+                    <span className="ch-callbar-dot" aria-hidden="true" />
+                    <span className="ch-callbar-text">
+                        Call in progress · {callParticipants}
+                        {callParticipants === 1 ? ' person' : ' people'}
+                    </span>
+                    <button
+                        onClick={() => setInCall(true)}
+                        className="ch-callbar-join"
+                        title="Join the call in this channel"
+                    >
+                        <Icon name="video" size={12} />
+                        Join
+                    </button>
+                </div>
             )}
 
             {!inCall && (

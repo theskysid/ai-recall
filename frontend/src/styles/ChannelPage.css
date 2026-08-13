@@ -306,6 +306,74 @@
     display: none;
 }
 
+/* ═══ Active call bar ═════════════════════════════════════════
+   Sits above the console when someone else is already on a call.
+   Borrows the record green so "live" reads the same here as it
+   does on the header's Call button. */
+
+.ch-callbar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    background: var(--ch-rec-dim);
+    border-bottom: 1px solid var(--ch-rec-line);
+}
+
+.ch-callbar-dot {
+    width: 7px;
+    height: 7px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--ch-rec);
+    animation: ch-callbar-pulse 2s var(--ch-ease) infinite;
+}
+
+@keyframes ch-callbar-pulse {
+    50% { opacity: 0.3; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ch-callbar-dot { animation: none; }
+}
+
+.ch-callbar-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ch-rec-soft);
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: -0.004em;
+}
+
+.ch-callbar-join {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    height: 26px;
+    padding: 0 10px;
+    border: 1px solid var(--ch-rec-line);
+    border-radius: var(--ch-r-2);
+    background: var(--ch-bg);
+    color: var(--ch-rec);
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: -0.004em;
+    cursor: pointer;
+    transition: background 0.13s, border-color 0.13s, color 0.13s;
+}
+
+.ch-callbar-join:hover {
+    background: var(--ch-rec);
+    border-color: var(--ch-rec);
+    color: var(--ch-bg);
+}
+
 /* ═══ Intelligence console ════════════════════════════════════
    The flagship. A full-bleed band directly under the header, one
    step brighter than the page, holding the ask field and the

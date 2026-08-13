@@ -1,6 +1,7 @@
 package com.theskysid.echobackend.call.controller;
 
 import com.theskysid.echobackend.auth.service.AuthenticationService;
+import com.theskysid.echobackend.call.dto.CallStatusDTO;
 import com.theskysid.echobackend.call.dto.CallTokenDTO;
 import com.theskysid.echobackend.call.service.LiveKitService;
 import com.theskysid.echobackend.channel.service.ChannelService;
@@ -57,6 +58,34 @@ public class CallController {
                     .identity(identity)
                     .build();
             return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
+        }
+    }
+
+    /**
+     * GET /api/channels/{channelId}/call-status — how many people are in the
+     * channel's call right now, so the chat can offer to join one already in
+     * progress. Members only.
+     */
+    @GetMapping("/{channelId}/call-status")
+    public ResponseEntity<?> getCallStatus(@PathVariable Long channelId, Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+        }
+        try {
+            User currentUser = authenticationService.resolveAuthenticatedUser(authentication.getName());
+
+            if (!channelService.isMember(currentUser, channelId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "You are not a member of this channel"));
+            }
+
+            int participants = liveKitService.getParticipantCount(String.valueOf(channelId));
+            return ResponseEntity.ok(CallStatusDTO.builder()
+                    .active(participants > 0)
+                    .participants(participants)
+                    .build());
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
         }
