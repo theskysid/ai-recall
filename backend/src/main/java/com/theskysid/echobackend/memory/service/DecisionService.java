@@ -39,10 +39,6 @@ public class DecisionService {
      * Ask the LLM whether the text contains a final project/technical decision.
      * Returns false on any error so ingestion never breaks.
      */
-    public boolean isDecision(String text) {
-        return extractDecision(text);
-    }
-
     public boolean extractDecision(String text) {
         if (text == null || text.isBlank()) {
             return false;

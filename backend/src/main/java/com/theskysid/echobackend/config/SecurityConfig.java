@@ -48,7 +48,6 @@ public class SecurityConfig {
                                 "/auth/email-otp/**",
                                 "/auth/google/**")
                         .permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/auth/getonlineusers", "/auth/getcurrentuser", "/api/**").authenticated()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/ws/**").permitAll()

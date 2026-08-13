@@ -237,17 +237,6 @@ export const authService = {
         return authService.verifyEmailOtp(value, otp);
     },
 
-    fetchPrivateMessages: async(user1, user2) => {
-        try{
-
-            const response = await api.get(`/api/messages/private?user1=${encodeURIComponent(user1)}&user2=${encodeURIComponent(user2)}`);
-            return response.data;
-        }
-        catch(error){
-            console.error('Error in fetching private messages', error);
-            throw error;
-        }
-    },
 
     getOnlineUsers: async () => {
         try {

@@ -61,10 +61,7 @@ public class RagService {
         String answer = generateAnswer(query, context);
 
         return RagContextDTO.builder()
-                .channelId(channel)
-                .query(query)
                 .answer(answer)
-                .context(context)
                 .sourceIds(sourceIds)
                 .build();
     }

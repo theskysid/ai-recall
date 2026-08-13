@@ -1,35 +1,23 @@
 package com.theskysid.echobackend.messaging.entity;
 
-import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * Transient presence-event payload broadcast to /topic/public (JOIN/LEAVE).
+ * Not persisted — the old private-message table is gone.
+ */
 @Data
-@Entity
-@Table(name = "chat_messages")
 public class ChatMessage {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String content;
-
     private String sender;
-
-    private String recipient;
-
+    private String content;
     private String color;
-
-    @Column(nullable = false)
     private LocalDateTime timestamp;
-
-    @Enumerated(EnumType.STRING)
     private MessageType type;
 
     public enum MessageType {
-        CHAT, PRIVATE_MESSAGE, JOIN, LEAVE, TYPING
+        JOIN, LEAVE
     }
-
 }
