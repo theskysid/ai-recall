@@ -19,6 +19,17 @@ const RECORDING_MIME_TYPES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4
 const pickMimeType = () =>
     RECORDING_MIME_TYPES.find((type) => MediaRecorder.isTypeSupported(type)) || '';
 
+// Closing the tab mid-call loses the transcript: the upload only starts once the
+// recorder stops, and it then outlives this component — so the guard can't hang
+// off the effect cleanup. Module-scoped so add/remove always match the same
+// reference. Browsers ignore custom text and show their own generic dialog.
+const warnUnsavedCall = (event) => {
+    event.preventDefault();
+    event.returnValue = '';
+};
+
+const stopWarning = () => window.removeEventListener('beforeunload', warnUnsavedCall);
+
 /**
  * Records the call by mixing every audio track the browser has — the local mic
  * plus each subscribed remote track — into one WebAudio destination, then
@@ -73,15 +84,22 @@ const CallRecorder = ({ channelId }) => {
             context.close().catch(() => {});
             const type = recorder.mimeType || 'audio/webm';
             const blob = new Blob(chunks, { type });
-            if (blob.size < MIN_RECORDING_BYTES) return;
+            if (blob.size < MIN_RECORDING_BYTES) {
+                stopWarning();
+                return;
+            }
             const extension = type.includes('mp4') ? 'm4a' : 'webm';
             callService
                 .uploadRecording(channelId, blob, `call-${channelId}.${extension}`)
-                .catch((err) => console.error('Failed to upload call recording:', err));
+                .catch((err) => console.error('Failed to upload call recording:', err))
+                .finally(stopWarning);
         };
 
         context.resume().catch(() => {});
         recorder.start(1000); // flush a chunk per second so long calls stay in memory-sized pieces
+        // Armed only once recording is actually live, so a start() throw can't
+        // leave the tab nagging forever with nothing to save.
+        window.addEventListener('beforeunload', warnUnsavedCall);
 
         return () => {
             room.off(RoomEvent.TrackSubscribed, onTrackSubscribed);
@@ -89,6 +107,7 @@ const CallRecorder = ({ channelId }) => {
             if (recorder.state !== 'inactive') {
                 recorder.stop();
             } else {
+                stopWarning();
                 context.close().catch(() => {});
             }
         };
