@@ -190,6 +190,11 @@ const LiveCallRoom = ({ channelId, channelName, onLeaveCall }) => {
                     connect={true}
                     video={true}
                     audio={true}
+                    // livekit-client disconnects on 'beforeunload' by default, so our
+                    // "you'll lose the recording" prompt killed the call even when the
+                    // user cancelled it. Leaving for real still unmounts and disconnects
+                    // cleanly; a hard tab close now just lets the server time them out.
+                    options={{ disconnectOnPageLeave: false }}
                     onDisconnected={onLeaveCall}
                     data-lk-theme="default"
                     style={{ height: '100%' }}
