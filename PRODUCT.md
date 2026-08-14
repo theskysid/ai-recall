@@ -47,8 +47,9 @@ it: **the channel itself is the memory.** Three parts, all real in the code —
 2. **Decisions are extracted and dated, and supersession is explicit.** When a
    channel settles something it is flagged as a decision; a later decision that
    replaces it marks the older one `superseded` rather than deleting it, and
-   retrieval demotes the superseded one. The record keeps its own history of
-   changing its mind.
+   retrieval excludes superseded decisions from the context by default
+   (`recall.retrieval.mode=filter`; `demote` and `baseline` exist as evaluation
+   arms). The record keeps its own history of changing its mind.
 3. **Retrieval is channel-scoped and cited.** Answers come back with the message
    and transcript IDs they were drawn from.
 
@@ -65,8 +66,10 @@ language.
   first-class scene, not a squeeze of the desktop one.
 - Sign-in paths: password, email OTP, and Google OAuth. (Phone/SMS OTP was
   removed and must not return.)
-- Self-hosted: Docker Compose on a single EC2 box behind nginx. Embedding runs
-  in-process; there is no external embedding vendor.
+- Self-hosted: Docker Compose on a single EC2 box behind Caddy (TLS/Let's
+  Encrypt); the frontend container's nginx proxies `/api`, `/auth` and `/ws` to
+  the backend so everything is one origin. Embedding runs in-process; there is
+  no external embedding vendor.
 
 ## Capabilities and Constraints
 
@@ -80,31 +83,46 @@ Confirmed and working:
 - LiveKit video calls per channel, backend-minted scoped tokens.
 - Deepgram transcription of call audio, stored per channel.
 - Vector memory: messages and transcripts embedded locally (all-MiniLM-L6-v2,
-  384-dim) into pgvector; `GET /ask?q=` retrieves top-5 channel-scoped memories
-  and synthesizes a grounded answer with source IDs.
+  384-dim) into pgvector; `GET /api/channels/{id}/ask?q=` retrieves up to 5
+  channel-scoped, non-superseded memories and synthesizes a grounded answer with
+  source IDs.
 - Decision extraction and supersession.
+- Decision timeline endpoint: `GET /api/channels/{id}/decisions` (active +
+  superseded, newest first).
+- Retrieval mode is configurable (`recall.retrieval.mode` = filter | demote |
+  baseline); filter is the shipped default.
+- Channel memory panel: decision timeline (active/superseded) and per-call
+  transcripts, collapsed above the feed.
 
 Constraints future work must respect:
 
 - **Additive only.** Auth, friend chat/DMs, and channels (text, calls, memory)
   are stable. Extend alongside them; do not remove or replace.
 - **Removed and not to be reintroduced:** global/public chat, phone/SMS OTP.
-- No design tokens or component library exist yet as a documented system; styles
-  live in per-surface CSS files under `src/styles/` plus `index.css`.
+- Design tokens are defined and commented in `src/index.css` (ground/text/
+  accent/record/alarm scales, light + dark); per-surface CSS files under
+  `src/styles/` consume them. Tailwind v4 is imported utilities-only via
+  `src/tailwind.css` (no Preflight) solely for the shadcn-derived buttons in
+  `src/components/ui/`. There is still no full component library.
 - Terminology, as used in product surfaces: *channel*, *invite code*, *memory*,
   *decision*, *superseded*, *transcript*, *direct message*. Not: workspace,
-  server, thread, assistant, bot.
+  server, thread, assistant, bot. UI copy holds to this, but the RAG answer
+  prompt still opens "You are an AI project assistant" (`RagService`), so
+  generated answers can adopt assistant persona language — the prompt should be
+  reworded to a non-persona instruction.
+- An evaluation harness (`/api/eval/**`) exists for measuring retrieval
+  staleness; it is disabled unless `recall.eval.enabled=true` and is absent from
+  normal deployments. Not a product surface — do not design UI for it.
 
 Undecided (do not invent):
 
-- Whether transcripts and a decision timeline get their own UI surface — this is
-  the named next feature but has no committed design.
 - Pricing, plans, or any commercial model. None exists.
 
 ## Brand Commitments
 
 - **Name:** Recall. (`echo-frontend` / "Echo Messaging" is the codebase's legacy
-  name and is not user-facing.)
+  name and is not user-facing, except `public/favicon.svg`, which still reads
+  "Echo" — in the browser tab and as the PWA icon — and must be corrected.)
 - **Tagline in use:** "Chat with a memory."
 - **Voice:** plain, declarative, unhyped. Short sentences. States what the product
   does as fact, not benefit-speak. Existing copy is the reference — e.g. "Calls

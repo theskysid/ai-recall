@@ -11,22 +11,28 @@
   compatible, Llama 3) for decision extraction + RAG answer synthesis; pgvector
   (`com.pgvector:pgvector`) for similarity search.
 - **Frontend** — React 19, Vite 7, Axios, `@stomp/stompjs` + `sockjs-client`,
-  `react-router-dom` 7, `@react-oauth/google`, `@livekit/components-react`.
+  `react-router-dom` 7, `@react-oauth/google`, `@livekit/components-react`,
+  Tailwind CSS 4 (`@tailwindcss/vite`), `motion`, and shadcn-style primitives
+  (`@radix-ui/react-slot`, `class-variance-authority`) in `components/ui/`.
 - **Database** — PostgreSQL 16 + `vector` extension. `db/init/01-enable-pgvector.sql`
   auto-enables it on a fresh volume; on an existing volume run
   `CREATE EXTENSION IF NOT EXISTS vector;` once.
 - **Infra** — Docker / Docker Compose (postgres = `pgvector/pgvector:pg16`),
-  nginx, AWS EC2. Backend runtime image is **glibc** (`eclipse-temurin:21-jre`,
+  Caddy for TLS/reverse proxy at the edge (`Caddyfile`, `DOMAIN` in `.env`),
+  nginx inside the frontend image serving the Vite build, AWS EC2.
+  `docker-compose.local.yml` builds from source; `docker-compose.yml` pulls
+  published images. Backend runtime image is **glibc** (`eclipse-temurin:21-jre`,
   not alpine) — ONNX Runtime for MiniLM needs libstdc++.
 
 ## Layout
 
-- `echo-backend/` — base package `com.theskysid.echobackend`, by feature:
+- `backend/` — base package `com.theskysid.echobackend`, by feature:
   `auth`, `friendship`, `messaging` (DMs + presence), `channel`, `call`
   (LiveKit + Deepgram), `memory` (embeddings, pgvector, decisions, RAG),
   `user`, `config` (incl. `LlmConfig` — the Groq `ChatLanguageModel` bean).
-- `echo-frontend/src/` — `pages/`, `components/` (`chat/` incl. `AskAiWidget`),
-  `services/` (Axios clients), `hooks/`, `styles/`.
+- `frontend/src/` — `pages/`, `components/` (`chat/` incl. `AskAiWidget`,
+  `MemoryPanel`; `ui/` for shared primitives), `services/` (Axios clients),
+  `hooks/`, `lib/`, `utils/`, `styles/`.
 
 ## How it connects
 
@@ -35,7 +41,8 @@
 - WebSocket at `/ws` (SockJS/STOMP). Channels: send `/app/channel/{id}/send`,
   subscribe `/topic/channel/{id}`. DMs: `/app/dm.sendMessage` → `/user/{u}/queue/dm`.
   Presence only on `/topic/public`. Config in `config/WebSocketConfig`.
-- Async ingestion (`@EnableAsync`): `ChannelService.postMessage` / transcript save
+- Async ingestion (`@EnableAsync`): `ChannelService.postMessage` and
+  `TranscriptionController` (after the transcript row is saved)
   fire `MemoryIngestionService` `@Async` methods → embed + LLM decision/supersession
   → pgvector, never blocking the broadcast.
 
@@ -44,6 +51,7 @@
 Per feature: `entity/` → `repository/` (`JpaRepository`, `@Query` + `JOIN FETCH`,
 native pgvector queries) → `service/` (`@Service`, `@Transactional`) →
 `controller/` (`@RestController` under `/api/...`, thin). WebSocket handlers in
-`*/websocket/`. DTOs in `dto/`; external config via `application.yml` → `@Value`.
+`*/websocket/` (exception: the presence handler `messaging/controller/ChatController`).
+DTOs in `dto/`; external config via `application.yml` → `@Value`.
 LLM injected as the `ChatLanguageModel` interface (provider-agnostic).
 Security: `JwtAuthenticationFilter` + `SecurityConfig`; `/api/**` requires auth.

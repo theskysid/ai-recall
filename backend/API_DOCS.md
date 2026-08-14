@@ -6,11 +6,27 @@ http://localhost:8080
 ```
 
 ## Authentication
-Most endpoints require JWT authentication. Include the token in one of these ways:
+Include the JWT in one of these ways:
 - **Header**: `Authorization: Bearer <token>`
 - **Cookie**: `JWT=<token>` (automatically set after login)
 
-Token expires after 1 hour.
+Everything requires authentication except the following, which are `permitAll`
+in `SecurityConfig`:
+
+```
+/auth/login
+/auth/signup
+/auth/signup/verify
+/auth/email-otp/**
+/auth/google/**
+/actuator/health
+/ws/**
+```
+
+That includes `/api/**` and `/auth/logout` — all authenticated.
+
+Token lifetime comes from `JWT_EXPIRATION` (currently `3600000` ms = 1 hour).
+The `JWT` cookie has its own hardcoded `maxAge` of 3600s.
 
 ---
 
@@ -18,9 +34,8 @@ Token expires after 1 hour.
 
 ### Authentication Endpoints
 
-#### POST /api/auth/register
-**Description**: Register a new user
-**Authentication**: Not required
+#### POST /auth/signup
+**Description**: Register a new user with username + email + password
 **Request Body**:
 ```json
 {
@@ -35,13 +50,32 @@ Token expires after 1 hour.
   "id": 1,
   "username": "string",
   "email": "string",
-  "online": false
+  "displayName": null,
+  "bio": null,
+  "googleId": null,
+  "authProvider": "EMAIL",
+  "online": false,
+  "token": null
 }
 ```
+**Note**: `token` is null on this path — only `/auth/login`, `/auth/signup/verify`
+and the OTP/Google paths issue a token.
 
-#### POST /api/auth/login
+#### POST /auth/signup/verify
+**Description**: Complete an OTP-verified signup and log the user in
+**Request Body**:
+```json
+{
+  "username": "string",
+  "email": "string",
+  "password": "string",
+  "otp": "123456"
+}
+```
+**Response**: UserDTO with `token` set. Also sets the JWT cookie.
+
+#### POST /auth/login
 **Description**: User login
-**Authentication**: Not required
 **Request Body**:
 ```json
 {
@@ -49,95 +83,226 @@ Token expires after 1 hour.
   "password": "string"
 }
 ```
-**Response**:
+**Response**: a flat UserDTO — there is no `{user, token}` wrapper.
 ```json
 {
-  "user": {
-    "id": 1,
-    "username": "string",
-    "email": "string",
-    "online": false
-  },
+  "id": 1,
+  "username": "string",
+  "email": "string",
+  "displayName": null,
+  "bio": null,
+  "googleId": null,
+  "authProvider": "EMAIL",
+  "online": false,
   "token": "eyJhbGciOiJIUzM4NCJ9..."
 }
 ```
 **Note**: Also sets JWT cookie automatically
 
-#### POST /api/auth/logout
-**Description**: User logout
-**Authentication**: Required
-**Response**: 
+#### POST /auth/email-otp/send
+**Description**: Send a 6-digit OTP to an email address (creates the user if it
+does not exist). Rate limited to 3 requests per 10 minutes per email.
+**Request Body**:
 ```json
-"User logged out successfully"
+{ "email": "string" }
 ```
 
-#### GET /api/auth/getonlineusers
-**Description**: Get list of currently online users
-**Authentication**: Required
+#### POST /auth/email-otp/verify
+**Description**: Verify the emailed OTP; issues a JWT cookie and returns UserDTO
+
+#### POST /auth/google/login
+**Description**: Exchange a Google ID token for a session; issues a JWT cookie
+and returns UserDTO
+**Request Body**:
+```json
+{ "idToken": "string" }
+```
+
+#### POST /auth/logout
+**Description**: User logout — clears the `JWT` cookie (maxAge 0)
 **Response**:
 ```json
-{
-  "onlineUsers": [
-    {
-      "id": 1,
-      "username": "string",
-      "email": "string",
-      "online": true
-    }
-  ]
-}
+"Logged out successfully"
 ```
 
-#### GET /api/auth/getcurrentuser
+#### GET /auth/getonlineusers
+**Description**: Get usernames of currently online users
+**Response**:
+```json
+["alice", "bob"]
+```
+
+#### GET /auth/getcurrentuser
 **Description**: Get current authenticated user details
-**Authentication**: Required
+**Response**: UserDTO (see Data Models)
+
+### Profile Endpoints
+
+#### GET /api/profile
+**Description**: Current user's profile
+
+#### PUT /api/profile
+**Description**: Update `displayName`, `bio`, `username`
+
+#### POST /api/profile/link-email/send
+**Description**: Send an OTP to an email address to link it to the account
+
+#### POST /api/profile/link-email/verify
+**Description**: Verify the OTP and link the email
+
+#### POST /api/profile/link-google
+**Description**: Link a Google account by verifying its ID token
+
+#### POST /api/profile/unlink-email
+#### POST /api/profile/unlink-google
+**Description**: Remove an auth method (refused if it is the only one left)
+
+### Friend Endpoints
+
+#### GET /api/friends
+**Description**: List accepted friends
+
+#### GET /api/friends/requests/incoming
+#### GET /api/friends/requests/rejected
+**Description**: List pending incoming / rejected friend requests
+
+#### GET /api/friends/search
+**Description**: Search users by username
+**Query Parameters**:
+- `q`: search query
+
+#### POST /api/friends/request
+**Description**: Send a friend request
+
+#### POST /api/friends/accept/{id}
+#### POST /api/friends/reject/{id}
+**Description**: Accept / reject an incoming request
+
+#### DELETE /api/friends/cancel/{id}
+**Description**: Cancel an outgoing request
+
+#### DELETE /api/friends/{id}
+**Description**: Remove a friend
+
+### Conversation Endpoints (DMs)
+
+#### GET /api/conversations
+**Description**: List the current user's active conversations
+**Response**: array of ConversationDTO
+
+#### GET /api/conversations/{id}/messages
+**Description**: Paginated message history for a conversation
+**Query Parameters**:
+- `page`: page index (default `0`)
+- `size`: page size (default `50`)
+**Response**: a Spring `Page<DirectMessageDTO>` (`content`, `totalElements`,
+`totalPages`, …)
+
+#### PUT /api/conversations/{id}/retention
+**Description**: Update the conversation retention policy; also pushes a
+`RETENTION_POLICY_UPDATE:<POLICY>` notification to both participants' DM queues
+**Request Body**:
+```json
+{ "policy": "SIX_HOURS|ONE_DAY|SEVEN_DAYS" }
+```
+
+#### POST /api/conversations/with/{username}
+**Description**: Get or create a conversation with a friend
+
+### Channel Endpoints
+
+#### GET /api/channels
+**Description**: List the channels the current user belongs to
+
+#### POST /api/channels
+**Description**: Create a channel (creator becomes owner)
+**Request Body**:
+```json
+{ "name": "string", "description": "string" }
+```
+
+#### POST /api/channels/join
+**Description**: Join a channel with an invite code
+**Request Body**:
+```json
+{ "inviteCode": "string" }
+```
+
+#### DELETE /api/channels/{id}/leave
+**Description**: Leave a channel
+
+#### GET /api/channels/{id}/messages
+**Description**: CHAT history for a channel the user belongs to
+
+### Call Endpoints
+
+All of these are members-only and return `403` otherwise.
+
+#### GET /api/channels/{channelId}/call-token
+**Description**: Mint a LiveKit token for the channel's call
 **Response**:
 ```json
 {
-  "id": 1,
-  "username": "string",
-  "email": "string",
-  "online": true
+  "token": "string",
+  "url": "wss://...",
+  "room": "channelId",
+  "identity": "userId"
 }
 ```
 
-### Message Endpoints
+#### GET /api/channels/{channelId}/call-status
+**Description**: How many participants are currently in the channel's call
 
-#### GET /api/messages/private
-**Description**: Get private messages between two users
-**Authentication**: Required
+#### POST /api/channels/{channelId}/transcribe
+**Description**: Transcribe a hosted recording via Deepgram and persist it
+**Request Body**:
+```json
+{ "audioUrl": "string" }
+```
+
+#### POST /api/channels/{channelId}/recording
+**Description**: Upload a browser-captured recording (multipart, field `file`),
+transcribe the bytes and persist the result
+
+#### GET /api/channels/{channelId}/transcripts
+**Description**: Saved call transcripts for the channel, newest first
+
+### AI Memory Endpoints
+
+#### GET /api/channels/{channelId}/ask
+**Description**: RAG answer over the channel's memory. Members only.
 **Query Parameters**:
-- `user1`: Username of first user
-- `user2`: Username of second user
+- `q`: the question
 **Response**:
 ```json
-[
-  {
-    "id": 1,
-    "content": "Hello!",
-    "sender": "user1",
-    "recipient": "user2",
-    "timestamp": "2025-09-28T10:30:00",
-    "type": "PRIVATE_MESSAGE"
-  }
-]
+{ "answer": "string", "sourceIds": [1, 2] }
 ```
 
-#### GET /api/messages/public
-**Description**: Get all public chat messages
-**Authentication**: Required
-**Response**:
-```json
-[
-  {
-    "id": 1,
-    "content": "Hello everyone!",
-    "sender": "username",
-    "timestamp": "2025-09-28T10:30:00",
-    "type": "CHAT"
-  }
-]
-```
+#### GET /api/channels/{channelId}/decisions
+**Description**: Extracted decisions for the channel (active + superseded),
+newest first. Members only.
+
+See [RAG_API_DOCS.md](RAG_API_DOCS.md) for the full AI surface.
+
+### Eval Endpoints (non-product)
+
+Registered only when `recall.eval.enabled=true`. These ship with the eval
+harness, not the product; request bodies are plain maps.
+
+#### POST /api/eval/channels/{channelId}/message
+**Request Body**: `{ "content": "string" }`
+
+#### POST /api/eval/channels/{channelId}/transcript
+**Request Body**: `{ "content": "string" }`
+
+#### GET /api/eval/channels/{channelId}/memory-count
+**Description**: Vectors stored so far (ingestion is async — poll this)
+
+#### GET /api/eval/channels/{channelId}/ask
+**Description**: Same RAG call as the product endpoint, but returns the
+retrieved chunks and retrieval mode too
+**Query Parameters**:
+- `q`: the question
 
 ---
 
@@ -147,124 +312,128 @@ Token expires after 1 hour.
 ```
 ws://localhost:8080/ws
 ```
+(SockJS fallback enabled.)
 
 ### Allowed Origins
-- `http://localhost:5176`
-- `http://localhost:5174`
+Read from the `allowed-origins` property (env `ALLOWED_ORIGINS`), default
+`https://echomessaging.duckdns.org,http://localhost:5173`.
 
 ### Message Types
 ```
-CHAT - Public chat message
-JOIN - User joined chat
-LEAVE - User left chat
-PRIVATE_MESSAGE - Private message between users
+ChatMessage.MessageType     JOIN, LEAVE          (presence only, /topic/public)
+ChannelMessage.MessageType  CHAT, JOIN, LEAVE, TYPING  (channel chat)
 ```
 
 ---
 
 ## WebSocket Endpoints (via STOMP)
 
-### Subscribe to Public Messages
+### Subscribe to Presence Events
 **Topic**: `/topic/public`
-**Description**: Subscribe to receive all public chat messages and user join/leave notifications
+**Description**: Subscribe to receive user join/leave notifications
 **Receives**:
 ```json
 {
-  "id": 1,
-  "content": "message content",
   "sender": "username",
+  "content": "",
+  "color": null,
   "timestamp": "2025-09-28T10:30:00",
-  "type": "CHAT|JOIN|LEAVE"
-}
-```
-
-### Subscribe to Private Messages
-**Topic**: `/user/{username}/queue/private`
-**Description**: Subscribe to receive private messages for specific user
-**Receives**:
-```json
-{
-  "id": 1,
-  "content": "private message",
-  "sender": "sender_username",
-  "recipient": "recipient_username",
-  "timestamp": "2025-09-28T10:30:00",
-  "type": "PRIVATE_MESSAGE"
-}
-```
-
-### Send Public Message
-**Destination**: `/app/chat.sendMessage`
-**Description**: Send a message to public chat
-**Payload**:
-```json
-{
-  "content": "Hello everyone!",
-  "sender": "username",
-  "type": "CHAT"
+  "type": "JOIN|LEAVE"
 }
 ```
 
 ### Add User to Chat
 **Destination**: `/app/chat.addUser`
-**Description**: Add user to chat (marks user as online)
+**Description**: Register presence for the current session (marks user as online)
 **Payload**:
 ```json
 {
-  "sender": "username",
-  "type": "JOIN"
+  "sender": "username"
+}
+```
+**Note**: `type` in the payload is ignored — the server always sets `JOIN`.
+Nothing is broadcast if the sender does not exist or the session was already
+registered.
+
+### Subscribe to Direct Messages
+**Topic**: `/user/{username}/queue/dm`
+**Description**: Receives DirectMessageDTOs for the user (both sides of a
+conversation get the message), plus typing and retention notifications
+
+### Send Direct Message
+**Destination**: `/app/dm.sendMessage`
+**Description**: Send a DM. Provide either `conversationId` or
+`recipientUsername`.
+**Payload** (DirectMessageRequestDTO):
+```json
+{
+  "conversationId": 1,
+  "senderUsername": "sender",
+  "recipientUsername": "recipient",
+  "content": "Hello!",
+  "type": "MESSAGE"
 }
 ```
 
-### Send Private Message
-**Destination**: `/app/chat.sendPrivateMessage`
-**Description**: Send a private message to specific user
-**Payload**:
+### Send Typing Indicator
+**Destination**: `/app/dm.typing`
+**Description**: Same payload as above with `type: "TYPING"`; delivered to the
+other participant's `/user/{username}/queue/dm`.
+
+### Subscribe to Channel Messages
+**Topic**: `/topic/channel/{channelId}`
+**Description**: Receives ChannelMessageDTOs broadcast to the channel
+
+### Send Channel Message
+**Destination**: `/app/channel/{channelId}/send`
+**Payload** (ChannelMessageRequestDTO):
 ```json
 {
-  "content": "Private message",
-  "sender": "sender_username",
-  "recipient": "recipient_username",
-  "type": "PRIVATE_MESSAGE"
+  "sender": "username",
+  "content": "Hello channel!",
+  "color": "#aabbcc",
+  "type": "CHAT"
 }
 ```
+**Note**: only `CHAT` messages are persisted; `TYPING`/`JOIN`/`LEAVE` are
+broadcast only.
 
 ---
 
 ## Data Models
 
-### User
+### User (UserDTO)
 ```json
 {
   "id": "Long",
   "username": "String",
-  "email": "String", 
-  "online": "Boolean"
+  "email": "String",
+  "displayName": "String",
+  "bio": "String",
+  "googleId": "String (\"connected\" or null)",
+  "authProvider": "String (EMAIL|GOOGLE)",
+  "online": "Boolean (never set — always false; use GET /auth/getonlineusers)",
+  "token": "String (set on login paths only)"
 }
 ```
 
 ### ChatMessage
+Transient presence payload — not persisted.
 ```json
 {
-  "id": "Long",
-  "content": "String",
   "sender": "String",
-  "recipient": "String (optional - for private messages)",
+  "content": "String",
+  "color": "String",
   "timestamp": "LocalDateTime",
-  "type": "MessageType"
+  "type": "JOIN|LEAVE"
 }
 ```
-
-### MessageType Enum
-- `CHAT` - Public chat message
-- `JOIN` - User joined notification
-- `LEAVE` - User left notification  
-- `PRIVATE_MESSAGE` - Private message
 
 ---
 
 ## CORS Configuration
-- **Allowed Origins**: `http://localhost:5176`, `http://localhost:5174`
+- **Allowed Origins**: from `allowed-origins` (env `ALLOWED_ORIGINS`), default
+  `https://echomessaging.duckdns.org,http://localhost:5173`
 - **Credentials**: Allowed
 - **Methods**: GET, POST, PUT, DELETE, OPTIONS
 
@@ -281,6 +450,7 @@ PRIVATE_MESSAGE - Private message between users
 - `401 Unauthorized` - Authentication required
 - `403 Forbidden` - Access denied
 - `404 Not Found` - Resource not found
+- `429 Too Many Requests` - OTP rate limit hit
 
 ### Server Errors
 - `500 Internal Server Error` - Server error
@@ -292,12 +462,13 @@ PRIVATE_MESSAGE - Private message between users
 ### Login Flow
 ```javascript
 // 1. Login
-const loginResponse = await fetch('/api/auth/login', {
+const loginResponse = await fetch('/auth/login', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ username: 'user', password: 'pass' })
 });
-const { user, token } = await loginResponse.json();
+const user = await loginResponse.json();
+const token = user.token;
 
 // 2. Store token for subsequent requests
 localStorage.setItem('token', token);
@@ -306,22 +477,21 @@ localStorage.setItem('token', token);
 const socket = new SockJS('/ws');
 const stompClient = Stomp.over(socket);
 stompClient.connect({}, function() {
-  // Subscribe to public messages
+  // Subscribe to presence events
   stompClient.subscribe('/topic/public', function(message) {
     const chatMessage = JSON.parse(message.body);
-    displayMessage(chatMessage);
+    displayPresenceEvent(chatMessage);
   });
   
-  // Subscribe to private messages
-  stompClient.subscribe(`/user/${user.username}/queue/private`, function(message) {
-    const privateMessage = JSON.parse(message.body);
-    displayPrivateMessage(privateMessage);
+  // Subscribe to direct messages
+  stompClient.subscribe(`/user/${user.username}/queue/dm`, function(message) {
+    const directMessage = JSON.parse(message.body);
+    displayDirectMessage(directMessage);
   });
   
-  // Add user to chat
+  // Register presence
   stompClient.send('/app/chat.addUser', {}, JSON.stringify({
-    sender: user.username,
-    type: 'JOIN'
+    sender: user.username
   }));
 });
 ```
@@ -329,40 +499,9 @@ stompClient.connect({}, function() {
 ### Authenticated Requests
 ```javascript
 // Include token in requests
-const response = await fetch('/api/auth/getonlineusers', {
+const response = await fetch('/auth/getonlineusers', {
   headers: {
     'Authorization': `Bearer ${localStorage.getItem('token')}`
   }
 });
 ```
-
----
-
-## Known Issues & Fixes Needed
-
-1. **WebSocket CORS**: Add `http://localhost:5174` to allowed origins in WebSocketConfig.java
-2. **JWT Token Handling**: Ensure frontend properly stores and sends JWT tokens
-3. **Token Expiration**: Handle token refresh or re-authentication after 1 hour
-
----
-
-## Database Tables
-
-### users
-- `id` (Primary Key)
-- `username` (Unique)
-- `email` 
-- `password` (Encrypted)
-- `is_online` (Boolean)
-
-### chat_messages  
-- `id` (Primary Key)
-- `content`
-- `sender` 
-- `recipient` (Nullable - for private messages)
-- `timestamp`
-- `type` (Enum)
-
----
-
-*Last Updated: September 28, 2025*

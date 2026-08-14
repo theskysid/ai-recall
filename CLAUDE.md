@@ -5,11 +5,11 @@ Spring Boot (Java 21) backend + React (Vite) frontend, over WebSocket
 (STOMP/SockJS), PostgreSQL 16 + pgvector. Channels support text chat, LiveKit
 video calls, Deepgram transcription, and RAG Q&A over a vector memory
 (local MiniLM embeddings + Groq/Llama 3 answer synthesis). REST reference for
-the AI endpoints: [echo-backend/RAG_API_DOCS.md](echo-backend/RAG_API_DOCS.md).
+the AI endpoints: [backend/RAG_API_DOCS.md](backend/RAG_API_DOCS.md).
 
 ## Read before making changes
 
-- [ai/project.md](ai/project.md) — what the app is, features today, planned next
+- [ai/project.md](ai/project.md) — what the app is, features today, what was removed
 - [ai/architecture.md](ai/architecture.md) — stack, layout, how the tiers connect, layering
 - [ai/conventions.md](ai/conventions.md) — naming, error handling, testing
 
@@ -23,7 +23,7 @@ Full stack (local, builds from source):
 docker compose -f docker-compose.local.yml up --build
 ```
 
-Backend (`echo-backend/`):
+Backend (`backend/`):
 
 ```bash
 ./mvnw clean package    # build (runs tests)
@@ -31,7 +31,7 @@ Backend (`echo-backend/`):
 ./mvnw spring-boot:run  # run locally
 ```
 
-Frontend (`echo-frontend/`):
+Frontend (`frontend/`):
 
 ```bash
 npm install

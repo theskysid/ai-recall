@@ -75,14 +75,28 @@ Example: `GET /api/channels/3/ask?q=What is the secret password`
 - `sourceIds` — `source_id`s of the memory chunks used as context (the originating
   message / transcript ids).
 
+Retrieval takes the top 5 vectors scoped to that channel only. By default a
+decision that a later decision superseded is **excluded** and can never reach the
+prompt. `RECALL_RETRIEVAL_MODE` changes that arm — it exists for the retrieval
+evaluation, leave it at `filter` otherwise:
+
+| Mode | Behaviour |
+|------|-----------|
+| `filter` (default) | superseded decisions excluded outright |
+| `demote` | superseded decisions get a +10 distance penalty, so they sort last but can still backfill a sparse channel |
+| `baseline` | supersession ignored; plain cosine similarity |
+
+This endpoint returns only `answer` + `sourceIds`. The eval `/ask` (§6) returns
+the full `RagContextDTO`, which also carries `mode` and `retrieved`.
+
 ### Error responses
 
 | Status | Body | When |
 |--------|------|------|
-| `401` | `{ "error": "Not authenticated" }` | missing/invalid token |
+| `403` | *(empty)* | missing/invalid token — Spring Security's default entry point rejects the request before the controller runs |
 | `403` | `{ "error": "You are not a member of this channel" }` | not a channel member |
 | `400` | `{ "error": "Query is required" }` | `q` blank |
-| `400` | `{ "error": "For input string: \"abc\"" }` | non-numeric `channelId` |
+| `400` | Spring's default error body (`timestamp`/`status`/`error`/`path`) | non-numeric `channelId` — fails at `@PathVariable Long` binding |
 
 ---
 
@@ -139,8 +153,10 @@ Example: `GET /api/channels/3/ask?q=What is the secret password`
 
 ## 3. How memory gets populated (important for testing)
 
-There is **no REST endpoint to post a channel message.** Messages are sent over
-WebSocket (STOMP), which is what triggers the async embedding pipeline:
+There is **no REST endpoint to post a channel message in a normal deployment** —
+set `RECALL_EVAL_ENABLED=true` to expose `/api/eval/channels/{id}/message` for
+seeding (§6). Otherwise messages are sent over WebSocket (STOMP), which is what
+triggers the async embedding pipeline:
 
 - Send:      `/app/channel/{channelId}/send`
 - Subscribe: `/topic/channel/{channelId}`
@@ -186,6 +202,43 @@ messages; use Postman for `/ask` and the REST endpoints above.
 Requires `DEEPGRAM_API_KEY` set in `.env`. The saved transcript is also chunked and
 embedded into `memory_vectors`, so it becomes searchable via `/ask`.
 
+### 4c. Upload a browser call recording
+`POST /api/channels/{channelId}/recording`  ·  `multipart/form-data`, field `file`
+
+Transcribes the uploaded bytes directly (no `audioUrl` round-trip) and files the
+result through the same ingestion path. `200 OK` → the same transcript shape as
+4b; `204 No Content` when the recording transcribes to nothing (a silent call).
+Uploads are capped at 100MB (`spring.servlet.multipart` in `application.yml`).
+
+### 4d. List saved transcripts
+`GET /api/channels/{channelId}/transcripts` → `200 OK`, array of the transcript
+shape above, most recent first.
+
+### 4e. Call status
+`GET /api/channels/{channelId}/call-status` → `200 OK`
+```json
+{ "active": true, "participants": 2 }
+```
+
+### 4f. Channel decisions
+`GET /api/channels/{channelId}/decisions` → `200 OK`
+```json
+[
+  {
+    "id": "0f0a6f0e-9e2b-4a1e-9f0a-1c2d3e4f5a6b",
+    "channelId": 3,
+    "content": "We're going with Postgres for the vector store.",
+    "sourceType": "MESSAGE",
+    "sourceId": 3,
+    "superseded": false,
+    "createdAt": "2026-07-31T09:00:00.00"
+  }
+]
+```
+Extracted decisions for the channel — both active and superseded — newest first.
+
+All of the above are members-only and use the same `403` behaviour as §1.
+
 ---
 
 ## 5. Quick curl (copy-paste)
@@ -201,3 +254,32 @@ curl -s -G "$BASE/api/channels/3/ask" \
   --data-urlencode "q=What is the secret password" \
   -H "Authorization: Bearer $TOKEN"
 ```
+
+---
+
+## 6. Evaluation endpoints (`RECALL_EVAL_ENABLED=true` only)
+
+Absent from a normal deployment — the controller is `@ConditionalOnProperty`.
+They exist so the staleness evaluation can seed a corpus over HTTP; everything
+still routes through the production ingestion path. Members only, same auth
+behaviour as §1.
+
+| Endpoint | Body / params | Purpose |
+|----------|---------------|---------|
+| `POST /api/eval/channels/{channelId}/message` | `{ "content": "..." }` | Post a chat message without the WebSocket → `{ "id": 12 }` |
+| `POST /api/eval/channels/{channelId}/transcript` | `{ "content": "..." }` | File a call transcript without Deepgram → `{ "id": 4 }` |
+| `GET /api/eval/channels/{channelId}/memory-count` | — | `{ "count": 7 }` — ingestion is async, poll this until it settles |
+| `GET /api/eval/channels/{channelId}/ask?q=` | `q` | Full `RagContextDTO` |
+
+The eval `/ask` returns more than the product one:
+```json
+{
+  "answer": "The database secret password is banana-pancake.",
+  "sourceIds": [3],
+  "mode": "filter",
+  "retrieved": ["The secret password for the database is banana-pancake."]
+}
+```
+`mode` is the active `RECALL_RETRIEVAL_MODE`; `retrieved` is the raw text of every
+chunk handed to the LLM, in prompt order — so a retrieval failure can be told
+apart from a synthesis failure.
