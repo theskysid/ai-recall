@@ -314,6 +314,11 @@ public class DecisionService {
     /**
      * Short label for the decisions list. Falls back to the first few words of
      * the content when the LLM is unavailable, so a title always exists.
+     *
+     * Deliberately not a three-way result like the two stages above: a title is
+     * cosmetic, the fallback invents nothing (it is the content's own opening
+     * words), and no measurement reads it. Both fallback paths log, so a run of
+     * truncated titles is diagnosable, but nothing counts them.
      */
     String generateTitle(String content) {
         if (content == null || content.isBlank()) {
@@ -328,8 +333,9 @@ public class DecisionService {
             if (!title.isBlank() && title.length() <= 120) {
                 return title;
             }
+            logger.warn("Unusable title reply, falling back to content: {}", abbreviate(title));
         } catch (Exception e) {
-            logger.warn("Title generation failed: {}", e.getMessage());
+            logger.warn("Title generation failed, falling back to content: {}", e.getMessage());
         }
         return truncateWords(content, 8);
     }

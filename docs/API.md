@@ -42,6 +42,7 @@
 - `POST /api/eval/channels/{channelId}/transcript` - Seed a test transcript
 - `GET /api/eval/channels/{channelId}/memory-count` - Check memory stats
 - `GET /api/eval/channels/{channelId}/ask` - Test AI RAG
+- `GET /api/eval/llm-errors` - Extractor and classifier failure counts since startup
 
 ## STOMP / WebSocket Destinations
 

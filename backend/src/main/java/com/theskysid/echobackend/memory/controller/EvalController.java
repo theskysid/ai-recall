@@ -9,6 +9,7 @@ import com.theskysid.echobackend.channel.repository.ChannelRepository;
 import com.theskysid.echobackend.channel.service.ChannelService;
 import com.theskysid.echobackend.memory.dto.RagContextDTO;
 import com.theskysid.echobackend.memory.repository.MemoryVectorRepository;
+import com.theskysid.echobackend.memory.service.DecisionService;
 import com.theskysid.echobackend.memory.service.MemoryIngestionService;
 import com.theskysid.echobackend.memory.service.RagService;
 import com.theskysid.echobackend.user.entity.User;
@@ -62,6 +63,9 @@ public class EvalController {
 
     @Autowired
     private RagService ragService;
+
+    @Autowired
+    private DecisionService decisionService;
 
     @Autowired
     private AuthenticationService authenticationService;
@@ -135,6 +139,24 @@ public class EvalController {
             RagContextDTO result = ragService.retrieveContext(String.valueOf(channelId), query);
             return ResponseEntity.ok(result);
         });
+    }
+
+    /**
+     * GET /api/eval/llm-errors — how many texts the decision extractor and how many
+     * pairs the conflict classifier failed on since startup. Both stages fall back
+     * to "nothing to record" on failure, so a run with a throttled model produces
+     * quietly fewer decisions rather than wrong ones; without these the harness
+     * would score that as a retrieval result. Read before and after a run and take
+     * the difference — the counters are cumulative and process-wide, not per channel.
+     */
+    @GetMapping("/llm-errors")
+    public ResponseEntity<?> llmErrors(Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+        }
+        return ResponseEntity.ok(Map.of(
+                "extractionErrors", decisionService.getExtractionErrorCount(),
+                "classificationErrors", decisionService.getClassificationErrorCount()));
     }
 
     /**

@@ -270,6 +270,13 @@ behaviour as §1.
 | `POST /api/eval/channels/{channelId}/transcript` | `{ "content": "..." }` | File a call transcript without Deepgram → `{ "id": 4 }` |
 | `GET /api/eval/channels/{channelId}/memory-count` | — | `{ "count": 7 }` — ingestion is async, poll this until it settles |
 | `GET /api/eval/channels/{channelId}/ask?q=` | `q` | Full `RagContextDTO` |
+| `GET /api/eval/llm-errors` | — | `{ "extractionErrors": 0, "classificationErrors": 2 }` — cumulative since startup, process-wide, any authenticated caller |
+
+Both ingestion stages fall back to "record nothing" when the LLM fails, so a
+throttled model yields quietly fewer decisions rather than wrong ones. Read
+`llm-errors` before and after a run and take the difference: a nonzero
+`extractionErrors` caps what the classifier ever saw, which invalidates a
+classification measurement taken in the same run.
 
 The eval `/ask` returns more than the product one:
 ```json
