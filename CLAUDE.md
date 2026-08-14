@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+> **Notice**: For documentation on the actual current state of the architecture, schemas, API, and status, please see the [docs](docs/) directory.
+
 **Recall** (codebase: Echo Messaging) — a real-time chat + AI-memory app:
 Spring Boot (Java 21) backend + React (Vite) frontend, over WebSocket
 (STOMP/SockJS), PostgreSQL 16 + pgvector. Channels support text chat, LiveKit
