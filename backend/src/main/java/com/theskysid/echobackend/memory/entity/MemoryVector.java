@@ -46,10 +46,31 @@ public class MemoryVector {
     @Column(name = "is_decision", nullable = false, columnDefinition = "boolean not null default false")
     private boolean isDecision = false;
 
+    // Short human label for the item, generated at ingestion. Nullable on
+    // purpose: rows written before titles existed keep a null title and the UI
+    // falls back to the content.
+    @Column(name = "title")
+    private String title;
+
+    // What retrieval and the UI read. Kept in step with supersedesId:
+    // status == SUPERSEDED iff supersedesId != null. The DB default lets
+    // ddl-auto add the column to an already-populated table; existing
+    // superseded rows are corrected by backfillStatuses() on startup.
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    @Column(name = "status", nullable = false,
+            columnDefinition = "varchar(20) not null default 'CURRENT'")
+    private MemoryStatus status = MemoryStatus.CURRENT;
+
     // If set, the id of the newer decision that replaced this one. When present,
     // this vector is superseded and gets demoted in retrieval.
     @Column(name = "supersedes_id")
     private UUID supersedesId;
+
+    // The other side of an unresolved clash. Set on both rows, pointing at each
+    // other, when status == UNRESOLVED. Neither row is demoted.
+    @Column(name = "conflicts_with_id")
+    private UUID conflictsWithId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

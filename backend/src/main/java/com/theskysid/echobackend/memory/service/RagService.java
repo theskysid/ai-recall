@@ -9,6 +9,7 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -34,9 +35,25 @@ public class RagService {
     private ChatLanguageModel chatLanguageModel;
 
     /**
+     * How retrieval treats a decision that a later decision superseded:
+     *
+     *   filter   — exclude it outright; it can never reach the prompt (default)
+     *   demote   — add a large penalty to its distance so it sorts last, but let
+     *              it fill a slot when there is nothing else (previous behaviour)
+     *   baseline — ignore supersession entirely; plain cosine similarity
+     *
+     * Only "filter" actually guarantees stale context stays out: "demote" still
+     * backfills dead decisions in a channel holding fewer than 5 active vectors.
+     * The other two arms exist so the filter can be measured against a control
+     * that differs in nothing else.
+     */
+    @Value("${recall.retrieval.mode:filter}")
+    private String retrievalMode;
+
+    /**
      * Embed the query, fetch the top 5 most similar memory vectors for the given
-     * channel only (superseded decisions demoted), combine their text, and ask
-     * the LLM to synthesize a natural-language answer grounded in that context.
+     * channel only (superseded decisions handled per retrievalMode), combine
+     * their text, and ask the LLM to synthesize an answer grounded in that context.
      */
     public RagContextDTO retrieveContext(String channelId, String query) {
         if (query == null || query.isBlank()) {
@@ -47,22 +64,28 @@ public class RagService {
         float[] queryEmbedding = embeddingService.embed(query);
         String vectorLiteral = toVectorLiteral(queryEmbedding);
 
-        List<MemoryVector> matches = memoryVectorRepository
-                .findTop5ByChannelAndSimilarity(channel, vectorLiteral);
+        String mode = retrievalMode == null ? "filter" : retrievalMode.trim().toLowerCase();
+        List<MemoryVector> matches = switch (mode) {
+            case "baseline" -> memoryVectorRepository.findTop5Baseline(channel, vectorLiteral);
+            case "demote" -> memoryVectorRepository.findTop5ByChannelAndSimilarity(channel, vectorLiteral);
+            default -> memoryVectorRepository.findTop5ActiveOnly(channel, vectorLiteral);
+        };
 
-        String context = matches.stream()
+        List<String> contents = matches.stream()
                 .map(MemoryVector::getContent)
-                .collect(Collectors.joining("\n\n"));
+                .collect(Collectors.toList());
 
         List<Long> sourceIds = matches.stream()
                 .map(MemoryVector::getSourceId)
                 .collect(Collectors.toList());
 
-        String answer = generateAnswer(query, context);
+        String answer = generateAnswer(query, String.join("\n\n", contents));
 
         return RagContextDTO.builder()
                 .answer(answer)
                 .sourceIds(sourceIds)
+                .mode(mode)
+                .retrieved(contents)
                 .build();
     }
 

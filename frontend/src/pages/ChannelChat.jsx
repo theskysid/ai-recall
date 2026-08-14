@@ -86,7 +86,10 @@ const ChannelChat = ({
         };
     }, [channelId, inCall]);
 
+    const [highlightedId, setHighlightedId] = useState(null);
+
     const messagesEndRef = useRef(null);
+    const highlightTimerRef = useRef(null);
     const messageIdsRef = useRef(new Set());
     const isInitialScrollRef = useRef(true);
     const copyTimerRef = useRef(null);
@@ -164,6 +167,21 @@ const ChannelChat = ({
     }, [channelId, isConnected, subscribeToChannel, handleIncoming]);
 
     useEffect(() => () => clearTimeout(copyTimerRef.current), []);
+
+    // Jump to the message a memory item came from. Returns false when the id is
+    // not on screen — the memory outlived the message — so the caller can say so
+    // instead of scrolling nowhere.
+    const viewMessage = useCallback((messageId) => {
+        const el = document.getElementById(`msg-${messageId}`);
+        if (!el) return false;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setHighlightedId(messageId);
+        clearTimeout(highlightTimerRef.current);
+        highlightTimerRef.current = setTimeout(() => setHighlightedId(null), 1800);
+        return true;
+    }, []);
+
+    useEffect(() => () => clearTimeout(highlightTimerRef.current), []);
 
     const sendMessage = (e) => {
         e.preventDefault();
@@ -275,7 +293,10 @@ const ChannelChat = ({
             return (
                 <React.Fragment key={msg.id || index}>
                     {divider}
-                    <div className={`ch-msg ${isLead ? 'is-lead' : ''} ${isOwn ? 'is-own' : ''}`}>
+                    <div
+                        id={msg.id != null ? `msg-${msg.id}` : undefined}
+                        className={`ch-msg ${isLead ? 'is-lead' : ''} ${isOwn ? 'is-own' : ''} ${msg.id === highlightedId ? 'is-found' : ''}`}
+                    >
                         <div className="ch-msg-gutter">
                             {isLead ? (
                                 <span
@@ -399,7 +420,7 @@ const ChannelChat = ({
             {!inCall && (
                 <div className="ch-intel">
                     <AskAiWidget channelId={channelId} channelName={channel?.name} />
-                    <MemoryPanel channelId={channelId} />
+                    <MemoryPanel channelId={channelId} onViewMessage={viewMessage} />
                 </div>
             )}
 

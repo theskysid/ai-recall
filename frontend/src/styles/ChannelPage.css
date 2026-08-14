@@ -886,6 +886,30 @@
     box-shadow: inset 0 0 0 1px var(--ch-fg-3);
 }
 
+/* Contested: still standing, so it keeps a filled dot — just not the
+   record's green, which would read as settled. */
+.ch-dec.is-clash .ch-dec-dot {
+    background: var(--ch-bad);
+}
+
+.ch-dec-title {
+    margin: 0 0 2px;
+    max-width: 68ch;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--ch-fg);
+}
+
+.ch-dec.is-old .ch-dec-title {
+    color: var(--ch-fg-2);
+}
+
+/* With a title above it, the body text is the supporting line. */
+.ch-dec-title + .ch-dec-text {
+    color: var(--ch-fg-2);
+}
+
 .ch-dec-text {
     margin: 0;
     max-width: 68ch;
@@ -923,6 +947,24 @@
 .ch-tag-old {
     background: var(--ch-raised-3);
     color: var(--ch-fg-2);
+}
+
+.ch-tag-clash {
+    background: var(--ch-bad-dim);
+    color: var(--ch-bad);
+}
+
+.ch-dec-jump {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: var(--ch-you);
+    cursor: pointer;
+}
+
+.ch-dec-jump:hover {
+    text-decoration: underline;
 }
 
 /* Transcripts */
@@ -1017,6 +1059,14 @@
    enough to read as a row. */
 .ch-msg:hover {
     background: rgba(16, 24, 40, 0.022);
+}
+
+/* Arrived here from "View message" in the memory panel. Held for a moment,
+   then faded — the record's green, since the memory panel sent you. */
+.ch-msg.is-found {
+    background: var(--ch-rec-dim);
+    box-shadow: inset 2px 0 0 var(--ch-rec);
+    transition: background 0.5s var(--ch-ease), box-shadow 0.5s var(--ch-ease);
 }
 
 .ch-msg.is-lead {

@@ -1,0 +1,249 @@
+{
+  "notes": "Synthetic staleness-blindness corpus. t1 messages are posted as chat, t2 as a call transcript, padding as chat. Padding exists so each channel holds more than 5 active vectors — without it the LIMIT 5 retrieval returns superseded chunks in every arm and the arms become indistinguishable.",
+  "scenarios": [
+    {
+      "id": "S1",
+      "title": "Database choice",
+      "change_type": "entity swap",
+      "channel": "eval-s1-database",
+      "t1_messages": [
+        "Priya: Alright, decision made - we're going with MongoDB for the primary datastore.",
+        "Dev: Good call, the flexible schema will save us a ton of migration pain early on.",
+        "Priya: Exactly. I'll set up the Atlas cluster this week.",
+        "Marco: +1 on Mongo. I've used it on two projects, the aggregation pipeline is solid.",
+        "Dev: I'll start on the Mongoose models tomorrow then."
+      ],
+      "t2_transcript": "[Architecture Review - 00:14:22]\nPriya: So after the load test we're reversing the datastore decision. We're moving to PostgreSQL, not MongoDB. The relational joins we need for reporting were killing us in Mongo.\nMarco: Agreed, Postgres it is.",
+      "padding": [
+        "Dev: We're standardising on pnpm for package management across all repos.",
+        "Marco: Decision: CI runs on GitHub Actions, not Jenkins.",
+        "Priya: We're using Tailwind for styling, that's settled.",
+        "Dev: Log aggregation goes to Grafana Loki. Final answer.",
+        "Marco: We're pinning Node to version 20 LTS everywhere.",
+        "Priya: Code review requires one approval, not two. Decided.",
+        "Dev: We're using Vitest for unit tests, not Jest.",
+        "Marco: Container base image is Debian slim, decision made."
+      ],
+      "gold": {
+        "current": "PostgreSQL",
+        "stale": "MongoDB",
+        "answer": "PostgreSQL. The team initially chose MongoDB but reversed that on day 7 after load testing showed relational joins for reporting performed poorly."
+      },
+      "current_keywords": ["postgres", "postgresql"],
+      "stale_keywords": ["mongo", "mongodb", "atlas", "mongoose"],
+      "stale_chunk_marker": "we're going with MongoDB for the primary datastore",
+      "queries": [
+        {"id": "Q1", "form": "direct", "text": "What database are we using?"},
+        {"id": "Q2", "form": "past-tense", "text": "What database did we decide on?"},
+        {"id": "Q3", "form": "current-state", "text": "What's the current datastore decision?"},
+        {"id": "Q4", "form": "stale-anchored", "text": "Are we still on MongoDB?"},
+        {"id": "Q5", "form": "indirect", "text": "What should I use for the new service's persistence layer?"},
+        {"id": "Q6", "form": "comparative", "text": "Did the database choice change?"}
+      ]
+    },
+    {
+      "id": "S2",
+      "title": "Deployment date",
+      "change_type": "date shift",
+      "channel": "eval-s2-deploy-date",
+      "t1_messages": [
+        "Sam: Confirmed with leadership - production deploy is November 14th.",
+        "Ana: Noted, I'll freeze the release branch on the 12th.",
+        "Sam: Perfect. Nov 14 it is, that gives QA a full week.",
+        "Ravi: I'll book the war room for the 14th."
+      ],
+      "t2_transcript": "[Release Sync - 00:03:51]\nSam: Small change - the deploy is pushed to December 5th. The compliance sign-off won't land before the 14th, so November is off the table.\nAna: December 5th, updating the calendar now.",
+      "padding": [
+        "Ana: Decision: we ship behind a feature flag, not a big-bang release.",
+        "Ravi: Rollback window is 30 minutes, that's agreed.",
+        "Sam: We're doing a canary to 5% of traffic first. Settled.",
+        "Ana: On-call rotation for launch week is Ravi then Ana. Decided.",
+        "Ravi: Status page updates go out manually, not automated.",
+        "Sam: We're freezing dependency upgrades two weeks before launch.",
+        "Ana: Decision: no schema migrations on deploy day.",
+        "Ravi: Launch retro happens the Monday after, that's fixed."
+      ],
+      "gold": {
+        "current": "December 5th",
+        "stale": "November 14th",
+        "answer": "December 5th. It was originally set for November 14th but moved because compliance sign-off would not complete in time."
+      },
+      "current_keywords": ["december", "dec 5", "december 5"],
+      "stale_keywords": ["november", "nov 14", "november 14", "14th"],
+      "stale_chunk_marker": "production deploy is November 14th",
+      "queries": [
+        {"id": "Q1", "form": "direct", "text": "When are we deploying to production?"},
+        {"id": "Q2", "form": "past-tense", "text": "What deploy date did we agree on?"},
+        {"id": "Q3", "form": "current-state", "text": "What's the current production deploy date?"},
+        {"id": "Q4", "form": "stale-anchored", "text": "Are we still deploying on November 14th?"},
+        {"id": "Q5", "form": "indirect", "text": "How long do I have before the production release?"},
+        {"id": "Q6", "form": "comparative", "text": "Did the deploy date change?"}
+      ]
+    },
+    {
+      "id": "S3",
+      "title": "Marketing budget",
+      "change_type": "budget cut with numeric ambiguity",
+      "channel": "eval-s3-budget",
+      "t1_messages": [
+        "Lena: Q3 paid budget is locked: $50,000, split 60/40 between search and social.",
+        "Tom: $50k works. I'll brief the agency on the 60/40 split.",
+        "Lena: Great - 30k search, 20k social.",
+        "Tom: Agency confirmed they can absorb the $50k spend across the quarter."
+      ],
+      "t2_transcript": "[Budget Review - 00:21:07]\nLena: Finance clawed back part of it. The Q3 paid budget is now $30,000, not fifty. All of the cut comes out of social - search stays at 30k, social goes to zero.\nTom: So 30k, search only. Got it.",
+      "padding": [
+        "Tom: Decision: we're running the brand campaign in Q4, not Q3.",
+        "Lena: Attribution model is last-click for now, that's settled.",
+        "Tom: We're dropping the podcast sponsorship. Decided.",
+        "Lena: Landing pages get built in Webflow, not in-house.",
+        "Tom: Decision: weekly reporting cadence, not daily.",
+        "Lena: We're targeting mid-market only this quarter, that's final.",
+        "Tom: Creative refresh happens every six weeks. Agreed.",
+        "Lena: Decision: no influencer spend this year."
+      ],
+      "gold": {
+        "current": "$30,000, all to search",
+        "stale": "$50,000 split 60/40",
+        "answer": "$30,000, all allocated to search. It was originally $50,000 split 60/40 between search and social, but finance cut it and the reduction came entirely out of social."
+      },
+      "current_keywords": ["30,000", "30k", "$30"],
+      "stale_keywords": ["50,000", "50k", "$50", "60/40", "20k", "20,000"],
+      "stale_chunk_marker": "Q3 paid budget is locked: $50,000",
+      "queries": [
+        {"id": "Q1", "form": "direct", "text": "How much is the Q3 marketing budget?"},
+        {"id": "Q2", "form": "past-tense", "text": "What budget did we agree for Q3 paid?"},
+        {"id": "Q3", "form": "current-state", "text": "What's the current Q3 paid spend?"},
+        {"id": "Q4", "form": "stale-anchored", "text": "Is the Q3 budget still $50,000?"},
+        {"id": "Q5", "form": "indirect", "text": "How much can I commit to the agency for Q3?"},
+        {"id": "Q6", "form": "comparative", "text": "Did the Q3 budget change?"}
+      ]
+    },
+    {
+      "id": "S4",
+      "title": "Auth provider",
+      "change_type": "vendor change",
+      "channel": "eval-s4-auth",
+      "t1_messages": [
+        "Dev: We're going with Auth0 for authentication. Decision is final.",
+        "Priya: Makes sense, SSO and MFA out of the box.",
+        "Dev: Right, and the free tier covers us to 7,000 monthly active users.",
+        "Marco: I'll wire up the Auth0 React SDK on the frontend."
+      ],
+      "t2_transcript": "[Security Review - 00:11:40]\nDev: Auth0 is out. Legal won't approve the data-residency terms, so we're self-hosting Keycloak instead.\nPriya: Keycloak, confirmed. I'll kill the Auth0 tenant.",
+      "padding": [
+        "Priya: Session tokens expire after one hour, that's decided.",
+        "Marco: We're storing refresh tokens in httpOnly cookies. Settled.",
+        "Dev: Password minimum is 12 characters, final.",
+        "Priya: Decision: MFA is optional for now, mandatory for admins.",
+        "Marco: Rate limiting is 100 requests per minute per IP. Agreed.",
+        "Dev: We're logging auth failures to a separate audit table.",
+        "Priya: Decision: no social login besides Google.",
+        "Marco: Account lockout after 10 failed attempts, that's fixed."
+      ],
+      "gold": {
+        "current": "self-hosted Keycloak",
+        "stale": "Auth0",
+        "answer": "Self-hosted Keycloak. Auth0 was chosen first but rejected on day 6 because legal would not approve its data-residency terms."
+      },
+      "current_keywords": ["keycloak"],
+      "stale_keywords": ["auth0", "auth 0"],
+      "stale_chunk_marker": "We're going with Auth0 for authentication",
+      "queries": [
+        {"id": "Q1", "form": "direct", "text": "Which auth provider are we using?"},
+        {"id": "Q2", "form": "past-tense", "text": "Which auth provider did we pick?"},
+        {"id": "Q3", "form": "current-state", "text": "What's the current authentication decision?"},
+        {"id": "Q4", "form": "stale-anchored", "text": "Are we still using Auth0?"},
+        {"id": "Q5", "form": "indirect", "text": "What do I integrate against for login on the new client?"},
+        {"id": "Q6", "form": "comparative", "text": "Did the auth provider change?"}
+      ]
+    },
+    {
+      "id": "S5",
+      "title": "Release scope",
+      "change_type": "scope reduction (superset trap)",
+      "channel": "eval-s5-scope",
+      "t1_messages": [
+        "Ravi: v2 scope is agreed: offline mode, real-time collaboration, and the analytics dashboard. All three ship together.",
+        "Ana: All three, confirmed. I'll write the epics.",
+        "Ravi: Offline mode is the headline feature, that's the one marketing wants.",
+        "Sam: Real-time collab is the biggest lift but the team's up for it."
+      ],
+      "t2_transcript": "[Scope Cut Call - 00:07:15]\nRavi: We're cutting v2 down. Only the analytics dashboard ships in v2 - offline mode and real-time collaboration both move to v3.\nAna: Analytics only for v2. Updating the roadmap.",
+      "padding": [
+        "Ana: Decision: v2 is web only, no mobile app.",
+        "Sam: We're supporting the last two browser versions, that's settled.",
+        "Ravi: Decision: pricing stays unchanged for v2.",
+        "Ana: Beta group is 20 existing customers. Agreed.",
+        "Sam: We're writing the migration guide before launch, not after.",
+        "Ravi: Decision: no public API in v2.",
+        "Ana: Onboarding gets a redesign in v3, not v2.",
+        "Sam: Support handover happens two weeks before GA, that's fixed."
+      ],
+      "gold": {
+        "current": "analytics dashboard only",
+        "stale": "offline mode, real-time collaboration, and analytics dashboard",
+        "answer": "Only the analytics dashboard. Offline mode and real-time collaboration were originally in v2 but were deferred to v3 on day 8."
+      },
+      "current_keywords": ["analytics"],
+      "stale_keywords": ["offline mode", "real-time collab", "real time collab", "realtime collab"],
+      "stale_chunk_marker": "v2 scope is agreed: offline mode",
+      "queries": [
+        {"id": "Q1", "form": "direct", "text": "What's shipping in v2?"},
+        {"id": "Q2", "form": "past-tense", "text": "What did we agree to include in v2?"},
+        {"id": "Q3", "form": "current-state", "text": "What's the current v2 scope?"},
+        {"id": "Q4", "form": "stale-anchored", "text": "Is offline mode still in v2?"},
+        {"id": "Q5", "form": "indirect", "text": "What should I put on the v2 release notes?"},
+        {"id": "Q6", "form": "comparative", "text": "Did the v2 scope change?"}
+      ]
+    }
+  ],
+  "controls": {
+    "channel": "eval-controls",
+    "notes": "Proves the filter is safe, not merely active. Without these the study shows supersession does something, not that it does no harm.",
+    "cases": [
+      {
+        "id": "C1",
+        "kind": "never-superseded",
+        "expect": "The filter must not degrade retrieval of a decision nothing replaced.",
+        "messages": [
+          "Marco: Decision: the API rate limit is 100 requests per minute per key.",
+          "Priya: 100 rpm per key, noted. I'll document it."
+        ],
+        "query": "What is the API rate limit?",
+        "expect_keywords": ["100"]
+      },
+      {
+        "id": "C2",
+        "kind": "similar-but-independent",
+        "expect": "replaces() must return NO for both. If either gets superseded, that is a false-supersession and the precision metric drops.",
+        "messages": [
+          "Dev: Decision: the staging database runs Postgres 15.",
+          "Dev: Decision: the production database runs Postgres 16."
+        ],
+        "query": "What Postgres version does production run?",
+        "expect_keywords": ["16"]
+      },
+      {
+        "id": "C3",
+        "kind": "reinstated",
+        "expect": "Chained supersession: the middle decision must end up superseded, the third must be live.",
+        "messages": [
+          "Ana: Decision: standups are at 9:30am.",
+          "Ana: Change of plan - standups move to 11:00am.",
+          "Ana: Reverting again, standups go back to 9:30am. Final."
+        ],
+        "query": "What time is standup?",
+        "expect_keywords": ["9:30"]
+      },
+      {
+        "id": "C4",
+        "kind": "unanswerable",
+        "expect": "Must decline, not confabulate from the nearest neighbour.",
+        "messages": [],
+        "query": "What did we decide about the Berlin office lease?",
+        "expect_keywords": ["do not know", "don't know", "no information", "not in the context"]
+      }
+    ]
+  }
+}

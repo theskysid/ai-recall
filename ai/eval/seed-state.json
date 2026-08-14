@@ -1,0 +1,144 @@
+{
+  "base": "http://localhost:8080",
+  "rpm": 24,
+  "multi_user": true,
+  "speakers": [
+    {
+      "speaker": "Dev",
+      "username": "dev",
+      "email": "dev@eval.local"
+    },
+    {
+      "speaker": "Marco",
+      "username": "marco",
+      "email": "marco@eval.local"
+    },
+    {
+      "speaker": "Priya",
+      "username": "priya",
+      "email": "priya@eval.local"
+    },
+    {
+      "speaker": "Ana",
+      "username": "ana",
+      "email": "ana@eval.local"
+    },
+    {
+      "speaker": "Ravi",
+      "username": "ravi",
+      "email": "ravi@eval.local"
+    },
+    {
+      "speaker": "Sam",
+      "username": "sam",
+      "email": "sam@eval.local"
+    },
+    {
+      "speaker": "Lena",
+      "username": "lena",
+      "email": "lena@eval.local"
+    },
+    {
+      "speaker": "Tom",
+      "username": "tom",
+      "email": "tom@eval.local"
+    }
+  ],
+  "scenarios": {
+    "S1": {
+      "channel_id": 15,
+      "channel_name": "eval-s1-database-3",
+      "vectors": 14,
+      "decisions_extracted": 11,
+      "decisions_superseded": 2,
+      "t1_correctly_superseded": true,
+      "superseded_content": [
+        "Good call, the flexible schema will save us a ton of migration pain early on.",
+        "Alright, decision made - we're going with MongoDB for the primary datastore."
+      ]
+    },
+    "S2": {
+      "channel_id": 16,
+      "channel_name": "eval-s2-deploy-date-3",
+      "vectors": 13,
+      "decisions_extracted": 11,
+      "decisions_superseded": 2,
+      "t1_correctly_superseded": true,
+      "superseded_content": [
+        "Noted, I'll freeze the release branch on the 12th.",
+        "Confirmed with leadership - production deploy is November 14th."
+      ]
+    },
+    "S3": {
+      "channel_id": 17,
+      "channel_name": "eval-s3-budget-3",
+      "vectors": 13,
+      "decisions_extracted": 11,
+      "decisions_superseded": 3,
+      "t1_correctly_superseded": true,
+      "superseded_content": [
+        "Agency confirmed they can absorb the $50k spend across the quarter.",
+        "$50k works. I'll brief the agency on the 60/40 split.",
+        "Q3 paid budget is locked: $50,000, split 60/40 between search and social."
+      ]
+    },
+    "S4": {
+      "channel_id": 18,
+      "channel_name": "eval-s4-auth-3",
+      "vectors": 13,
+      "decisions_extracted": 13,
+      "decisions_superseded": 2,
+      "t1_correctly_superseded": true,
+      "superseded_content": [
+        "I'll wire up the Auth0 React SDK on the frontend.",
+        "We're going with Auth0 for authentication. Decision is final."
+      ]
+    },
+    "S5": {
+      "channel_id": 19,
+      "channel_name": "eval-s5-scope-3",
+      "vectors": 13,
+      "decisions_extracted": 9,
+      "decisions_superseded": 1,
+      "t1_correctly_superseded": true,
+      "superseded_content": [
+        "v2 scope is agreed: offline mode, real-time collaboration, and the analytics dashboard. All three ship together."
+      ]
+    }
+  },
+  "controls": {
+    "channel_id": 20,
+    "channel_name": "eval-controls-3",
+    "vectors": 7,
+    "decisions": [
+      {
+        "content": "Reverting again, standups go back to 9:30am. Final.",
+        "superseded": false
+      },
+      {
+        "content": "Change of plan - standups move to 11:00am.",
+        "superseded": true
+      },
+      {
+        "content": "Decision: standups are at 9:30am.",
+        "superseded": true
+      },
+      {
+        "content": "Decision: the production database runs Postgres 16.",
+        "superseded": false
+      },
+      {
+        "content": "Decision: the staging database runs Postgres 15.",
+        "superseded": false
+      },
+      {
+        "content": "100 rpm per key, noted. I'll document it.",
+        "superseded": false
+      },
+      {
+        "content": "Decision: the API rate limit is 100 requests per minute per key.",
+        "superseded": false
+      }
+    ]
+  }
+}

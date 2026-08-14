@@ -11,9 +11,14 @@ import java.util.UUID;
 public class DecisionDTO {
     private UUID id;
     private Long channelId;
+    private String title;
     private String content;
     private String sourceType;
     private Long sourceId;
+    /** CURRENT | SUPERSEDED | UNRESOLVED. */
+    private String status;
+    /** Kept for existing callers; true exactly when status is SUPERSEDED. */
     private boolean superseded;
+    private UUID conflictsWithId;
     private LocalDateTime createdAt;
 }

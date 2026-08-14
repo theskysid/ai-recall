@@ -60,6 +60,15 @@ livekit:
 deepgram:
   api-key: ${DEEPGRAM_API_KEY:}
 
+# Memory retrieval + evaluation harness
+recall:
+  retrieval:
+    # filter (default) | demote | baseline — see RagService.retrievalMode.
+    mode: ${RECALL_RETRIEVAL_MODE:filter}
+  eval:
+    # Exposes /api/eval/** for seeding the evaluation corpus. Keep false in prod.
+    enabled: ${RECALL_EVAL_ENABLED:false}
+
 # OTP settings
 otp:
   expiry-minutes: 5

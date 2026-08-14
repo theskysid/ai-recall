@@ -12,7 +12,22 @@ const formatTime = (ts) => {
     return isNaN(d.getTime()) ? '' : d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
-const MemoryPanel = ({ channelId }) => {
+// CURRENT is the fallback: rows written before the status column existed, and
+// anything the backend sends with an unrecognised value, read as still standing.
+const STATUS_TAG = {
+    SUPERSEDED: { label: 'Superseded', className: 'ch-tag-old' },
+    UNRESOLVED: { label: 'Unresolved', className: 'ch-tag-clash' },
+    CURRENT: { label: 'Active', className: 'ch-tag-live' }
+};
+
+const statusOf = (d) => {
+    if (d.status && STATUS_TAG[d.status]) return d.status;
+    return d.superseded ? 'SUPERSEDED' : 'CURRENT';
+};
+
+const SNIPPET_CHARS = 160;
+
+const MemoryPanel = ({ channelId, onViewMessage }) => {
     const [collapsed, setCollapsed] = useState(true);
     const [tab, setTab] = useState('decisions'); // 'decisions' | 'transcripts'
     const [decisions, setDecisions] = useState([]);
@@ -20,6 +35,7 @@ const MemoryPanel = ({ channelId }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [expandedId, setExpandedId] = useState(null);
+    const [viewError, setViewError] = useState('');
 
     const load = useCallback(async () => {
         if (channelId == null) return;
@@ -49,7 +65,26 @@ const MemoryPanel = ({ channelId }) => {
     useEffect(() => {
         setCollapsed(true);
         setExpandedId(null);
+        setViewError('');
     }, [channelId]);
+
+    // Take a decision back to where it came from.
+    //
+    // MESSAGE items scroll to the message itself. TRANSCRIPT items open the
+    // Transcripts tab and expand the whole call: transcripts render as one
+    // block per call, so there is nothing finer to point at. Addressing an
+    // individual transcript line would need a UI that does not exist yet.
+    const viewSource = (d) => {
+        setViewError('');
+        if (d.sourceType === 'TRANSCRIPT') {
+            setTab('transcripts');
+            setExpandedId(d.sourceId);
+            return;
+        }
+        if (!onViewMessage || !onViewMessage(d.sourceId)) {
+            setViewError('That message is no longer loaded in this channel.');
+        }
+    };
 
     const hasCounts = !collapsed && !isLoading && !error;
 
@@ -118,6 +153,13 @@ const MemoryPanel = ({ channelId }) => {
                         </button>
                     </div>
 
+                    {viewError && (
+                        <div className="ch-ask-fail" role="status">
+                            <Icon name="alert" size={14} />
+                            {viewError}
+                        </div>
+                    )}
+
                     {isLoading ? (
                         <div className="ch-working" role="status">
                             <span className="ch-pulse" />
@@ -137,22 +179,37 @@ const MemoryPanel = ({ channelId }) => {
                         ) : (
                             <div className="ch-mem-scroll">
                                 <ul className="ch-mem-list">
-                                    {decisions.map((d) => (
-                                        <li key={d.id}>
-                                            <div className={`ch-dec ${d.superseded ? 'is-old' : ''}`}>
-                                                <span className="ch-dec-dot" />
-                                                <div>
-                                                    <p className="ch-dec-text">{d.content}</p>
-                                                    <div className="ch-dec-meta">
-                                                        <span>{formatTime(d.createdAt)}</span>
-                                                        <span className={`ch-tag ${d.superseded ? 'ch-tag-old' : 'ch-tag-live'}`}>
-                                                            {d.superseded ? 'Superseded' : 'Active'}
-                                                        </span>
+                                    {decisions.map((d) => {
+                                        const status = statusOf(d);
+                                        const tag = STATUS_TAG[status];
+                                        const snippet = (d.content || '').length > SNIPPET_CHARS
+                                            ? `${d.content.slice(0, SNIPPET_CHARS).trimEnd()}…`
+                                            : d.content;
+                                        return (
+                                            <li key={d.id}>
+                                                <div className={`ch-dec ${status === 'SUPERSEDED' ? 'is-old' : ''} ${status === 'UNRESOLVED' ? 'is-clash' : ''}`}>
+                                                    <span className="ch-dec-dot" />
+                                                    <div>
+                                                        {d.title && <p className="ch-dec-title">{d.title}</p>}
+                                                        <p className="ch-dec-text">{snippet}</p>
+                                                        <div className="ch-dec-meta">
+                                                            <span>{formatTime(d.createdAt)}</span>
+                                                            <span className={`ch-tag ${tag.className}`}>{tag.label}</span>
+                                                            {d.sourceId != null && (
+                                                                <button
+                                                                    type="button"
+                                                                    className="ch-dec-jump"
+                                                                    onClick={() => viewSource(d)}
+                                                                >
+                                                                    {d.sourceType === 'TRANSCRIPT' ? 'View call' : 'View message'}
+                                                                </button>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </li>
-                                    ))}
+                                            </li>
+                                        );
+                                    })}
                                 </ul>
                             </div>
                         )

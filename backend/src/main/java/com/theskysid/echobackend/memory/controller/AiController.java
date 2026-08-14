@@ -4,6 +4,7 @@ import com.theskysid.echobackend.auth.service.AuthenticationService;
 import com.theskysid.echobackend.channel.service.ChannelService;
 import com.theskysid.echobackend.memory.dto.DecisionDTO;
 import com.theskysid.echobackend.memory.dto.RagContextDTO;
+import com.theskysid.echobackend.memory.entity.MemoryStatus;
 import com.theskysid.echobackend.memory.entity.MemoryVector;
 import com.theskysid.echobackend.memory.repository.MemoryVectorRepository;
 import com.theskysid.echobackend.memory.service.RagService;
@@ -96,13 +97,17 @@ public class AiController {
     }
 
     private DecisionDTO toDecisionDTO(MemoryVector v) {
+        MemoryStatus status = v.getStatus() == null ? MemoryStatus.CURRENT : v.getStatus();
         return DecisionDTO.builder()
                 .id(v.getId())
                 .channelId(v.getChannelId())
+                .title(v.getTitle())
                 .content(v.getContent())
                 .sourceType(v.getSourceType() == null ? null : v.getSourceType().name())
                 .sourceId(v.getSourceId())
-                .superseded(v.getSupersedesId() != null)
+                .status(status.name())
+                .superseded(status == MemoryStatus.SUPERSEDED)
+                .conflictsWithId(v.getConflictsWithId())
                 .createdAt(v.getCreatedAt())
                 .build();
     }
