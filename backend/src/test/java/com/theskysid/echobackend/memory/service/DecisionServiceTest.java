@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -179,6 +180,109 @@ class DecisionServiceTest {
     }
 
     // ── Parser and title fallback ────────────────────────────────────────
+
+    // ── Extraction: the three-way contract ───────────────────────────────
+
+    @Test
+    void extractorReadsYesAndNo() {
+        replies.add("NO");
+        assertEquals(DecisionService.ExtractionResult.NOT_A_DECISION,
+                decisionService.extractDecision("Anyone up for lunch?"));
+
+        replies.add("YES");
+        assertEquals(DecisionService.ExtractionResult.DECISION,
+                decisionService.extractDecision("We are going with Gearbase."));
+
+        // Blank input never reaches the model, and is not an error.
+        assertEquals(DecisionService.ExtractionResult.NOT_A_DECISION,
+                decisionService.extractDecision("  "));
+    }
+
+    @Test
+    void malformedExtractorReplyIsAnErrorNotANonDecision() {
+        replies.add("Hmm, that could be read either way.");
+
+        DecisionService.ExtractionResult result =
+                decisionService.extractDecision("We are going with Gearbase.");
+
+        assertEquals(DecisionService.ExtractionResult.LLM_ERROR, result);
+        assertNotEquals(DecisionService.ExtractionResult.NOT_A_DECISION, result);
+    }
+
+    @Test
+    void extractorExceptionIsAnErrorNotANonDecision() {
+        when(chatLanguageModel.generate(any(List.class)))
+                .thenThrow(new RuntimeException("rate_limit_exceeded"));
+
+        DecisionService.ExtractionResult result =
+                decisionService.extractDecision("We are going with Gearbase.");
+
+        assertEquals(DecisionService.ExtractionResult.LLM_ERROR, result);
+        assertNotEquals(DecisionService.ExtractionResult.NOT_A_DECISION, result);
+    }
+
+    @Test
+    void nonDecisionIsStoredAsAnOrdinaryMemory() {
+        MemoryVector v = ingest("Anyone up for lunch?", "NO", "");
+
+        assertFalse(v.isDecision());
+        assertNull(v.getTitle());
+        assertEquals(MemoryStatus.CURRENT, v.getStatus());
+        // DecisionService hands it back untouched; MemoryIngestionService saves it.
+        verify(memoryVectorRepository, never()).save(any(MemoryVector.class));
+    }
+
+    @Test
+    void extractionErrorStoresAnOrdinaryMemoryAndTouchesNothingElse() {
+        MemoryVector v = ingest(
+                "We are dropping Widgetron and moving the parts catalogue to Gearbase.",
+                "I'm not sure, it depends on context.", "");
+
+        // The vector survives as a plain memory — not a decision, not dropped.
+        assertNotNull(v.getContent());
+        assertFalse(v.isDecision());
+        assertNull(v.getTitle());
+        assertEquals(MemoryStatus.CURRENT, v.getStatus());
+        assertNull(v.getSupersedesId());
+        assertNull(v.getConflictsWithId());
+
+        // No supersession work happened at all: the old row is untouched and the
+        // classifier was never reached.
+        assertEquals(MemoryStatus.CURRENT, oldVector.getStatus());
+        assertNull(oldVector.getSupersedesId());
+        assertNull(oldVector.getConflictsWithId());
+        verify(memoryVectorRepository, never()).save(any(MemoryVector.class));
+        verify(memoryVectorRepository, never()).findTopDecisionsByChannel(anyLong(), anyString());
+
+        assertEquals(1, decisionService.getExtractionErrorCount());
+        assertEquals(0, decisionService.getClassificationErrorCount());
+    }
+
+    @Test
+    void extractionErrorsAreCountedSeparatelyFromClassificationErrors() {
+        replies.add("NO");
+        decisionService.extractDecision("chatter");
+        replies.add("YES");
+        decisionService.extractDecision("a decision");
+        assertEquals(0, decisionService.getExtractionErrorCount(),
+                "a successful extraction must not count as an error");
+
+        replies.add("Probably?");                    // malformed
+        decisionService.extractDecision("something");
+        assertEquals(1, decisionService.getExtractionErrorCount());
+
+        when(chatLanguageModel.generate(any(List.class)))
+                .thenThrow(new RuntimeException("boom"));   // call failure
+        decisionService.extractDecision("something else");
+        assertEquals(2, decisionService.getExtractionErrorCount());
+
+        // A failing extractor never inflates the classifier's count.
+        assertEquals(0, decisionService.getClassificationErrorCount());
+
+        decisionService.classifyConflict("a", OLD_DECISION);
+        assertEquals(1, decisionService.getClassificationErrorCount());
+        assertEquals(2, decisionService.getExtractionErrorCount());
+    }
 
     // ── The strict reply contract ────────────────────────────────────────
 

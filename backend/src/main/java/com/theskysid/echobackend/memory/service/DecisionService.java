@@ -54,6 +54,24 @@ public class DecisionService {
     /** Marker for grepping classification failures out of the logs. */
     static final String LLM_ERROR_MARKER = "CONFLICT_CLASSIFICATION_LLM_ERROR";
 
+    /** Marker for grepping extraction failures out of the logs — the earlier stage. */
+    static final String EXTRACT_ERROR_MARKER = "DECISION_EXTRACTION_LLM_ERROR";
+
+    /** Outcome of asking whether one piece of text records a decision. */
+    public enum ExtractionResult {
+        /** The text states a settled decision; it enters the supersession pipeline. */
+        DECISION,
+        /** The text is ordinary chatter; stored as a plain memory. */
+        NOT_A_DECISION,
+        /**
+         * The extractor never produced a usable answer — the call failed, timed
+         * out, or the reply was not YES or NO. NOT a verdict: the vector is stored
+         * as an ordinary memory (same as NOT_A_DECISION) and counted separately, so
+         * a throttled model is never read as "nobody decided anything here".
+         */
+        LLM_ERROR
+    }
+
     /** Outcome of comparing a new decision against one older decision. */
     public enum ConflictResult {
         /** The new decision replaces the old one; the old one becomes SUPERSEDED. */
@@ -72,15 +90,23 @@ public class DecisionService {
     }
 
     /**
-     * Classification failures since startup, kept apart from the real outcomes.
-     * ponytail: in-process counter, per instance and reset on restart — wire a
-     * Micrometer MeterRegistry here if this ever needs to be scraped.
+     * Failures since startup, kept apart from the real outcomes and from each
+     * other — the two stages fail for different reasons and drop-off has to be
+     * attributable to the right one.
+     * TODO: in-process counters, per instance and reset on restart — wire a
+     * Micrometer MeterRegistry here if these ever need to be scraped.
      */
     private final AtomicLong classificationErrors = new AtomicLong();
+    private final AtomicLong extractionErrors = new AtomicLong();
 
     /** Number of pairs the classifier failed on since startup. */
     public long getClassificationErrorCount() {
         return classificationErrors.get();
+    }
+
+    /** Number of texts the extractor failed on since startup. */
+    public long getExtractionErrorCount() {
+        return extractionErrors.get();
     }
 
     @Autowired
@@ -112,22 +138,51 @@ public class DecisionService {
 
     /**
      * Ask the LLM whether the text contains a final project/technical decision.
-     * Returns false on any error so ingestion never breaks.
+     * Returns LLM_ERROR — never NOT_A_DECISION — when the call fails or the reply
+     * isn't YES or NO, so a throttled model is never mistaken for a text that
+     * simply held no decision. Ingestion never breaks either way: both non-DECISION
+     * outcomes leave the vector to be stored as an ordinary memory.
      */
-    public boolean extractDecision(String text) {
+    public ExtractionResult extractDecision(String text) {
         if (text == null || text.isBlank()) {
-            return false;
+            return ExtractionResult.NOT_A_DECISION;
         }
+        ExtractionResult result;
         try {
             String answer = chatLanguageModel.generate(List.of(
                     SystemMessage.from(EXTRACT_SYSTEM),
                     UserMessage.from(text)
             )).content().text();
-            return isYes(answer);
+            result = parseExtraction(answer);
+            if (result == ExtractionResult.LLM_ERROR) {
+                logger.warn("{} unusable extractor reply: {}", EXTRACT_ERROR_MARKER, abbreviate(answer));
+            }
         } catch (Exception e) {
-            logger.warn("Decision extraction failed: {}", e.getMessage());
-            return false;
+            // Message only — an exception from the HTTP client can carry the
+            // request headers, and those hold the API key.
+            logger.warn("{} extractor call failed: {}", EXTRACT_ERROR_MARKER, e.getMessage());
+            result = ExtractionResult.LLM_ERROR;
         }
+        if (result == ExtractionResult.LLM_ERROR) {
+            extractionErrors.incrementAndGet();
+        }
+        return result;
+    }
+
+    /**
+     * Read the extractor's reply. EXTRACT_SYSTEM asks for one word, so exactly
+     * YES or NO (modulo surrounding whitespace and case) — anything else is
+     * LLM_ERROR rather than a guess.
+     */
+    ExtractionResult parseExtraction(String answer) {
+        if (answer == null) {
+            return ExtractionResult.LLM_ERROR;
+        }
+        return switch (answer.trim().toUpperCase()) {
+            case "YES" -> ExtractionResult.DECISION;
+            case "NO" -> ExtractionResult.NOT_A_DECISION;
+            default -> ExtractionResult.LLM_ERROR;
+        };
     }
 
     /**
@@ -140,9 +195,12 @@ public class DecisionService {
             return;
         }
 
-        boolean decision = extractDecision(newVector.getContent());
-        newVector.setDecision(decision);
-        if (!decision) {
+        // Anything that isn't a confirmed decision — including a failed
+        // extraction — leaves the vector as a plain memory for the caller to
+        // save: no flag, no title, no supersession.
+        ExtractionResult extraction = extractDecision(newVector.getContent());
+        newVector.setDecision(extraction == ExtractionResult.DECISION);
+        if (extraction != ExtractionResult.DECISION) {
             return;
         }
 
@@ -282,10 +340,6 @@ public class DecisionService {
             return String.join(" ", words);
         }
         return String.join(" ", List.of(words).subList(0, limit)) + "…";
-    }
-
-    private boolean isYes(String answer) {
-        return answer != null && answer.trim().toUpperCase().startsWith("YES");
     }
 
     private String toVectorLiteral(float[] vector) {
