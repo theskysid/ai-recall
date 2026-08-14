@@ -16,12 +16,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import java.net.SocketTimeoutException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -32,10 +34,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Covers the three-way conflict wiring: what each outcome does to the stored
- * rows. The LLM is stubbed, so these pin the persistence behaviour and the
- * reply parser, not the quality of the classification prompt — that prompt is
- * an unvalidated placeholder and its accuracy is measured separately.
+ * Covers the conflict wiring: what each outcome does to the stored rows, and
+ * that a failed classification is never mistaken for one. The LLM is stubbed,
+ * so these pin the persistence behaviour, the strict reply contract and the
+ * error path — not the quality of the classification prompt, which is an
+ * unvalidated placeholder whose accuracy is measured separately.
  *
  * Sample content is invented for the test and matches no real project.
  */
@@ -177,22 +180,114 @@ class DecisionServiceTest {
 
     // ── Parser and title fallback ────────────────────────────────────────
 
+    // ── The strict reply contract ────────────────────────────────────────
+
     @Test
-    void parserReadsTheThreeOutcomesFromLooseReplies() {
+    void parserAcceptsTheThreeAllowedTokens() {
         assertEquals(DecisionService.ConflictResult.SUPERSEDE,
                 decisionService.parseConflict("SUPERSEDE"));
-        assertEquals(DecisionService.ConflictResult.SUPERSEDE,
-                decisionService.parseConflict("It replaces the old one."));
         assertEquals(DecisionService.ConflictResult.UNRESOLVED,
                 decisionService.parseConflict("UNRESOLVED"));
         assertEquals(DecisionService.ConflictResult.NO_CONFLICT,
                 decisionService.parseConflict("NONE"));
-        assertEquals(DecisionService.ConflictResult.NO_CONFLICT,
-                decisionService.parseConflict(null));
 
-        // A reply naming both outcomes is a clash, not a replacement.
-        assertEquals(DecisionService.ConflictResult.UNRESOLVED,
+        // Surrounding whitespace and case are the only leniency.
+        assertEquals(DecisionService.ConflictResult.SUPERSEDE,
+                decisionService.parseConflict("  supersede\n"));
+    }
+
+    @Test
+    void parserRejectsAnythingThatIsNotOneOfTheThreeTokens() {
+        // These two were SUPERSEDE / UNRESOLVED under the old lenient parser.
+        // Prose is no longer a classification, however plausible it reads.
+        assertEquals(DecisionService.ConflictResult.LLM_ERROR,
+                decisionService.parseConflict("It replaces the old one."));
+        assertEquals(DecisionService.ConflictResult.LLM_ERROR,
                 decisionService.parseConflict("This is still UNRESOLVED, it may replace it later."));
+
+        assertEquals(DecisionService.ConflictResult.LLM_ERROR,
+                decisionService.parseConflict("SUPERSEDE."));
+        assertEquals(DecisionService.ConflictResult.LLM_ERROR,
+                decisionService.parseConflict("The answer is NONE"));
+        assertEquals(DecisionService.ConflictResult.LLM_ERROR,
+                decisionService.parseConflict(""));
+        assertEquals(DecisionService.ConflictResult.LLM_ERROR,
+                decisionService.parseConflict(null));
+    }
+
+    @Test
+    void malformedReplyIsAnErrorNotNoConflict() {
+        replies.add("I'd say the newer one probably wins here.");
+
+        DecisionService.ConflictResult result =
+                decisionService.classifyConflict("New thing", OLD_DECISION);
+
+        assertEquals(DecisionService.ConflictResult.LLM_ERROR, result);
+        assertNotEquals(DecisionService.ConflictResult.NO_CONFLICT, result);
+    }
+
+    @Test
+    void modelExceptionIsAnErrorNotNoConflict() {
+        when(chatLanguageModel.generate(any(List.class)))
+                .thenThrow(new RuntimeException("rate_limit_exceeded"));
+
+        DecisionService.ConflictResult result =
+                decisionService.classifyConflict("New thing", OLD_DECISION);
+
+        assertEquals(DecisionService.ConflictResult.LLM_ERROR, result);
+        assertNotEquals(DecisionService.ConflictResult.NO_CONFLICT, result);
+    }
+
+    @Test
+    void apiTimeoutIsAnErrorNotNoConflict() {
+        when(chatLanguageModel.generate(any(List.class)))
+                .thenThrow(new RuntimeException(new SocketTimeoutException("timeout")));
+
+        DecisionService.ConflictResult result =
+                decisionService.classifyConflict("New thing", OLD_DECISION);
+
+        assertEquals(DecisionService.ConflictResult.LLM_ERROR, result);
+        assertNotEquals(DecisionService.ConflictResult.NO_CONFLICT, result);
+    }
+
+    @Test
+    void classificationErrorsAreCountedSeparatelyFromRealOutcomes() {
+        long before = decisionService.getClassificationErrorCount();
+
+        replies.add("NONE");
+        decisionService.classifyConflict("a", OLD_DECISION);
+        replies.add("SUPERSEDE");
+        decisionService.classifyConflict("b", OLD_DECISION);
+        assertEquals(before, decisionService.getClassificationErrorCount(),
+                "a successful classification must not count as an error");
+
+        replies.add("Well, it depends.");           // malformed
+        decisionService.classifyConflict("c", OLD_DECISION);
+        assertEquals(before + 1, decisionService.getClassificationErrorCount());
+
+        when(chatLanguageModel.generate(any(List.class)))
+                .thenThrow(new RuntimeException("boom"));   // call failure
+        decisionService.classifyConflict("d", OLD_DECISION);
+        assertEquals(before + 2, decisionService.getClassificationErrorCount());
+    }
+
+    @Test
+    void llmErrorLeavesBothRowsCompletelyUnchanged() {
+        MemoryVector newer = ingest(
+                "We are dropping Widgetron and moving the parts catalogue to Gearbase.",
+                "YES", "I cannot determine that from the given text.");
+
+        // Old row: exactly as it was before ingestion.
+        assertEquals(MemoryStatus.CURRENT, oldVector.getStatus());
+        assertNull(oldVector.getSupersedesId());
+        assertNull(oldVector.getConflictsWithId());
+
+        // New row: recorded as a decision, but carries no conflict verdict.
+        assertEquals(MemoryStatus.CURRENT, newer.getStatus());
+        assertNull(newer.getSupersedesId());
+        assertNull(newer.getConflictsWithId());
+
+        assertEquals(1, decisionService.getClassificationErrorCount());
     }
 
     @Test

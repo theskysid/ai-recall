@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class DecisionService {
@@ -32,12 +33,15 @@ public class DecisionService {
     // Oracle tomorrow" reliably is the actual contribution and must be written
     // and tuned by hand before any of this is presented as a result.
     //
-    // Replace the prompt below (and, if needed, parseConflict) — the callers,
-    // the enum and the persistence wiring stay as they are.
+    // Replace the semantic rules in the prompt below — the callers, the enum,
+    // the persistence wiring and the strict one-token reply contract stay as
+    // they are. parseConflict is deliberately exact; do not loosen it to cover
+    // a prompt that talks back.
     // ─────────────────────────────────────────────────────────────────────
     private static final String CONFLICT_SYSTEM =
             "You compare a new statement against an older recorded decision. " +
-            "Reply with exactly one word, one of: SUPERSEDE, UNRESOLVED, NONE.\n" +
+            "Reply with exactly one of these tokens and nothing else: SUPERSEDE, UNRESOLVED, NONE. " +
+            "No explanation, no punctuation, no other words — any other reply is discarded.\n" +
             "SUPERSEDE — the new statement is itself a settled decision that replaces or reverses the old one.\n" +
             "UNRESOLVED — the two are about the same question and disagree, but the new statement is a " +
             "proposal, a question, or an ongoing discussion rather than a settled decision.\n" +
@@ -47,6 +51,9 @@ public class DecisionService {
             "Write a title for the decision below: at most 8 words, no quotes, no trailing period. " +
             "Reply with the title only.";
 
+    /** Marker for grepping classification failures out of the logs. */
+    static final String LLM_ERROR_MARKER = "CONFLICT_CLASSIFICATION_LLM_ERROR";
+
     /** Outcome of comparing a new decision against one older decision. */
     public enum ConflictResult {
         /** The new decision replaces the old one; the old one becomes SUPERSEDED. */
@@ -54,7 +61,26 @@ public class DecisionService {
         /** Same question, genuine disagreement, nothing settled it; both become UNRESOLVED. */
         UNRESOLVED,
         /** Unrelated or in agreement; nothing changes. */
-        NO_CONFLICT
+        NO_CONFLICT,
+        /**
+         * The classifier never produced a usable answer — the call failed, timed
+         * out, or the reply was not one of the three allowed tokens. NOT a
+         * classification: the pair is left untouched and counted separately, so a
+         * throttled model can never be read as "these two don't conflict".
+         */
+        LLM_ERROR
+    }
+
+    /**
+     * Classification failures since startup, kept apart from the real outcomes.
+     * ponytail: in-process counter, per instance and reset on restart — wire a
+     * Micrometer MeterRegistry here if this ever needs to be scraped.
+     */
+    private final AtomicLong classificationErrors = new AtomicLong();
+
+    /** Number of pairs the classifier failed on since startup. */
+    public long getClassificationErrorCount() {
+        return classificationErrors.get();
     }
 
     @Autowired
@@ -159,6 +185,10 @@ public class DecisionService {
                         memoryVectorRepository.save(saved);
                     }
                     case NO_CONFLICT -> { /* nothing to do */ }
+                    // Already logged and counted in classifyConflict. Both rows
+                    // stay exactly as they were — an unclassified pair is not
+                    // evidence of anything.
+                    case LLM_ERROR -> { /* nothing to do */ }
                 }
             }
         } catch (Exception e) {
@@ -169,42 +199,58 @@ public class DecisionService {
     /**
      * Classify a new decision against one older decision. See CONFLICT_SYSTEM —
      * the prompt is a placeholder awaiting the real, hand-tuned rules.
-     * Returns NO_CONFLICT on any error so ingestion never breaks, which means a
-     * throttled LLM looks exactly like "unrelated" (same caveat as extractDecision).
+     * Returns LLM_ERROR — never NO_CONFLICT — when the call fails or the reply
+     * isn't one of the three allowed tokens, so a throttled model is never
+     * mistaken for a genuine "these don't conflict".
      */
     ConflictResult classifyConflict(String newDecision, String oldDecision) {
+        ConflictResult result;
         try {
             String answer = chatLanguageModel.generate(List.of(
                     SystemMessage.from(CONFLICT_SYSTEM),
                     UserMessage.from("Old decision: \"" + oldDecision + "\"\n"
                             + "New statement: \"" + newDecision + "\"\n"
-                            + "Answer SUPERSEDE, UNRESOLVED or NONE.")
+                            + "Answer with one token: SUPERSEDE, UNRESOLVED or NONE.")
             )).content().text();
-            return parseConflict(answer);
+            result = parseConflict(answer);
+            if (result == ConflictResult.LLM_ERROR) {
+                logger.warn("{} unusable classifier reply: {}", LLM_ERROR_MARKER, abbreviate(answer));
+            }
         } catch (Exception e) {
-            logger.warn("Conflict classification failed: {}", e.getMessage());
-            return ConflictResult.NO_CONFLICT;
+            // Message only — an exception from the HTTP client can carry the
+            // request headers, and those hold the API key.
+            logger.warn("{} classifier call failed: {}", LLM_ERROR_MARKER, e.getMessage());
+            result = ConflictResult.LLM_ERROR;
         }
+        if (result == ConflictResult.LLM_ERROR) {
+            classificationErrors.incrementAndGet();
+        }
+        return result;
     }
 
     /**
-     * Read the classifier's reply. Small models rarely answer with a bare token,
-     * so UNRESOLVED is checked first — a reply that mentions both an unresolved
-     * clash and a replacement is a clash, not a replacement.
+     * Read the classifier's reply. Exactly one of the three allowed tokens,
+     * modulo surrounding whitespace and case — anything else (prose, an
+     * explanation, an empty reply, a token buried in a sentence) is LLM_ERROR.
      */
     ConflictResult parseConflict(String answer) {
         if (answer == null) {
-            return ConflictResult.NO_CONFLICT;
+            return ConflictResult.LLM_ERROR;
         }
-        String a = answer.trim().toUpperCase();
-        if (a.contains("UNRESOLVED") || a.contains("UNSETTLED") || a.contains("PROPOS")
-                || a.contains("DISCUSS")) {
-            return ConflictResult.UNRESOLVED;
+        return switch (answer.trim().toUpperCase()) {
+            case "SUPERSEDE" -> ConflictResult.SUPERSEDE;
+            case "UNRESOLVED" -> ConflictResult.UNRESOLVED;
+            case "NONE" -> ConflictResult.NO_CONFLICT;
+            default -> ConflictResult.LLM_ERROR;
+        };
+    }
+
+    private String abbreviate(String reply) {
+        if (reply == null) {
+            return "<null>";
         }
-        if (a.startsWith("NONE") || a.startsWith("NO")) {
-            return ConflictResult.NO_CONFLICT;
-        }
-        return isAffirmative(a) ? ConflictResult.SUPERSEDE : ConflictResult.NO_CONFLICT;
+        String r = reply.trim().replaceAll("\\s+", " ");
+        return r.length() <= 120 ? r : r.substring(0, 120) + "…";
     }
 
     /**
@@ -240,22 +286,6 @@ public class DecisionService {
 
     private boolean isYes(String answer) {
         return answer != null && answer.trim().toUpperCase().startsWith("YES");
-    }
-
-    /**
-     * Lenient affirmative check — small models often answer with a synonym
-     * ("Contradict.", "Replaces") instead of a bare YES.
-     */
-    private boolean isAffirmative(String answer) {
-        if (answer == null) {
-            return false;
-        }
-        String a = answer.trim().toUpperCase();
-        if (a.startsWith("NO") || a.contains("INDEPENDENT") || a.contains("UNRELATED") || a.contains("NOT ")) {
-            return false;
-        }
-        return a.startsWith("YES") || a.contains("YES") || a.contains("SUPERSED")
-                || a.contains("REPLACE") || a.contains("CONTRADICT") || a.contains("REVERSE");
     }
 
     private String toVectorLiteral(float[] vector) {
