@@ -25,27 +25,67 @@ public class DecisionService {
             "Reply YES only if the text states a final, concrete project or technical decision. Otherwise NO.";
 
     // ─────────────────────────────────────────────────────────────────────
-    // PLACEHOLDER — STARTING POINT ONLY, NOT THE RESEARCH CONTRIBUTION.
+    // The decision boundary this whole feature rests on: separating a settled
+    // replacement ("we've decided to switch to Oracle") from a proposal that
+    // merely challenges the old decision ("let's switch to Oracle") from talk
+    // that changes nothing ("Oracle might be faster").
     //
-    // This prompt is wiring scaffolding so the three-way path compiles and can
-    // be exercised. It has NOT been tuned and its decision boundary has not
-    // been validated: telling "we're switching to Oracle" from "let's discuss
-    // Oracle tomorrow" reliably is the actual contribution and must be written
-    // and tuned by hand before any of this is presented as a result.
+    // Small models default to treating the newer statement as the winner, so
+    // the rules say outright that recency is not evidence. The examples carry
+    // more weight than the definitions — keep them when editing the wording.
     //
-    // Replace the semantic rules in the prompt below — the callers, the enum,
-    // the persistence wiring and the strict one-token reply contract stay as
-    // they are. parseConflict is deliberately exact; do not loosen it to cover
-    // a prompt that talks back.
+    // parseConflict is deliberately exact; do not loosen it to cover a prompt
+    // that talks back. Fix the prompt instead.
     // ─────────────────────────────────────────────────────────────────────
-    private static final String CONFLICT_SYSTEM =
-            "You compare a new statement against an older recorded decision. " +
-            "Reply with exactly one of these tokens and nothing else: SUPERSEDE, UNRESOLVED, NONE. " +
-            "No explanation, no punctuation, no other words — any other reply is discarded.\n" +
-            "SUPERSEDE — the new statement is itself a settled decision that replaces or reverses the old one.\n" +
-            "UNRESOLVED — the two are about the same question and disagree, but the new statement is a " +
-            "proposal, a question, or an ongoing discussion rather than a settled decision.\n" +
-            "NONE — they are about different questions, or they agree.";
+    private static final String CONFLICT_SYSTEM = """
+            You compare a new statement against an older recorded decision and \
+            determine the relationship between them.
+
+            Reply with exactly one of these tokens and nothing else: NONE, SUPERSEDE, UNRESOLVED.
+            No explanation, no punctuation, no markdown, no other words — any other reply is discarded.
+
+            NONE — the new statement does not establish a meaningful replacement of, or an
+            unresolved conflict with, the old decision. A question, a suggestion of an option,
+            a comparison, a brainstorming idea, a restatement of the old decision, or an
+            unrelated statement is not itself a replacement.
+            Old: "We decided to use PostgreSQL." New: "Should we consider Oracle?" -> NONE
+            Old: "We decided to use PostgreSQL." New: "Oracle might be faster." -> NONE
+            Old: "We decided to use PostgreSQL." New: "Oracle has better performance for some workloads." -> NONE
+            Old: "We decided to use PostgreSQL." New: "PostgreSQL is currently used by the application." -> NONE
+
+            UNRESOLVED — the new statement meaningfully challenges the old decision, conflicts
+            with it, or proposes changing it, but does not settle a replacement. A conditional
+            or future change that has not happened yet is UNRESOLVED.
+            Old: "We decided to use PostgreSQL." New: "I think we should switch to Oracle." -> UNRESOLVED
+            Old: "We decided to use PostgreSQL." New: "Let's switch to Oracle." -> UNRESOLVED
+            Old: "We decided to use PostgreSQL." New: "We're probably switching to Oracle." -> UNRESOLVED
+            Old: "We decided to use PostgreSQL." New: "I'm not sure PostgreSQL is still the right choice." -> UNRESOLVED
+            Old: "We decided to use PostgreSQL." New: "We should discuss whether PostgreSQL is still the right choice." -> UNRESOLVED
+            Old: "We decided to use PostgreSQL." New: "We haven't decided yet; Oracle and PostgreSQL are both options." -> UNRESOLVED
+            Old: "We decided to use PostgreSQL." New: "If performance doesn't improve, we'll switch to Oracle." -> UNRESOLVED
+
+            SUPERSEDE — the new statement clearly establishes a settled replacement of the old
+            decision: the team has decided, agreed, approved, or already moved.
+            Old: "We decided to use PostgreSQL." New: "We've decided to switch to Oracle." -> SUPERSEDE
+            Old: "We decided to use PostgreSQL." New: "We've agreed to use Oracle instead." -> SUPERSEDE
+            Old: "We decided to use PostgreSQL." New: "We're now using Oracle." -> SUPERSEDE
+            Old: "We decided to use PostgreSQL." New: "Actually, we've changed the decision. We're using Oracle." -> SUPERSEDE
+            Old: "We decided to use PostgreSQL." New: "The team has approved Oracle as the replacement for PostgreSQL." -> SUPERSEDE
+
+            Rules:
+            1. Recency alone must NEVER cause SUPERSEDE. That one statement is newer is not evidence by itself.
+            2. A proposal is not a settled decision.
+            3. A question is not a decision.
+            4. Brainstorming is not a decision.
+            5. A possibility or hypothetical future change is not a settled replacement.
+            6. Use SUPERSEDE when the new statement clearly indicates the team or project has made a new decision.
+            7. Use UNRESOLVED when it indicates meaningful disagreement or possible change but the matter is unsettled.
+            8. Use NONE when there is no meaningful conflict or replacement relationship.
+            9. Do not infer a decision that is not expressed or reasonably implied by the text.
+            10. Ignore superficial wording differences when the underlying decision is clearly the same.
+            11. If the new statement confirms or repeats the old decision, reply NONE.
+
+            Your entire response is one token: NONE, SUPERSEDE or UNRESOLVED.""";
 
     private static final String TITLE_SYSTEM =
             "Write a title for the decision below: at most 8 words, no quotes, no trailing period. " +
@@ -255,8 +295,8 @@ public class DecisionService {
     }
 
     /**
-     * Classify a new decision against one older decision. See CONFLICT_SYSTEM —
-     * the prompt is a placeholder awaiting the real, hand-tuned rules.
+     * Classify a new decision against one older decision. See CONFLICT_SYSTEM for
+     * the boundary between a settled replacement and a mere proposal.
      * Returns LLM_ERROR — never NO_CONFLICT — when the call fails or the reply
      * isn't one of the three allowed tokens, so a throttled model is never
      * mistaken for a genuine "these don't conflict".

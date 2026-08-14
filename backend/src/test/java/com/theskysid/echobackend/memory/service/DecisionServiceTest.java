@@ -9,6 +9,8 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.output.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -38,8 +40,8 @@ import static org.mockito.Mockito.when;
  * Covers the conflict wiring: what each outcome does to the stored rows, and
  * that a failed classification is never mistaken for one. The LLM is stubbed,
  * so these pin the persistence behaviour, the strict reply contract and the
- * error path — not the quality of the classification prompt, which is an
- * unvalidated placeholder whose accuracy is measured separately.
+ * error path — not the quality of the classification prompt, whose accuracy
+ * only a run against a live model can show and is measured separately.
  *
  * Sample content is invented for the test and matches no real project.
  */
@@ -180,6 +182,75 @@ class DecisionServiceTest {
     }
 
     // ── Parser and title fallback ────────────────────────────────────────
+
+    // ── The semantic boundary cases, wiring only ─────────────────────────
+    //
+    // The model is stubbed with the token CONFLICT_SYSTEM is written to return
+    // for each case, so these prove the pipeline does the right thing with each
+    // verdict — NOT that the real classifier returns that verdict. Only a run
+    // against a live model over ai/eval/ can show that. The sample sentences
+    // are the ones the prompt is written around, kept here so a prompt edit
+    // that changes an intended outcome shows up as a failing expectation.
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "Should we consider Oracle?",                                  // question
+            "Oracle might be faster.",                                     // brainstorming
+            "Oracle has better performance for some workloads.",           // comparison
+            "PostgreSQL is currently used by the application.",            // confirms the old decision
+    })
+    void statementsClassifiedNoneLeaveBothRowsAlone(String content) {
+        oldVector.setContent("We decided to use PostgreSQL.");
+        MemoryVector newer = ingest(content, "YES", "NONE");
+
+        assertEquals(MemoryStatus.CURRENT, oldVector.getStatus());
+        assertNull(oldVector.getSupersedesId());
+        assertNull(oldVector.getConflictsWithId());
+        assertEquals(MemoryStatus.CURRENT, newer.getStatus());
+        assertNull(newer.getConflictsWithId());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "I think we should switch to Oracle.",                         // suggestion
+            "Let's switch to Oracle.",                                     // proposal
+            "We're probably switching to Oracle.",                         // hedged
+            "I'm not sure PostgreSQL is still the right choice.",          // doubt
+            "We should discuss whether PostgreSQL is still the right choice.",
+            "We haven't decided yet; Oracle and PostgreSQL are both options.",
+            "If performance doesn't improve, we'll switch to Oracle.",     // conditional
+    })
+    void statementsClassifiedUnresolvedContestBothRowsWithoutDemotingEither(String content) {
+        oldVector.setContent("We decided to use PostgreSQL.");
+        MemoryVector newer = ingest(content, "YES", "UNRESOLVED");
+
+        assertEquals(MemoryStatus.UNRESOLVED, oldVector.getStatus());
+        assertEquals(MemoryStatus.UNRESOLVED, newer.getStatus());
+        assertEquals(newer.getId(), oldVector.getConflictsWithId());
+        assertEquals(oldVector.getId(), newer.getConflictsWithId());
+
+        // Contested is not superseded: neither is filtered or demoted, since
+        // both retrieval queries key off status = 'SUPERSEDED'.
+        assertNull(oldVector.getSupersedesId());
+        assertNull(newer.getSupersedesId());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "We've decided to switch to Oracle.",                          // settled
+            "We've agreed to use Oracle instead.",                         // team agreement
+            "We're now using Oracle.",                                     // already moved
+            "Actually, we've changed the decision. We're using Oracle.",   // explicit reversal
+            "The team has approved Oracle as the replacement for PostgreSQL.",
+    })
+    void statementsClassifiedSupersedeRetireTheOldRow(String content) {
+        oldVector.setContent("We decided to use PostgreSQL.");
+        MemoryVector newer = ingest(content, "YES", "SUPERSEDE");
+
+        assertEquals(MemoryStatus.SUPERSEDED, oldVector.getStatus());
+        assertEquals(newer.getId(), oldVector.getSupersedesId());
+        assertEquals(MemoryStatus.CURRENT, newer.getStatus());
+    }
 
     // ── Extraction: the three-way contract ───────────────────────────────
 
