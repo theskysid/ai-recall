@@ -91,7 +91,7 @@ public class GoogleOAuthService {
         if (base.isBlank()) {
             base = "user";
         }
-        // ponytail: check-then-insert races if two signups land at once; the
+        // TODO: check-then-insert races if two signups land at once; the
         // UNIQUE constraint still catches it. Retry loop only if that shows up.
         String candidate = base;
         for (int i = 2; userRepository.findByUsernameIgnoreCase(candidate).isPresent(); i++) {

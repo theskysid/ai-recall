@@ -29,7 +29,7 @@ const AskAiWidget = ({ channelId, channelName }) => {
     const patchLast = (patch) =>
         setTurns((t) => t.map((turn, i) => (i === t.length - 1 ? { ...turn, ...patch } : turn)));
 
-    // ponytail: each ask is retrieved independently — no follow-up context.
+    // TODO: each ask is retrieved independently — no follow-up context.
     // Thread prior turns into the query if "and what about X?" needs to work.
     const ask = async (q) => {
         if (!q || channelId == null || isLoading) return;

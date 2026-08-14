@@ -5,7 +5,7 @@
    a flatten-filter-join does the same job without pulling in clsx +
    tailwind-merge.
 
-   ponytail: naive join, no conflict resolution. If a caller ever needs to
+   TODO: naive join, no conflict resolution. If a caller ever needs to
    OVERRIDE a base utility via className (e.g. pass `rounded-full` to beat
    `rounded-md`), install clsx + tailwind-merge and swap this one line. */
 export function cn(...inputs) {

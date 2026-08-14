@@ -48,7 +48,7 @@ const NotebookNib = ({ containerRef }) => {
         if (!root || !fine) return undefined;
 
         const onMove = (event) => {
-            /* ponytail: two getBoundingClientRect reads per move. One layout
+            /* TODO: two getBoundingClientRect reads per move. One layout
                read, no write — swap for a cached rect + resize/scroll listener
                only if this ever shows up in a profile. */
             const rootRect = root.getBoundingClientRect();
