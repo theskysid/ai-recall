@@ -5,6 +5,8 @@ import dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+
 @Service
 public class EmbeddingService {
 
@@ -21,5 +23,13 @@ public class EmbeddingService {
         }
         Embedding embedding = embeddingModel.embed(text).content();
         return embedding.vector();
+    }
+
+    /**
+     * Render a float[] as a pgvector literal for the native similarity queries,
+     * e.g. "[0.1, 0.2, 0.3]". pgvector's parser skips the whitespace.
+     */
+    public String toVectorLiteral(float[] vector) {
+        return Arrays.toString(vector);
     }
 }

@@ -62,7 +62,7 @@ public class RagService {
 
         Long channel = Long.valueOf(channelId);
         float[] queryEmbedding = embeddingService.embed(query);
-        String vectorLiteral = toVectorLiteral(queryEmbedding);
+        String vectorLiteral = embeddingService.toVectorLiteral(queryEmbedding);
 
         String mode = retrievalMode == null ? "filter" : retrievalMode.trim().toLowerCase();
         List<MemoryVector> matches = switch (mode) {
@@ -109,15 +109,4 @@ public class RagService {
         }
     }
 
-    /**
-     * Render a float[] as a pgvector literal, e.g. "[0.1,0.2,0.3]".
-     */
-    private String toVectorLiteral(float[] vector) {
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < vector.length; i++) {
-            if (i > 0) sb.append(',');
-            sb.append(vector[i]);
-        }
-        return sb.append(']').toString();
-    }
 }

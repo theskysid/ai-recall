@@ -38,24 +38,38 @@ public class DecisionService {
     // that talks back. Fix the prompt instead.
     // ─────────────────────────────────────────────────────────────────────
     private static final String CONFLICT_SYSTEM = """
-            You compare a new statement against an older recorded decision and \
-            determine the relationship between them.
-
+            You compare a new statement against an older recorded decision and determine the relationship between them.
+            
             Reply with exactly one of these tokens and nothing else: NONE, SUPERSEDE, UNRESOLVED.
             No explanation, no punctuation, no markdown, no other words — any other reply is discarded.
-
-            NONE — the new statement does not establish a meaningful replacement of, or an
-            unresolved conflict with, the old decision. A question, a suggestion of an option,
-            a comparison, a brainstorming idea, a restatement of the old decision, or an
-            unrelated statement is not itself a replacement.
-            Old: "We decided to use PostgreSQL." New: "Should we consider Oracle?" -> NONE
-            Old: "We decided to use PostgreSQL." New: "Oracle might be faster." -> NONE
-            Old: "We decided to use PostgreSQL." New: "Oracle has better performance for some workloads." -> NONE
+            
+            Step 1 — Same decision/topic gate:
+            First determine whether the new statement concerns the same underlying decision, question, choice, or subject as the existing decision.
+            If it concerns a different decision or unrelated subject, reply NONE. Do NOT proceed to the supersession test.
+            This gate has priority over all other rules. A new statement containing strong decision or reversal language must still be NONE if it concerns a different decision.
+            
+            Step 2 — Relationship to the existing decision:
+            Only if the statements concern the same underlying decision, use the following rules:
+            
+            - SUPERSEDE: clear settled replacement/reversal. The new statement clearly establishes a settled replacement of the old decision: the team has decided, agreed, approved, or already moved.
+            - UNRESOLVED: meaningful challenge, proposal, uncertainty, or reopening without a settled replacement. A conditional or future change that has not happened yet is UNRESOLVED.
+            - NONE: no meaningful conflict or change. A question, suggestion, comparison, brainstorming idea, or a restatement of the old decision is not itself a replacement.
+            
+            Important distinction:
+            Do not classify a statement as SUPERSEDE merely because it contains a decision, contains "we decided", contains "switch", contains "instead", contains reversal language, is newer, or uses similar vocabulary to the existing decision. It must first be about the same underlying decision.
+            Repeating or confirming the same decision is not supersession.
+            
+            Examples (Unrelated Subjects -> NONE):
+            Old: "We decided to use MongoDB for the database." New: "We've decided to use Loki for observability." -> NONE
+            Old: "We decided to use PostgreSQL for the database." New: "We've decided to switch the frontend from React to Vue." -> NONE
+            
+            Examples (Restatement -> NONE):
+            Old: "We decided to use PostgreSQL." New: "The team has decided to use PostgreSQL." -> NONE
+            Old: "We decided to use PostgreSQL." New: "We're continuing with PostgreSQL." -> NONE
+            Old: "We decided to use PostgreSQL." New: "We're still using PostgreSQL." -> NONE
             Old: "We decided to use PostgreSQL." New: "PostgreSQL is currently used by the application." -> NONE
-
-            UNRESOLVED — the new statement meaningfully challenges the old decision, conflicts
-            with it, or proposes changing it, but does not settle a replacement. A conditional
-            or future change that has not happened yet is UNRESOLVED.
+            
+            Examples (Unresolved Challenge -> UNRESOLVED):
             Old: "We decided to use PostgreSQL." New: "I think we should switch to Oracle." -> UNRESOLVED
             Old: "We decided to use PostgreSQL." New: "Let's switch to Oracle." -> UNRESOLVED
             Old: "We decided to use PostgreSQL." New: "We're probably switching to Oracle." -> UNRESOLVED
@@ -63,15 +77,15 @@ public class DecisionService {
             Old: "We decided to use PostgreSQL." New: "We should discuss whether PostgreSQL is still the right choice." -> UNRESOLVED
             Old: "We decided to use PostgreSQL." New: "We haven't decided yet; Oracle and PostgreSQL are both options." -> UNRESOLVED
             Old: "We decided to use PostgreSQL." New: "If performance doesn't improve, we'll switch to Oracle." -> UNRESOLVED
-
-            SUPERSEDE — the new statement clearly establishes a settled replacement of the old
-            decision: the team has decided, agreed, approved, or already moved.
+            
+            Examples (Settled Replacement -> SUPERSEDE):
+            Old: "We decided to use PostgreSQL." New: "We've decided to use Oracle." -> SUPERSEDE
             Old: "We decided to use PostgreSQL." New: "We've decided to switch to Oracle." -> SUPERSEDE
             Old: "We decided to use PostgreSQL." New: "We've agreed to use Oracle instead." -> SUPERSEDE
             Old: "We decided to use PostgreSQL." New: "We're now using Oracle." -> SUPERSEDE
             Old: "We decided to use PostgreSQL." New: "Actually, we've changed the decision. We're using Oracle." -> SUPERSEDE
             Old: "We decided to use PostgreSQL." New: "The team has approved Oracle as the replacement for PostgreSQL." -> SUPERSEDE
-
+            
             Rules:
             1. Recency alone must NEVER cause SUPERSEDE. That one statement is newer is not evidence by itself.
             2. A proposal is not a settled decision.
@@ -80,11 +94,11 @@ public class DecisionService {
             5. A possibility or hypothetical future change is not a settled replacement.
             6. Use SUPERSEDE when the new statement clearly indicates the team or project has made a new decision.
             7. Use UNRESOLVED when it indicates meaningful disagreement or possible change but the matter is unsettled.
-            8. Use NONE when there is no meaningful conflict or replacement relationship.
+            8. Use NONE when there is no meaningful conflict or replacement relationship, or when they concern different subjects.
             9. Do not infer a decision that is not expressed or reasonably implied by the text.
             10. Ignore superficial wording differences when the underlying decision is clearly the same.
             11. If the new statement confirms or repeats the old decision, reply NONE.
-
+            
             Your entire response is one token: NONE, SUPERSEDE or UNRESOLVED.""";
 
     private static final String TITLE_SYSTEM =
@@ -257,7 +271,7 @@ public class DecisionService {
                     : embeddingService.embed(saved.getContent());
 
             List<MemoryVector> oldDecisions =
-                    memoryVectorRepository.findTopDecisionsByChannel(saved.getChannelId(), toVectorLiteral(embedding));
+                    memoryVectorRepository.findTopDecisionsByChannel(saved.getChannelId(), embeddingService.toVectorLiteral(embedding));
 
             for (MemoryVector old : oldDecisions) {
                 if (old.getId().equals(saved.getId())) {
@@ -388,12 +402,4 @@ public class DecisionService {
         return String.join(" ", List.of(words).subList(0, limit)) + "…";
     }
 
-    private String toVectorLiteral(float[] vector) {
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < vector.length; i++) {
-            if (i > 0) sb.append(',');
-            sb.append(vector[i]);
-        }
-        return sb.append(']').toString();
-    }
 }
