@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { authService } from "../services/authService.js";
 import Icon from "../components/ui/Icon";
-import "../styles/Login.css";
+import "../styles/Auth.css";
 
 const Login = () => {
   const [activeTab, setActiveTab] = useState("password");

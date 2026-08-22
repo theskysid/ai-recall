@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { authService } from "../services/authService.js";
-import "../styles/Signup.css";
+import "../styles/Auth.css";
 
 const Signup = () => {
   const [username, setUsername] = useState("");

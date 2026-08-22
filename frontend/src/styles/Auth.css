@@ -4,7 +4,7 @@
    the owner writes who it belongs to before the first entry.
    Oxblood binding at the left, quadrille sheet at the right,
    and fields that are ruled fill-in lines, not boxes.
-   Shared by Login.css and Signup.css.
+   Shared by Login.jsx and Signup.jsx.
    ═══════════════════════════════════════════════════════ */
 
 .login-container,
