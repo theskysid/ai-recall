@@ -52,11 +52,11 @@
 /* Light — notebook coherent: ink on sheet, seal-green focus, stamp-red
    destructive. */
 :root {
-  --sc-background: #ffffff;
+  --sc-background: #f4f7f6;
   --sc-foreground: #14202b;
-  --sc-card: #ffffff;
+  --sc-card: #f4f7f6;
   --sc-card-foreground: #14202b;
-  --sc-popover: #ffffff;
+  --sc-popover: #f4f7f6;
   --sc-popover-foreground: #14202b;
   --sc-primary: #14202b;
   --sc-primary-foreground: #f4f7f6;

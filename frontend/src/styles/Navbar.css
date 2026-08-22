@@ -7,14 +7,14 @@
     position: sticky;
     top: 0;
     z-index: 1000;
-    background: rgba(255, 255, 255, 0.82);
+    background: rgba(244, 247, 246, 0.84);
     backdrop-filter: blur(20px) saturate(1.2);
     -webkit-backdrop-filter: blur(20px) saturate(1.2);
     border-bottom: 1px solid var(--line);
 }
 
 .navbar-compact {
-    background: rgba(255, 255, 255, 0.94);
+    background: rgba(244, 247, 246, 0.95);
 }
 
 .navbar-container {
@@ -147,7 +147,7 @@
     padding: 0.35rem 0.4rem 0.35rem 0.75rem;
     border: 1px solid var(--line);
     border-radius: var(--r-2);
-    background: rgba(16, 24, 40, 0.028);
+    background: rgba(20, 32, 43, 0.028);
     transition: border-color var(--transition-base);
 }
 
@@ -254,7 +254,7 @@
         display: block;
         position: fixed;
         inset: 0;
-        background: rgba(16, 24, 40, 0.38);
+        background: rgba(20, 32, 43, 0.38);
         backdrop-filter: blur(3px);
         z-index: 1000;
         animation: fadeIn var(--t-2) var(--ease);
@@ -340,8 +340,9 @@
    notebook's compressed stationery voice on the cold sheet with
    one hairline rule beneath it. Not a floating glass bar.
 
-   Everything below is nested under .navbar--notebook so the
-   logged-in app (/chatarea, /profile) is untouched.
+   Worn on every surface — the app is one bound book, so it gets
+   one running head. Only the binding inset is split off onto
+   .navbar--bound, for the surfaces that actually show the spine.
    ═══════════════════════════════════════════════════════ */
 
 .navbar.navbar--notebook {
@@ -353,11 +354,18 @@
 
 /* Full-bleed: a running head is printed across the sheet, not
    centred in a content column. The left inset clears the oxblood
-   binding the landing and auth pages paint at the edge. */
-.navbar--notebook .navbar-container {
+   binding — so it is on `--bound`, which only the surfaces that
+   actually carry a binding (the landing and the flyleaf) wear.
+   The masthead itself is now worn everywhere: one book, one
+   running head. */
+.navbar--bound .navbar-container {
     max-width: none;
     height: 58px;
     padding: 0 2rem 0 calc(46px + 1.75rem);
+}
+
+.navbar--notebook .navbar-container {
+    height: 58px;
 }
 
 /* ── Wordmark — printed onto the sheet ─────────────── */
@@ -488,6 +496,10 @@
 @media (max-width: 768px) {
     .navbar--notebook .navbar-container {
         height: 54px;
+        padding: 0 1.1rem;
+    }
+
+    .navbar--bound .navbar-container {
         padding: 0 1.1rem;
     }
 

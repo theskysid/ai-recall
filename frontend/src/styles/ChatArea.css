@@ -41,7 +41,7 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(16, 24, 40, 0.38);
+    background: rgba(20, 32, 43, 0.38);
     z-index: 45;
     animation: fadeIn var(--t-2) var(--ease);
 }
@@ -131,7 +131,7 @@
 }
 
 .sidebar-refresh-icon:hover {
-    background: rgba(16, 24, 40, 0.045);
+    background: rgba(20, 32, 43, 0.045);
     color: var(--paper);
 }
 
@@ -270,11 +270,11 @@
 
 .friend-sidebar-item:hover,
 .user-item:hover:not(.current-user) {
-    background: rgba(16, 24, 40, 0.045);
+    background: rgba(20, 32, 43, 0.045);
 }
 
 .friend-sidebar-item.menu-active {
-    background: rgba(16, 24, 40, 0.045);
+    background: rgba(20, 32, 43, 0.045);
     border-color: var(--line-strong);
 }
 
@@ -417,7 +417,7 @@
 }
 
 .friend-menu-trigger-btn:hover {
-    background: rgba(16, 24, 40, 0.065);
+    background: rgba(20, 32, 43, 0.065);
     color: var(--paper);
 }
 
@@ -456,7 +456,7 @@
 }
 
 .delete-friend-btn:hover:not(:disabled) {
-    background: rgba(224, 100, 92, 0.22);
+    background: var(--alarm-line);
 }
 
 .delete-friend-btn:disabled {
@@ -478,7 +478,7 @@
 }
 
 .close-menu-btn:hover {
-    background: rgba(16, 24, 40, 0.065);
+    background: rgba(20, 32, 43, 0.065);
     color: var(--paper);
 }
 
@@ -637,7 +637,7 @@
 }
 
 .mobile-back-button:active {
-    background: rgba(16, 24, 40, 0.065);
+    background: rgba(20, 32, 43, 0.065);
 }
 
 /* ── Top bar ───────────────────────────────────── */
@@ -692,7 +692,7 @@
 
 .tg-topbar-menu-btn:active,
 .tg-topbar-compose-btn:active {
-    background: rgba(16, 24, 40, 0.065);
+    background: rgba(20, 32, 43, 0.065);
 }
 
 .tg-hamburger-line {
@@ -741,7 +741,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.94);
+    background: rgba(244, 247, 246, 0.95);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--line);
@@ -885,7 +885,7 @@
 }
 
 .tg-channel-row:active {
-    background: rgba(16, 24, 40, 0.045);
+    background: rgba(20, 32, 43, 0.045);
 }
 
 /* Active marker matches the desktop channel list (Channels.css .channel-item):
@@ -964,7 +964,7 @@
 
 .tg-chat-row:active,
 .tg-chat-row.tg-menu-open {
-    background: rgba(16, 24, 40, 0.045);
+    background: rgba(20, 32, 43, 0.045);
 }
 
 .tg-avatar-wrapper {
@@ -1099,7 +1099,7 @@
 }
 
 .tg-ctx-item:active {
-    background: rgba(16, 24, 40, 0.065);
+    background: rgba(20, 32, 43, 0.065);
 }
 
 .tg-ctx-item.tg-ctx-danger {
@@ -1155,7 +1155,7 @@
     position: fixed;
     inset: 0;
     z-index: 1000;
-    background: rgba(16, 24, 40, 0.4);
+    background: rgba(20, 32, 43, 0.4);
     animation: fadeIn var(--t-2) var(--ease);
 }
 
@@ -1253,7 +1253,7 @@
 
 .tg-drawer-item:hover,
 .tg-drawer-item:active {
-    background: rgba(16, 24, 40, 0.045);
+    background: rgba(20, 32, 43, 0.045);
 }
 
 .tg-drawer-item-icon {

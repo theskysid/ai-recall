@@ -84,7 +84,7 @@
 }
 
 .channel-item:hover {
-    background: rgba(16, 24, 40, 0.045);
+    background: rgba(20, 32, 43, 0.045);
     color: var(--paper);
 }
 
@@ -325,7 +325,7 @@
 
 .ask-ai-header:hover,
 .memory-panel-header:hover {
-    background: rgba(16, 24, 40, 0.028);
+    background: rgba(20, 32, 43, 0.028);
     color: var(--paper);
 }
 
@@ -402,7 +402,7 @@
 }
 
 .ask-ai-submit:hover:not(:disabled) {
-    background: rgba(99, 199, 178, 0.22);
+    background: rgba(28, 107, 82, 0.22);
     color: var(--paper);
 }
 
@@ -572,7 +572,7 @@
 }
 
 .memory-refresh:hover:not(:disabled) {
-    background: rgba(16, 24, 40, 0.045);
+    background: rgba(20, 32, 43, 0.045);
     color: var(--paper);
 }
 
@@ -716,7 +716,7 @@
 }
 
 .transcript-head:hover {
-    background: rgba(16, 24, 40, 0.045);
+    background: rgba(20, 32, 43, 0.045);
     color: var(--paper);
 }
 

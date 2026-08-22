@@ -117,7 +117,7 @@ const ChatArea = () => {
     const chatListScrollRef = useRef(null);
 
     const username = currentUser?.username ?? '';
-    const userColor = currentUser?.color ?? '#007bff';
+    const userColor = currentUser?.color ?? '#6d1f28';
 
 
 
