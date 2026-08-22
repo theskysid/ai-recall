@@ -2,16 +2,21 @@
    Recall — light workspace
 
    A chat app that keeps a record: channels, calls, transcripts,
-   decisions, and a memory you can question. The interface is a
-   quiet document — white reading surface, tinted chrome, hairline
-   rules, and colour used only where it carries meaning.
+   decisions, and a memory you can question. The whole interface is
+   one bound notebook — the landing, the flyleaf, and the workspace
+   all stand on the same cold engineering sheet, in the same iron-
+   gall ink, bound in the same oxblood cloth.
 
    Three roles, not decoration:
      accent   = interactive. Buttons, the open channel, your own
-                name on a message.
+                name on a message. Worn as the binding's oxblood.
      record   = what the machine filed away. The AI console,
-                decisions, transcripts.
-     alarm    = destructive or failed.
+                decisions, transcripts. Worn as the countersign green.
+     alarm    = destructive or failed. Worn as the correction stamp.
+
+   The role tokens resolve to the `--nb-*` notebook palette below,
+   which is why every workspace stylesheet re-renders in the
+   notebook's colours without being touched.
 
    ── On the token names ─────────────────────────────────────────
    The role tokens below are the real system. Everything under
@@ -23,42 +28,54 @@
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Ground ─────────────────────────────────── */
-  --bg: #ffffff;
-  --bg-sunk: #f4f6f8;
-  --chrome: #f7f8fa;
-  --raised: #eef0f4;
-  --raised-2: #e5e8ee;
-  --raised-3: #d9dde5;
+  /* ── Ground ───────────────────────────────────
+     The workspace stands on the same stock the notebook is
+     printed on — cold engineering sheet, never white. The six
+     steps are the notebook's three plus two tints between, so
+     chrome still separates from the reading surface. */
+  --bg: var(--nb-sheet);
+  --bg-sunk: var(--nb-sheet-2);
+  --chrome: #eef3f1;
+  --raised: var(--nb-sheet-2);
+  --raised-2: var(--nb-sheet-3);
+  --raised-3: #cedad6;
 
-  --rule: rgba(16, 24, 40, 0.09);
-  --rule-strong: rgba(16, 24, 40, 0.15);
-  --rule-loud: rgba(16, 24, 40, 0.24);
+  --rule: rgba(20, 32, 43, 0.10);
+  --rule-strong: var(--nb-rule);
+  --rule-loud: var(--nb-rule-strong);
 
-  /* ── Text ───────────────────────────────────── */
-  --text: #15181d;
-  --text-2: #576070;
-  --text-3: #6b7280;
-  --text-4: #949cab;
+  /* ── Text — iron-gall, four steps ─────────────
+     The two faint steps sit half a stop darker than the notebook's
+     own --nb-ink-3, because the workspace uses them for real text
+     (timestamps, counts, meta) on grounds as dark as --raised-2,
+     where the notebook only ever uses them on the sheet.
+     Measured on --bg: 15.3 / 7.6 / 5.5 / 4.5 : 1. */
+  --text: var(--nb-ink);
+  --text-2: var(--nb-ink-2);
+  --text-3: #526775;
+  --text-4: #63757f;
 
-  /* ── Interactive ────────────────────────────── */
-  --accent: #1560e0;
-  --accent-2: #1257ce;
-  --accent-dim: rgba(27, 110, 243, 0.09);
-  --accent-line: rgba(27, 110, 243, 0.28);
-  --accent-wash: #e3edfe;
+  /* ── Interactive — the oxblood binding ────────
+     What was blue is now the cloth the book is bound in. It
+     carries the same role: buttons, the open channel, your own
+     name on a message. */
+  --accent: var(--nb-bind);
+  --accent-2: var(--nb-bind-2);
+  --accent-dim: rgba(109, 31, 40, 0.08);
+  --accent-line: rgba(109, 31, 40, 0.26);
+  --accent-wash: #f0e2df;
 
-  /* ── The record ─────────────────────────────── */
-  --record: #0e9f6e;
-  --record-2: #057a55;
-  --record-dim: rgba(14, 159, 110, 0.1);
-  --record-line: rgba(14, 159, 110, 0.28);
+  /* ── The record — the countersign ───────────── */
+  --record: var(--nb-seal);
+  --record-2: #14503e;
+  --record-dim: var(--nb-seal-dim);
+  --record-line: var(--nb-seal-line);
 
-  /* ── Alarm ──────────────────────────────────── */
-  --alarm: #dc2b2b;
-  --alarm-2: #b91c1c;
-  --alarm-dim: rgba(220, 43, 43, 0.08);
-  --alarm-line: rgba(220, 43, 43, 0.26);
+  /* ── Alarm — the correction stamp ───────────── */
+  --alarm: var(--nb-stamp);
+  --alarm-2: var(--nb-stamp-2);
+  --alarm-dim: var(--nb-stamp-dim);
+  --alarm-line: var(--nb-stamp-line);
 
   /* ── Compatibility: dark-theme names, light values ─────────── */
   --ink-950: var(--bg);
@@ -102,7 +119,7 @@
      them; pointing them at the same stack retires the serif
      wordmark and the monospace chrome in one place. Genuine code —
      an invite code, a key — uses --font-code. ───────────────── */
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-sans: 'Archivo', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
   --font-display: var(--font-sans);
   --font-mono: var(--font-sans);
   --font-code: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -115,9 +132,9 @@
   --r-full: 999px;
 
   /* ── Depth — on white, shadow is the only lift ─ */
-  --shadow-1: 0 1px 2px rgba(16, 24, 40, 0.06);
-  --shadow-2: 0 8px 24px -10px rgba(16, 24, 40, 0.16);
-  --shadow-3: 0 24px 56px -20px rgba(16, 24, 40, 0.22);
+  --shadow-1: 0 1px 2px rgba(20, 32, 43, 0.06);
+  --shadow-2: 0 8px 24px -10px rgba(20, 32, 43, 0.16);
+  --shadow-3: 0 24px 56px -20px rgba(20, 32, 43, 0.22);
 
   /* ── Motion ─────────────────────────────────── */
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -130,8 +147,8 @@
      names. Mapping them keeps everything on one palette. ────── */
   --bg-root: var(--bg);
   --bg-surface: var(--chrome);
-  --bg-surface-glass: rgba(255, 255, 255, 0.86);
-  --bg-surface-glass-light: rgba(16, 24, 40, 0.035);
+  --bg-surface-glass: rgba(244, 247, 246, 0.86);
+  --bg-surface-glass-light: rgba(20, 32, 43, 0.035);
   --bg-card: var(--ink-840);
   --bg-elevated: var(--ink-840);
   --border-glass: var(--line);
@@ -173,7 +190,7 @@
   --transition-smooth: var(--t-3) var(--ease);
   --gradient-primary: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%);
   --gradient-accent: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%);
-  --gradient-surface: linear-gradient(180deg, rgba(16, 24, 40, 0.025), transparent);
+  --gradient-surface: linear-gradient(180deg, rgba(20, 32, 43, 0.025), transparent);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -186,8 +203,9 @@
    through and initial it — so a superseded decision is drawn here the
    way a lab strikes a reading.
 
-   Scoped to `.nb`. The workspace tokens above are untouched: the chat
-   surfaces keep resolving exactly as they did. ═══════════════════ */
+   Declared on `:root` as well as `.nb`, because the workspace tokens
+   above now resolve to these. `.nb` remains the opt-in that also sets
+   the sheet's ink and lettering on a subtree. ═════════════════════ */
 
 /* Archivo: one grotesque with a live width axis (62–125%), which is
    how printed stationery actually works — the rubric compresses, the
@@ -217,6 +235,7 @@
     U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
+:root,
 .nb {
   /* ── The sheet ─── cold engineering stock, never cream ─────── */
   --nb-sheet: #f4f7f6;
@@ -250,7 +269,7 @@
   --nb-seal-dim: rgba(28, 107, 82, 0.09);
   --nb-seal-line: rgba(28, 107, 82, 0.28);
 
-  --nb-face: 'Archivo', var(--font-sans);
+  --nb-face: var(--font-sans);
   --nb-line: 34px;
 
   color: var(--nb-ink);
@@ -272,35 +291,40 @@
    in the app. Declared as custom properties rather than as
    background rules so a consumer opts in explicitly — no
    specificity race with the element's own class — and can keep its
-   own fallback for the unnamed case. Each value clears 4.5:1
+   own fallback for the unnamed case.
+
+   Six printed inks, not six bright hues: the notebook's own oxblood,
+   countersign, and correction stamp, plus a slate, a violet, and a
+   sepia in the same register. Saturated discs were the loudest thing
+   on a page whose whole argument is restraint. Each clears 6:1
    against the white initial it carries. */
 .hue-0 {
-  --avatar-hue: #c2410c;
+  --avatar-hue: #6d1f28;
   --avatar-ink: #fff;
 }
 
 .hue-1 {
-  --avatar-hue: #be185d;
+  --avatar-hue: #4a3b6b;
   --avatar-ink: #fff;
 }
 
 .hue-2 {
-  --avatar-hue: #047857;
+  --avatar-hue: #1c6b52;
   --avatar-ink: #fff;
 }
 
 .hue-3 {
-  --avatar-hue: #1d4ed8;
+  --avatar-hue: #2f4858;
   --avatar-ink: #fff;
 }
 
 .hue-4 {
-  --avatar-hue: #6d28d9;
+  --avatar-hue: #a2240f;
   --avatar-ink: #fff;
 }
 
 .hue-5 {
-  --avatar-hue: #0f766e;
+  --avatar-hue: #6b4a12;
   --avatar-ink: #fff;
 }
 
@@ -391,20 +415,20 @@ h4 {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(16, 24, 40, 0.17);
+  background: rgba(20, 32, 43, 0.17);
   border: 3px solid transparent;
   background-clip: content-box;
   border-radius: var(--r-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(16, 24, 40, 0.3);
+  background: rgba(20, 32, 43, 0.3);
   background-clip: content-box;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(16, 24, 40, 0.2) transparent;
+  scrollbar-color: rgba(20, 32, 43, 0.2) transparent;
 }
 
 ::selection {

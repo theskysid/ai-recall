@@ -1,10 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════
    Channel page — redesign
 
-   A quiet, dense working surface in the Linear/Notion register:
-   a white reading column, tinted chrome, hairlines doing the
-   dividing, and one sans at four sizes. No monospace, no
-   small-caps labels, no bubbles.
+   A quiet, dense working surface: a sheet-stock reading column,
+   tinted chrome, hairlines doing the dividing, and one sans at
+   four sizes. No monospace, no small-caps labels, no bubbles.
 
    Colour is reserved and semantic, never decorative:
      --ch-you  = you. Your name on your own messages, and any
@@ -18,35 +17,40 @@
    ═══════════════════════════════════════════════════════════════ */
 
 .ch-page {
-    /* ── Ground: white reading surface, tinted chrome ─ */
-    --ch-bg: #ffffff;
-    --ch-raised: #f7f8fa;
-    --ch-raised-2: #eef0f4;
-    --ch-raised-3: #e2e6ec;
+    /* ── Ground: sheet stock, tinted chrome ─────────
+       Every token here now resolves to the notebook palette in
+       index.css, so the channel reads as a page of the same book
+       as the landing and the flyleaf. The `--ch-` names stay:
+       ~400 selectors below ask for them, and the roles never
+       changed — only what colour wears each role. */
+    --ch-bg: var(--bg);
+    --ch-raised: var(--chrome);
+    --ch-raised-2: var(--raised);
+    --ch-raised-3: var(--raised-2);
 
-    --ch-line: rgba(16, 24, 40, 0.08);
-    --ch-line-2: rgba(16, 24, 40, 0.13);
-    --ch-line-3: rgba(16, 24, 40, 0.2);
+    --ch-line: rgba(20, 32, 43, 0.09);
+    --ch-line-2: var(--nb-rule);
+    --ch-line-3: rgba(20, 32, 43, 0.2);
 
     /* ── Text: three steps, all ≥4.5:1 on --ch-bg ─── */
-    --ch-fg: #15181d;
-    --ch-fg-2: #576070;
-    --ch-fg-3: #6b7280;
+    --ch-fg: var(--text);
+    --ch-fg-2: var(--text-2);
+    --ch-fg-3: var(--text-3);
 
-    /* ── You ──────────────────────────────────────── */
-    --ch-you: #1560e0;
-    --ch-you-dim: rgba(27, 110, 243, 0.1);
+    /* ── You — the binding ────────────────────────── */
+    --ch-you: var(--accent);
+    --ch-you-dim: rgba(109, 31, 40, 0.09);
 
-    /* ── The record ───────────────────────────────── */
-    --ch-rec: #067a55;
-    --ch-rec-soft: #045c40;
-    --ch-rec-dim: rgba(14, 159, 110, 0.09);
-    --ch-rec-line: rgba(14, 159, 110, 0.26);
+    /* ── The record — the countersign ─────────────── */
+    --ch-rec: var(--record);
+    --ch-rec-soft: var(--record-2);
+    --ch-rec-dim: var(--record-dim);
+    --ch-rec-line: var(--record-line);
 
-    /* ── Trouble ──────────────────────────────────── */
-    --ch-bad: #dc2b2b;
-    --ch-bad-dim: rgba(220, 43, 43, 0.07);
-    --ch-bad-line: rgba(220, 43, 43, 0.24);
+    /* ── Trouble — the correction stamp ───────────── */
+    --ch-bad: var(--alarm);
+    --ch-bad-dim: var(--alarm-dim);
+    --ch-bad-line: var(--alarm-line);
 
     /* ── Rhythm: 4px base ─────────────────────────── */
     --ch-r-1: 5px;
@@ -93,7 +97,7 @@
     border-bottom: none;
     border-radius: var(--ch-r-3) var(--ch-r-3) 0 0;
     overflow: hidden;
-    box-shadow: 0 24px 56px -20px rgba(16, 24, 40, 0.22);
+    box-shadow: 0 24px 56px -20px rgba(20, 32, 43, 0.22);
 }
 
 /* ═══ Header ══════════════════════════════════════════════════ */
@@ -285,7 +289,7 @@
 }
 
 .ch-btn-live:hover:not(:disabled) {
-    background: rgba(14, 159, 110, 0.16);
+    background: rgba(28, 107, 82, 0.16);
     color: var(--ch-rec-soft);
 }
 
@@ -406,14 +410,14 @@
     font-size: 13.5px;
     font-weight: 600;
     letter-spacing: -0.006em;
-    box-shadow: 0 6px 20px -6px rgba(21, 96, 224, 0.5);
+    box-shadow: 0 6px 20px -6px rgba(109, 31, 40, 0.5);
     transition: background 0.14s, transform 0.14s, box-shadow 0.14s;
 }
 
 .ch-ask-fab:hover {
-    background: #1257ce;
+    background: var(--accent-2);
     transform: translateY(-1px);
-    box-shadow: 0 11px 26px -8px rgba(21, 96, 224, 0.55);
+    box-shadow: 0 11px 26px -8px rgba(109, 31, 40, 0.55);
 }
 
 .ch-ask {
@@ -429,7 +433,7 @@
     border: 1px solid var(--ch-line-2);
     border-radius: var(--ch-r-3);
     background: var(--ch-bg);
-    box-shadow: 0 22px 52px -18px rgba(16, 24, 40, 0.32);
+    box-shadow: 0 22px 52px -18px rgba(20, 32, 43, 0.32);
     animation: ch-answer-in 0.26s var(--ch-ease) both;
 }
 
@@ -559,7 +563,7 @@
 }
 
 .ch-ask-go:hover:not(:disabled) {
-    background: rgba(14, 159, 110, 0.17);
+    background: rgba(28, 107, 82, 0.17);
     color: var(--ch-rec-soft);
 }
 
@@ -699,7 +703,7 @@
     padding: 3px 7px;
     border: 1px solid var(--ch-rec-line);
     border-radius: var(--ch-r-1);
-    background: rgba(14, 159, 110, 0.07);
+    background: rgba(28, 107, 82, 0.07);
     color: var(--ch-rec);
     font-size: 11.5px;
     font-weight: 500;
@@ -1058,7 +1062,7 @@
 /* Barely there — enough to anchor the hover timestamp, not
    enough to read as a row. */
 .ch-msg:hover {
-    background: rgba(16, 24, 40, 0.022);
+    background: rgba(20, 32, 43, 0.022);
 }
 
 /* Arrived here from "View message" in the memory panel. Held for a moment,
@@ -1268,7 +1272,7 @@
 }
 
 .ch-send:not(:disabled):hover {
-    background: var(--ch-you-2, #1257ce);
+    background: var(--ch-you-2, var(--accent-2));
 }
 
 .ch-send:disabled {
