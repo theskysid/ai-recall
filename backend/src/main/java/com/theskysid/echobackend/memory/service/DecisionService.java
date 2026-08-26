@@ -10,6 +10,7 @@ import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -163,8 +164,20 @@ public class DecisionService {
         return extractionErrors.get();
     }
 
+    /**
+     * The reasoning model — used only by classifyConflict, whose same-topic gate
+     * and settled-vs-proposed distinction are what CONFLICT_SYSTEM's rules exist
+     * to defend. See config/LlmConfig for why the two stages use different models.
+     */
     @Autowired
     private ChatLanguageModel chatLanguageModel;
+
+    /**
+     * The cheap model — extraction runs on every message, and titles are cosmetic.
+     */
+    @Autowired
+    @Qualifier("fastChatLanguageModel")
+    private ChatLanguageModel fastChatLanguageModel;
 
     @Autowired
     private EmbeddingService embeddingService;
@@ -203,7 +216,7 @@ public class DecisionService {
         }
         ExtractionResult result;
         try {
-            String answer = chatLanguageModel.generate(List.of(
+            String answer = fastChatLanguageModel.generate(List.of(
                     SystemMessage.from(EXTRACT_SYSTEM),
                     UserMessage.from(text)
             )).content().text();
@@ -379,7 +392,7 @@ public class DecisionService {
             return null;
         }
         try {
-            String title = chatLanguageModel.generate(List.of(
+            String title = fastChatLanguageModel.generate(List.of(
                     SystemMessage.from(TITLE_SYSTEM),
                     UserMessage.from(content)
             )).content().text();

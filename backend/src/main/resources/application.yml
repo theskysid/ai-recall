@@ -8,11 +8,14 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
-  # Groq (OpenAI-compatible LLM for decision extraction)
+  # Groq (OpenAI-compatible LLM). Two models: `model` reasons (RAG answers,
+  # conflict classification), `fast-model` runs the per-message decision
+  # extractor and titles. See config/LlmConfig.
   ai:
     groq:
       api-key: ${GROQ_API_KEY:}
-      model: ${GROQ_MODEL:llama-3.1-8b-instant}
+      model: ${GROQ_MODEL:llama-3.3-70b-versatile}
+      fast-model: ${GROQ_FAST_MODEL:llama-3.1-8b-instant}
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${DB_USER}
@@ -59,22 +62,6 @@ livekit:
 # Deepgram (call transcription) config
 deepgram:
   api-key: ${DEEPGRAM_API_KEY:}
-
-# Memory retrieval + evaluation harness
-recall:
-  retrieval:
-    # filter (default) | demote | baseline — see RagService.retrievalMode.
-    mode: ${RECALL_RETRIEVAL_MODE:filter}
-  eval:
-    # Exposes /api/eval/** for seeding the evaluation corpus. Keep false in prod.
-    enabled: ${RECALL_EVAL_ENABLED:false}
-
-# OTP settings
-otp:
-  expiry-minutes: 5
-  rate-limit:
-    max-requests: 3
-    window-minutes: 10
 
 allowed-origins: ${ALLOWED_ORIGINS:https://echomessaging.duckdns.org,http://localhost:5173}
 

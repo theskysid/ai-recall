@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
@@ -54,6 +55,14 @@ class DecisionServiceTest {
     @Mock
     private ChatLanguageModel chatLanguageModel;
 
+    /**
+     * The extractor and title generator run on the cheap model (see LlmConfig);
+     * only classifyConflict uses the one above. Both mocks are fed from the same
+     * `replies` deque, so a test still just queues answers in call order.
+     */
+    @Mock
+    private ChatLanguageModel fastChatLanguageModel;
+
     @Mock
     private EmbeddingService embeddingService;
 
@@ -72,10 +81,12 @@ class DecisionServiceTest {
     void setUp() {
         replies.clear();
 
-        when(chatLanguageModel.generate(any(List.class))).thenAnswer(inv -> {
+        Answer<Response<AiMessage>> nextReply = inv -> {
             String next = replies.isEmpty() ? "NO" : replies.poll();
             return Response.from(AiMessage.from(next));
-        });
+        };
+        when(chatLanguageModel.generate(any(List.class))).thenAnswer(nextReply);
+        when(fastChatLanguageModel.generate(any(List.class))).thenAnswer(nextReply);
 
         // save() returns its argument and assigns an id, like Hibernate does.
         when(memoryVectorRepository.save(any(MemoryVector.class))).thenAnswer(inv -> {
@@ -87,6 +98,10 @@ class DecisionServiceTest {
         });
 
         when(embeddingService.embed(anyString())).thenReturn(new float[]{0.1f, 0.2f});
+        // Unstubbed this returns null, and the repository stub below matches on
+        // anyString(), which does not match null — so findTopDecisionsByChannel
+        // fell through to an empty list and no comparison ever ran.
+        when(embeddingService.toVectorLiteral(any(float[].class))).thenReturn("[0.1,0.2]");
 
         oldVector = vector(OLD_DECISION);
         oldVector.setId(UUID.randomUUID());
@@ -282,7 +297,7 @@ class DecisionServiceTest {
 
     @Test
     void extractorExceptionIsAnErrorNotANonDecision() {
-        when(chatLanguageModel.generate(any(List.class)))
+        when(fastChatLanguageModel.generate(any(List.class)))
                 .thenThrow(new RuntimeException("rate_limit_exceeded"));
 
         DecisionService.ExtractionResult result =
@@ -342,7 +357,7 @@ class DecisionServiceTest {
         decisionService.extractDecision("something");
         assertEquals(1, decisionService.getExtractionErrorCount());
 
-        when(chatLanguageModel.generate(any(List.class)))
+        when(fastChatLanguageModel.generate(any(List.class)))
                 .thenThrow(new RuntimeException("boom"));   // call failure
         decisionService.extractDecision("something else");
         assertEquals(2, decisionService.getExtractionErrorCount());
@@ -467,7 +482,7 @@ class DecisionServiceTest {
 
     @Test
     void titleFallsBackToTheFirstWordsWhenTheModelFails() {
-        when(chatLanguageModel.generate(any(List.class)))
+        when(fastChatLanguageModel.generate(any(List.class)))
                 .thenThrow(new RuntimeException("rate_limit_exceeded"));
 
         String title = decisionService.generateTitle(
