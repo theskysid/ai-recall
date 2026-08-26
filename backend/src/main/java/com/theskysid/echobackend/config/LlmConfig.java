@@ -13,10 +13,16 @@ import org.springframework.context.annotation.Primary;
  * The reasoning model answers RAG questions and classifies conflicts — the
  * conflict classifier has to hold two statements side by side, decide whether
  * they concern the same underlying decision, and only then decide whether one
- * settles the other. An 8B model surface-matches keywords there ("switch",
+ * settles the other. A small model surface-matches keywords there ("switch",
  * "decided") and CONFLICT_SYSTEM grew a wall of counter-examples to fight it.
  * It runs only on text that already passed the extractor, so it is rare enough
  * for the bigger model to cost almost nothing.
+ *
+ * Groq decommissioned every Llama chat model, so the ids here are the gpt-oss
+ * pair. Both reply with a bare token and no reasoning preamble, which the
+ * exact-match parsers in DecisionService require. Check the id against
+ * https://console.groq.com/docs/models before changing it — a dead id fails
+ * every call, and the pipeline degrades silently to "nobody decided anything".
  *
  * The fast model runs the decision extractor — one short input, a YES/NO answer,
  * on every single message — and title generation, which is cosmetic.
@@ -32,10 +38,10 @@ public class LlmConfig {
     @Value("${spring.ai.groq.api-key:}")
     private String apiKey;
 
-    @Value("${spring.ai.groq.model:llama-3.3-70b-versatile}")
+    @Value("${spring.ai.groq.model:openai/gpt-oss-120b}")
     private String modelName;
 
-    @Value("${spring.ai.groq.fast-model:llama-3.1-8b-instant}")
+    @Value("${spring.ai.groq.fast-model:openai/gpt-oss-20b}")
     private String fastModelName;
 
     /** RAG answers and conflict classification. Injected wherever no qualifier is given. */
