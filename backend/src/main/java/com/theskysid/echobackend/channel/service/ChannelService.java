@@ -9,8 +9,10 @@ import com.theskysid.echobackend.channel.repository.ChannelRepository;
 import com.theskysid.echobackend.memory.service.MemoryIngestionService;
 import com.theskysid.echobackend.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
 import java.util.List;
@@ -151,6 +153,17 @@ public class ChannelService {
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new RuntimeException("Channel not found"));
         return channelMembershipRepository.existsByChannelAndUser(channel, user);
+    }
+
+    /**
+     * Membership guard for the channel-scoped endpoints: 403 for a non-member,
+     * 400 ("Channel not found") for a channel that isn't there.
+     */
+    @Transactional(readOnly = true)
+    public void requireMember(User user, Long channelId) {
+        if (!isMember(user, channelId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this channel");
+        }
     }
 
     /**

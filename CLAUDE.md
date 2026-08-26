@@ -7,7 +7,7 @@ Spring Boot (Java 21) backend + React (Vite) frontend, over WebSocket
 (STOMP/SockJS), PostgreSQL 16 + pgvector. Channels support text chat, LiveKit
 video calls, Deepgram transcription, and RAG Q&A over a vector memory
 (local MiniLM embeddings + Groq/Llama 3 answer synthesis). REST reference for
-the AI endpoints: [backend/RAG_API_DOCS.md](backend/RAG_API_DOCS.md).
+every endpoint, AI included: [docs/API.md](docs/API.md).
 
 ## Read before making changes
 

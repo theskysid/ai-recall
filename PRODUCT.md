@@ -110,9 +110,10 @@ Constraints future work must respect:
   prompt still opens "You are an AI project assistant" (`RagService`), so
   generated answers can adopt assistant persona language — the prompt should be
   reworded to a non-persona instruction.
-- An evaluation harness (`/api/eval/**`) exists for measuring retrieval
-  staleness; it is disabled unless `recall.eval.enabled=true` and is absent from
-  normal deployments. Not a product surface — do not design UI for it.
+- Retrieval staleness was measured once against three retrieval strategies;
+  excluding superseded decisions won and is now the only behaviour. The harness
+  has been removed — the record is in [ai/eval/](ai/eval/). Never a product
+  surface; do not design UI for it.
 
 Undecided (do not invent):
 

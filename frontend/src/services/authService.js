@@ -78,6 +78,20 @@ const generateUserColor = () => {
 
 const normalizeIdentifier = (identifier) => identifier?.trim();
 
+/* Every successful auth call stored the same two keys the same way. `user` is
+   the server's payload; `currentUser` is that plus the local-only display bits
+   (colour, login time) — both kept because different screens read each. */
+const persistUser = (data) => {
+    const userData = {
+        ...data,
+        color: generateUserColor(),
+        loginTime: new Date().toISOString()
+    };
+    localStorage.setItem('currentUser', JSON.stringify(userData));
+    localStorage.setItem('user', JSON.stringify(data));
+    return { success: true, user: userData };
+};
+
 export const authService = {
 
     login: async (username, password) => {
@@ -88,21 +102,7 @@ export const authService = {
                 password
             });
 
-            //After successful login
-            const userColor = generateUserColor();
-            const userData = {
-                ...response.data,
-                color: userColor,
-                loginTime: new Date().toISOString()
-            };
-
-            localStorage.setItem('currentUser', JSON.stringify(userData));
-            localStorage.setItem('user', JSON.stringify(response.data));
-
-            return{
-                success: true,
-                user: userData
-            };
+            return persistUser(response.data);
 
         }
         catch(error){
@@ -221,23 +221,6 @@ export const authService = {
         return !!user;
     },
 
-    sendOtp: async (identifier) => {
-        const value = normalizeIdentifier(identifier);
-        if (!value) {
-            throw new Error('Email is required');
-        }
-        return authService.sendEmailOtp(value);
-    },
-
-    verifyOtp: async (identifier, otp) => {
-        const value = normalizeIdentifier(identifier);
-        if (!value) {
-            throw new Error('Email is required');
-        }
-        return authService.verifyEmailOtp(value, otp);
-    },
-
-
     getOnlineUsers: async () => {
         try {
             const response = await api.get('/auth/getonlineusers');
@@ -250,7 +233,11 @@ export const authService = {
 
     // ── Email OTP ──────────────────────────────────────────
 
-    sendEmailOtp: async (email) => {
+    sendOtp: async (identifier) => {
+        const email = normalizeIdentifier(identifier);
+        if (!email) {
+            throw new Error('Email is required');
+        }
         try {
             const response = await api.post('/auth/email-otp/send', { email });
             return { success: true, message: response.data.message };
@@ -261,29 +248,21 @@ export const authService = {
         }
     },
 
-    verifyEmailOtp: async (email, otp) => {
+    verifyOtp: async (identifier, otp) => {
+        const email = normalizeIdentifier(identifier);
+        if (!email) {
+            throw new Error('Email is required');
+        }
         try {
             const response = await api.post('/auth/email-otp/verify', { email, otp });
 
-            const userColor = generateUserColor();
-            const userData = {
-                ...response.data,
-                color: userColor,
-                loginTime: new Date().toISOString()
-            };
-
-            localStorage.setItem('currentUser', JSON.stringify(userData));
-            localStorage.setItem('user', JSON.stringify(response.data));
-
-            return { success: true, user: userData };
+            return persistUser(response.data);
         } catch (error) {
             console.error('Verify email OTP failed', error);
             const errorMessage = error.response?.data?.error || 'OTP verification failed.';
             throw new Error(errorMessage);
         }
     },
-
-    sendSignupOtp: async (identifier) => authService.sendOtp(identifier),
 
     verifySignupOtp: async ({ username, identifier, password, otp }) => {
         try {
@@ -294,17 +273,7 @@ export const authService = {
                 otp
             });
 
-            const userColor = generateUserColor();
-            const userData = {
-                ...response.data,
-                color: userColor,
-                loginTime: new Date().toISOString()
-            };
-
-            localStorage.setItem('currentUser', JSON.stringify(userData));
-            localStorage.setItem('user', JSON.stringify(response.data));
-
-            return { success: true, user: userData };
+            return persistUser(response.data);
         } catch (error) {
             console.error('Verify signup OTP failed', error);
             const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Signup verification failed.';
@@ -318,17 +287,7 @@ export const authService = {
         try {
             const response = await api.post('/auth/google/login', { idToken });
 
-            const userColor = generateUserColor();
-            const userData = {
-                ...response.data,
-                color: userColor,
-                loginTime: new Date().toISOString()
-            };
-
-            localStorage.setItem('currentUser', JSON.stringify(userData));
-            localStorage.setItem('user', JSON.stringify(response.data));
-
-            return { success: true, user: userData };
+            return persistUser(response.data);
         } catch (error) {
             console.error('Google login failed', error);
             const errorMessage = error.response?.data?.error || 'Google authentication failed.';

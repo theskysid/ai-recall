@@ -7,7 +7,9 @@
 *.pem
 *.key
 
-.log
+*.log
 
 .vscode/
 .idea/
+.claude/skills/
+.claude/settings.local.json

@@ -32,7 +32,7 @@ const Signup = () => {
       if (!password.trim()) {
         throw new Error("Password is required");
       }
-      await authService.sendSignupOtp(identifier);
+      await authService.sendOtp(identifier);
       setOtpSent(true);
       setCountdown(60);
       setMessage("OTP sent! Check your email.");

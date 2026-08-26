@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class FriendshipService {
@@ -210,7 +209,7 @@ public class FriendshipService {
                 .map(f -> f.getRequester().getId().equals(user.getId())
                         ? f.getAddressee()
                         : f.getRequester())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -240,7 +239,7 @@ public class FriendshipService {
 
         return userRepository.searchByUsername(query.trim()).stream()
                 .filter(u -> !u.getId().equals(currentUser.getId()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**

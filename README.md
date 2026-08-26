@@ -112,9 +112,6 @@ cp .env.example .env
 Embeddings run in-process (all-MiniLM-L6-v2 via langchain4j) and need no key. Leave anything
 you don't have blank — that feature is simply inactive.
 
-`RECALL_RETRIEVAL_MODE=filter` and `RECALL_EVAL_ENABLED=false` are evaluation-harness knobs;
-leave them alone unless you are running the harness (see [ai/eval/README.md](ai/eval/README.md)).
-
 ---
 
 ## 📁 Project Structure
@@ -124,13 +121,11 @@ ai-recall/
 ├── backend/
 │   ├── src/                    # Java source & resources
 │   ├── Dockerfile
-│   ├── pom.xml
-│   ├── API_DOCS.md
-│   └── RAG_API_DOCS.md         # AI / memory endpoints
+│   └── pom.xml
 ├── frontend/
 │   ├── src/                    # React components, pages, services
-│   ├── Dockerfile
-│   ├── nginx.conf
+│   ├── Dockerfile              # Vite build → Caddy (TLS, static, API proxy)
+│   ├── Caddyfile
 │   ├── vite.config.js
 │   └── package.json
 ├── ai/                         # project, architecture & convention docs
@@ -224,7 +219,7 @@ Caddy is the only ingress; the backend (`8080`) and PostgreSQL (`5433`) are boun
 | Send      | `/app/dm.sendMessage`            | Send direct message               |
 | Send      | `/app/dm.typing`                 | DM typing indicator               |
 
-> Full API documentation: [`backend/API_DOCS.md`](backend/API_DOCS.md) · AI/memory endpoints: [`backend/RAG_API_DOCS.md`](backend/RAG_API_DOCS.md)
+> Full API documentation: [`docs/API.md`](docs/API.md)
 
 ---
 

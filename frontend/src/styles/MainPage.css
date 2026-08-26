@@ -347,26 +347,6 @@
         border-color var(--t-2) var(--ease), box-shadow var(--t-2) var(--ease);
 }
 
-/* Stamped block. */
-.cta-solid {
-    background: var(--nb-stamp);
-    color: var(--nb-sheet);
-    box-shadow: 0 2px 7px -1px rgba(20, 32, 43, 0.34);
-}
-
-.cta-solid:hover {
-    background: var(--nb-stamp-2);
-    color: var(--nb-sheet);
-    box-shadow: 0 1px 4px -1px rgba(20, 32, 43, 0.3);
-}
-
-.cta-solid:disabled,
-.cta-solid[aria-disabled='true'] {
-    background: var(--nb-sheet-3);
-    color: var(--nb-ink-3);
-    box-shadow: none;
-}
-
 .cta-quiet {
     color: var(--nb-ink);
     border-color: var(--nb-rule-strong);
