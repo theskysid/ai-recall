@@ -10,8 +10,6 @@ import com.theskysid.echobackend.channel.entity.ChannelMessage;
 import com.theskysid.echobackend.channel.service.ChannelService;
 import com.theskysid.echobackend.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/channels")
@@ -36,15 +33,11 @@ public class ChannelController {
      */
     @GetMapping
     @Transactional(readOnly = true)
-    public ResponseEntity<?> listChannels(Authentication authentication) {
-        if (authentication == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
-        }
-        User currentUser = authenticationService.resolveAuthenticatedUser(authentication.getName());
-        List<ChannelDTO> channels = channelService.listMemberships(currentUser).stream()
+    public List<ChannelDTO> listChannels(Authentication authentication) {
+        User currentUser = currentUser(authentication);
+        return channelService.listMemberships(currentUser).stream()
                 .map(membership -> toChannelDTO(membership.getChannel(), currentUser, membership.getJoinedAt()))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(channels);
+                .toList();
     }
 
     /**
@@ -52,17 +45,10 @@ public class ChannelController {
      */
     @PostMapping
     @Transactional
-    public ResponseEntity<?> createChannel(@RequestBody CreateChannelRequestDTO request, Authentication authentication) {
-        if (authentication == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
-        }
-        try {
-            User currentUser = authenticationService.resolveAuthenticatedUser(authentication.getName());
-            Channel channel = channelService.createChannel(currentUser, request.getName(), request.getDescription());
-            return ResponseEntity.ok(toChannelDTO(channel, currentUser, channel.getCreatedAt()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
-        }
+    public ChannelDTO createChannel(@RequestBody CreateChannelRequestDTO request, Authentication authentication) {
+        User currentUser = currentUser(authentication);
+        Channel channel = channelService.createChannel(currentUser, request.getName(), request.getDescription());
+        return toChannelDTO(channel, currentUser, channel.getCreatedAt());
     }
 
     /**
@@ -70,34 +56,19 @@ public class ChannelController {
      */
     @PostMapping("/join")
     @Transactional
-    public ResponseEntity<?> joinChannel(@RequestBody JoinChannelRequestDTO request, Authentication authentication) {
-        if (authentication == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
-        }
-        try {
-            User currentUser = authenticationService.resolveAuthenticatedUser(authentication.getName());
-            Channel channel = channelService.joinChannel(currentUser, request.getInviteCode());
-            return ResponseEntity.ok(toChannelDTO(channel, currentUser, LocalDateTime.now()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
-        }
+    public ChannelDTO joinChannel(@RequestBody JoinChannelRequestDTO request, Authentication authentication) {
+        User currentUser = currentUser(authentication);
+        Channel channel = channelService.joinChannel(currentUser, request.getInviteCode());
+        return toChannelDTO(channel, currentUser, LocalDateTime.now());
     }
 
     /**
      * DELETE /api/channels/{id}/leave — leave a channel.
      */
     @DeleteMapping("/{id}/leave")
-    public ResponseEntity<?> leaveChannel(@PathVariable Long id, Authentication authentication) {
-        if (authentication == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
-        }
-        try {
-            User currentUser = authenticationService.resolveAuthenticatedUser(authentication.getName());
-            channelService.leaveChannel(currentUser, id);
-            return ResponseEntity.ok(Map.of("message", "Left channel"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
-        }
+    public Map<String, String> leaveChannel(@PathVariable Long id, Authentication authentication) {
+        channelService.leaveChannel(currentUser(authentication), id);
+        return Map.of("message", "Left channel");
     }
 
     /**
@@ -105,22 +76,17 @@ public class ChannelController {
      */
     @GetMapping("/{id}/messages")
     @Transactional(readOnly = true)
-    public ResponseEntity<?> getChannelMessages(@PathVariable Long id, Authentication authentication) {
-        if (authentication == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
-        }
-        try {
-            User currentUser = authenticationService.resolveAuthenticatedUser(authentication.getName());
-            List<ChannelMessageDTO> messages = channelService.getChannelHistory(currentUser, id).stream()
-                    .map(this::toChannelMessageDTO)
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(messages);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
-        }
+    public List<ChannelMessageDTO> getChannelMessages(@PathVariable Long id, Authentication authentication) {
+        return channelService.getChannelHistory(currentUser(authentication), id).stream()
+                .map(this::toChannelMessageDTO)
+                .toList();
     }
 
     // ── Helpers ─────────────────────────────────────────────────
+
+    private User currentUser(Authentication authentication) {
+        return authenticationService.resolveAuthenticatedUser(authentication.getName());
+    }
 
     private ChannelMessageDTO toChannelMessageDTO(ChannelMessage message) {
         return ChannelMessageDTO.builder()

@@ -10,8 +10,6 @@ import com.theskysid.echobackend.memory.repository.MemoryVectorRepository;
 import com.theskysid.echobackend.memory.service.RagService;
 import com.theskysid.echobackend.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/channels")
@@ -46,27 +43,15 @@ public class AiController {
      * the LLM, and return it with the source ids. Members only.
      */
     @GetMapping("/{channelId}/ask")
-    public ResponseEntity<?> ask(@PathVariable Long channelId,
-                                 @RequestParam("q") String query,
-                                 Authentication authentication) {
-        if (authentication == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
-        }
-        try {
-            User currentUser = authenticationService.resolveAuthenticatedUser(authentication.getName());
+    public Map<String, Object> ask(@PathVariable Long channelId,
+                                   @RequestParam("q") String query,
+                                   Authentication authentication) {
+        channelService.requireMember(currentUser(authentication), channelId);
 
-            if (!channelService.isMember(currentUser, channelId)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", "You are not a member of this channel"));
-            }
-
-            RagContextDTO result = ragService.retrieveContext(String.valueOf(channelId), query);
-            return ResponseEntity.ok(Map.of(
-                    "answer", result.getAnswer() == null ? "" : result.getAnswer(),
-                    "sourceIds", result.getSourceIds()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
-        }
+        RagContextDTO result = ragService.retrieveContext(String.valueOf(channelId), query);
+        return Map.of(
+                "answer", result.getAnswer() == null ? "" : result.getAnswer(),
+                "sourceIds", result.getSourceIds());
     }
 
     /**
@@ -75,25 +60,16 @@ public class AiController {
      */
     @GetMapping("/{channelId}/decisions")
     @Transactional(readOnly = true)
-    public ResponseEntity<?> decisions(@PathVariable Long channelId, Authentication authentication) {
-        if (authentication == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
-        }
-        try {
-            User currentUser = authenticationService.resolveAuthenticatedUser(authentication.getName());
+    public List<DecisionDTO> decisions(@PathVariable Long channelId, Authentication authentication) {
+        channelService.requireMember(currentUser(authentication), channelId);
 
-            if (!channelService.isMember(currentUser, channelId)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", "You are not a member of this channel"));
-            }
+        return memoryVectorRepository.findDecisionsByChannel(channelId).stream()
+                .map(this::toDecisionDTO)
+                .toList();
+    }
 
-            List<DecisionDTO> decisions = memoryVectorRepository.findDecisionsByChannel(channelId).stream()
-                    .map(this::toDecisionDTO)
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(decisions);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
-        }
+    private User currentUser(Authentication authentication) {
+        return authenticationService.resolveAuthenticatedUser(authentication.getName());
     }
 
     private DecisionDTO toDecisionDTO(MemoryVector v) {

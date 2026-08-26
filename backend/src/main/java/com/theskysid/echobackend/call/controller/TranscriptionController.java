@@ -12,7 +12,6 @@ import com.theskysid.echobackend.channel.service.ChannelService;
 import com.theskysid.echobackend.memory.service.MemoryIngestionService;
 import com.theskysid.echobackend.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,8 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/channels")
@@ -57,29 +54,12 @@ public class TranscriptionController {
      * recording via Deepgram and persist the result. Members only.
      */
     @PostMapping("/{channelId}/transcribe")
-    public ResponseEntity<?> transcribe(@PathVariable Long channelId,
+    public CallTranscriptDTO transcribe(@PathVariable Long channelId,
                                         @RequestBody TranscribeRequestDTO request,
                                         Authentication authentication) {
-        if (authentication == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
-        }
-        try {
-            User currentUser = authenticationService.resolveAuthenticatedUser(authentication.getName());
-
-            if (!channelService.isMember(currentUser, channelId)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", "You are not a member of this channel"));
-            }
-
-            Channel channel = channelRepository.findById(channelId)
-                    .orElseThrow(() -> new RuntimeException("Channel not found"));
-
-            String transcript = deepgramService.transcribe(request.getAudioUrl());
-
-            return ResponseEntity.ok(toDTO(saveAndIngest(channel, request.getAudioUrl(), transcript)));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
-        }
+        Channel channel = memberChannel(channelId, authentication);
+        String transcript = deepgramService.transcribe(request.getAudioUrl());
+        return toDTO(saveAndIngest(channel, request.getAudioUrl(), transcript));
     }
 
     /**
@@ -91,37 +71,49 @@ public class TranscriptionController {
     public ResponseEntity<?> uploadRecording(@PathVariable Long channelId,
                                              @RequestParam("file") MultipartFile file,
                                              Authentication authentication) {
-        if (authentication == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+        Channel channel = memberChannel(channelId, authentication);
+
+        if (file == null || file.isEmpty()) {
+            throw new RuntimeException("Recording is empty");
         }
+
+        String transcript;
         try {
-            User currentUser = authenticationService.resolveAuthenticatedUser(authentication.getName());
-
-            if (!channelService.isMember(currentUser, channelId)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", "You are not a member of this channel"));
-            }
-
-            if (file == null || file.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Recording is empty"));
-            }
-
-            Channel channel = channelRepository.findById(channelId)
-                    .orElseThrow(() -> new RuntimeException("Channel not found"));
-
-            String transcript = deepgramService.transcribe(file.getBytes(), file.getContentType());
-
-            // A silent call transcribes to nothing — don't file an empty record.
-            if (transcript.isBlank()) {
-                return ResponseEntity.noContent().build();
-            }
-
-            return ResponseEntity.ok(toDTO(saveAndIngest(channel, "browser-recording", transcript)));
+            transcript = deepgramService.transcribe(file.getBytes(), file.getContentType());
         } catch (IOException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Could not read the uploaded recording"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
+            throw new RuntimeException("Could not read the uploaded recording");
         }
+
+        // A silent call transcribes to nothing — don't file an empty record.
+        if (transcript.isBlank()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(toDTO(saveAndIngest(channel, "browser-recording", transcript)));
+    }
+
+    /**
+     * GET /api/channels/{channelId}/transcripts — list saved call transcripts
+     * for the channel, most recent first. Members only.
+     */
+    @GetMapping("/{channelId}/transcripts")
+    @Transactional(readOnly = true)
+    public List<CallTranscriptDTO> listTranscripts(@PathVariable Long channelId, Authentication authentication) {
+        Channel channel = memberChannel(channelId, authentication);
+        return callTranscriptRepository.findByChannel(channel).stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    /**
+     * Resolve the channel, having checked the caller is a member of it — every
+     * endpoint here needs both.
+     */
+    private Channel memberChannel(Long channelId, Authentication authentication) {
+        User currentUser = authenticationService.resolveAuthenticatedUser(authentication.getName());
+        channelService.requireMember(currentUser, channelId);
+        return channelRepository.findById(channelId)
+                .orElseThrow(() -> new RuntimeException("Channel not found"));
     }
 
     /**
@@ -137,36 +129,6 @@ public class TranscriptionController {
 
         memoryIngestionService.ingestTranscript(saved);
         return saved;
-    }
-
-    /**
-     * GET /api/channels/{channelId}/transcripts — list saved call transcripts
-     * for the channel, most recent first. Members only.
-     */
-    @GetMapping("/{channelId}/transcripts")
-    @Transactional(readOnly = true)
-    public ResponseEntity<?> listTranscripts(@PathVariable Long channelId, Authentication authentication) {
-        if (authentication == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
-        }
-        try {
-            User currentUser = authenticationService.resolveAuthenticatedUser(authentication.getName());
-
-            if (!channelService.isMember(currentUser, channelId)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", "You are not a member of this channel"));
-            }
-
-            Channel channel = channelRepository.findById(channelId)
-                    .orElseThrow(() -> new RuntimeException("Channel not found"));
-
-            List<CallTranscriptDTO> transcripts = callTranscriptRepository.findByChannel(channel).stream()
-                    .map(this::toDTO)
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(transcripts);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
-        }
     }
 
     private CallTranscriptDTO toDTO(CallTranscript transcript) {
