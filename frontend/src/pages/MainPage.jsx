@@ -4,7 +4,7 @@ import { motion, MotionConfig, useReducedMotion } from 'motion/react';
 import { authService } from '../services/authService';
 import Icon from '../components/ui/Icon';
 import NotebookNib from '../components/NotebookNib';
-import { LiquidButton } from '../components/ui/liquid-glass-button';
+import LiquidButton from '../components/ui/LiquidButton';
 import '../styles/MainPage.css';
 
 /* Each row is a kind of record the app keeps. The code on the rail is
@@ -76,13 +76,13 @@ const MainPage = () => {
     /* The primary action is now a liquid-glass button; nesting a <button>
        inside react-router's <Link> is invalid, so it navigates on click. */
     const primaryCta = isAuthenticated ? (
-        <LiquidButton size="lg" onClick={() => navigate('/chatarea')}>
+        <LiquidButton onClick={() => navigate('/chatarea')}>
             Open your channels
             <Icon name="arrowUpRight" size={15} />
         </LiquidButton>
     ) : (
         <>
-            <LiquidButton size="lg" onClick={() => navigate('/login')}>
+            <LiquidButton onClick={() => navigate('/login')}>
                 Sign in
                 <Icon name="arrowUpRight" size={15} />
             </LiquidButton>
@@ -311,7 +311,6 @@ const MainPage = () => {
 
                             <motion.div className="signing" variants={reveal}>
                                 <LiquidButton
-                                    size="lg"
                                     onClick={() => navigate(isAuthenticated ? '/chatarea' : '/login')}
                                 >
                                     {isAuthenticated ? 'Open your channels' : 'Sign in to Recall'}

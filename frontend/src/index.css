@@ -394,16 +394,6 @@ h4 {
   line-height: 1.04;
 }
 
-/* ── Catalog label — anything the archive filed ─── */
-.mono-label {
-  font-family: var(--font-mono);
-  font-size: 0.66rem;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--paper-3);
-}
-
 /* ── Scrollbars ─────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 10px;
