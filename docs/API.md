@@ -37,13 +37,6 @@
 - `GET /api/channels/{channelId}/ask` - Ask a question using RAG against memory_vectors
 - `GET /api/channels/{channelId}/decisions` - Fetch synthesized decisions from memories
 
-### Eval / Dev (`/api/eval`)
-- `POST /api/eval/channels/{channelId}/message` - Seed a test message
-- `POST /api/eval/channels/{channelId}/transcript` - Seed a test transcript
-- `GET /api/eval/channels/{channelId}/memory-count` - Check memory stats
-- `GET /api/eval/channels/{channelId}/ask` - Test AI RAG
-- `GET /api/eval/llm-errors` - Extractor and classifier failure counts since startup
-
 ## STOMP / WebSocket Destinations
 
 - Endpoint: `/ws`

@@ -1,5 +1,11 @@
 # RECALL Staleness-Blindness Evaluation Dataset
 
+> **Historical record.** This describes the experiment as it was run. The
+> harness it references — `run_eval.py`, `corpus.json`, the `/api/eval/**`
+> endpoints and the `RECALL_RETRIEVAL_MODE` switch — has since been removed;
+> `filter` is now the only retrieval behaviour. Commands below no longer
+> execute. See [README.md](README.md).
+
 Synthetic corpus for measuring whether supersession-aware retrieval suppresses
 outdated decisions. 5 decision-evolution scenarios, each with a reinforced
 original decision (t1, chat) and a terse later reversal (t2, call transcript).
