@@ -12,14 +12,15 @@
   (`com.pgvector:pgvector`) for similarity search.
 - **Frontend** — React 19, Vite 7, Axios, `@stomp/stompjs` + `sockjs-client`,
   `react-router-dom` 7, `@react-oauth/google`, `@livekit/components-react`,
-  Tailwind CSS 4 (`@tailwindcss/vite`), `motion`, and shadcn-style primitives
-  (`@radix-ui/react-slot`, `class-variance-authority`) in `components/ui/`.
+  and `motion`. Styling is hand-written CSS per surface in `src/styles/` —
+  no CSS framework.
 - **Database** — PostgreSQL 16 + `vector` extension. `db/init/01-enable-pgvector.sql`
   auto-enables it on a fresh volume; on an existing volume run
   `CREATE EXTENSION IF NOT EXISTS vector;` once.
 - **Infra** — Docker / Docker Compose (postgres = `pgvector/pgvector:pg16`),
-  Caddy for TLS/reverse proxy at the edge (`Caddyfile`, `DOMAIN` in `.env`),
-  nginx inside the frontend image serving the Vite build, AWS EC2.
+  AWS EC2. The frontend image is Caddy (`frontend/Caddyfile`, `DOMAIN` in
+  `.env`): it terminates TLS, serves the Vite build, and proxies `/api`,
+  `/auth` and `/ws` to the backend — one server, not a proxy in front of a proxy.
   `docker-compose.local.yml` builds from source; `docker-compose.yml` pulls
   published images. Backend runtime image is **glibc** (`eclipse-temurin:21-jre`,
   not alpine) — ONNX Runtime for MiniLM needs libstdc++.
