@@ -1,6 +1,8 @@
 .env
 *.env
 .env.*
+# ...but the documented template must ship: README tells you to copy it.
+!.env.example
 
 *.pem
 *.key
