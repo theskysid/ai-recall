@@ -15,6 +15,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 
 @Controller
@@ -34,10 +35,21 @@ public class ChannelChatController {
 
     // Clients send to /app/channel/{channelId}/send and subscribe to /topic/channel/{channelId}
 
+    /**
+     * The sender is the authenticated STOMP principal, never request.getSender().
+     * The payload field is client-controlled: trusting it let any connected client
+     * post to any channel as any member of it, since postMessage only checks that
+     * the *claimed* sender belongs to the channel. The principal comes from the
+     * SockJS handshake, which the JWT filter authenticates.
+     */
     @MessageMapping("/channel/{channelId}/send")
     public void sendChannelMessage(@DestinationVariable Long channelId,
-                                   @Payload ChannelMessageRequestDTO request) {
-        String senderUsername = IdentifierNormalizer.normalizeUsername(request.getSender());
+                                   @Payload ChannelMessageRequestDTO request,
+                                   Principal principal) {
+        if (principal == null) {
+            return;
+        }
+        String senderUsername = IdentifierNormalizer.normalizeUsername(principal.getName());
         if (senderUsername == null || senderUsername.isBlank() || !userService.userExists(senderUsername)) {
             return;
         }

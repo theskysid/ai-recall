@@ -123,7 +123,11 @@ public class DirectMessageWsController {
         if (headerAccessor.getSessionAttributes() != null && headerAccessor.getSessionAttributes().get("username") != null) {
             return (String) headerAccessor.getSessionAttributes().get("username");
         }
-        return request.getSenderUsername();
+        // No fallback to request.getSenderUsername(): that field is client-controlled,
+        // so honouring it let any connected client send a DM as anyone else. Both
+        // sources above are server-side — the handshake principal, or the username
+        // this session registered through /chat.addUser.
+        return null;
     }
 
     private DirectMessageDTO toDTO(DirectMessage message) {
