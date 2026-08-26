@@ -3,7 +3,7 @@ package com.theskysid.echobackend.messaging.controller;
 import com.theskysid.echobackend.auth.service.OnlineUserService;
 import com.theskysid.echobackend.auth.util.IdentifierNormalizer;
 import com.theskysid.echobackend.messaging.entity.ChatMessage;
-import com.theskysid.echobackend.user.service.UserService;
+import com.theskysid.echobackend.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class ChatController {
 
     @Autowired
-    private UserService userService;
+    private UserRepository userRepository;
 
     @Autowired
     private OnlineUserService onlineUserService;
@@ -29,10 +29,10 @@ public class ChatController {
     @MessageMapping("/chat.addUser")
     @SendTo("/topic/public")
     public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
-        String username = IdentifierNormalizer.normalizeUsername(chatMessage.getSender());
+        String username = IdentifierNormalizer.normalizeIdentifier(chatMessage.getSender());
         String sessionId = headerAccessor.getSessionId();
 
-        if (username.isBlank() || !userService.userExists(username)) {
+        if (username.isBlank() || userRepository.findByUsernameIgnoreCase(username).isEmpty()) {
             return null;
         }
 

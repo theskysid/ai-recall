@@ -2,7 +2,6 @@ package com.theskysid.echobackend.auth.controller;
 
 import com.theskysid.echobackend.auth.dto.OtpVerifyDTO;
 import com.theskysid.echobackend.auth.dto.request.OtpRequestDTO;
-import com.theskysid.echobackend.auth.otp.entity.OtpVerification.IdentifierType;
 import com.theskysid.echobackend.auth.service.EmailOtpService;
 import com.theskysid.echobackend.auth.service.OtpService;
 import com.theskysid.echobackend.auth.dto.response.LoginResponseDTO;
@@ -59,9 +58,9 @@ public class EmailOtpController {
     public ResponseEntity<?> verifyOtp(@RequestBody OtpVerifyDTO request) {
         try {
             String normalizedEmail = IdentifierNormalizer.normalizeEmail(request.getEmail());
-            otpService.verifyOtp(normalizedEmail, IdentifierType.EMAIL, request.getOtp());
+            otpService.verifyOtp(normalizedEmail, request.getOtp());
 
-            LoginResponseDTO loginResponse = authenticationService.loginWithOtp(normalizedEmail, IdentifierType.EMAIL);
+            LoginResponseDTO loginResponse = authenticationService.loginWithOtp(normalizedEmail);
             ResponseCookie cookie = ResponseCookie.from("JWT", loginResponse.getToken())
                     .httpOnly(true)
                     .secure(secureCookie)

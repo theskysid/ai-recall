@@ -7,7 +7,6 @@ import com.theskysid.echobackend.channel.service.ChannelService;
 import com.theskysid.echobackend.auth.util.IdentifierNormalizer;
 import com.theskysid.echobackend.user.entity.User;
 import com.theskysid.echobackend.user.repository.UserRepository;
-import com.theskysid.echobackend.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -19,9 +18,6 @@ import java.time.LocalDateTime;
 
 @Controller
 public class ChannelChatController {
-
-    @Autowired
-    private UserService userService;
 
     @Autowired
     private UserRepository userRepository;
@@ -37,8 +33,8 @@ public class ChannelChatController {
     @MessageMapping("/channel/{channelId}/send")
     public void sendChannelMessage(@DestinationVariable Long channelId,
                                    @Payload ChannelMessageRequestDTO request) {
-        String senderUsername = IdentifierNormalizer.normalizeUsername(request.getSender());
-        if (senderUsername == null || senderUsername.isBlank() || !userService.userExists(senderUsername)) {
+        String senderUsername = IdentifierNormalizer.normalizeIdentifier(request.getSender());
+        if (senderUsername == null || senderUsername.isBlank() || userRepository.findByUsernameIgnoreCase(senderUsername).isEmpty()) {
             return;
         }
 

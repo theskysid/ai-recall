@@ -4,7 +4,6 @@ import com.theskysid.echobackend.auth.dto.request.LoginRequestDTO;
 import com.theskysid.echobackend.auth.dto.request.RegisterRequestDTO;
 import com.theskysid.echobackend.auth.dto.request.SignupOtpRequestDTO;
 import com.theskysid.echobackend.auth.dto.response.LoginResponseDTO;
-import com.theskysid.echobackend.auth.otp.entity.OtpVerification.IdentifierType;
 import com.theskysid.echobackend.auth.util.IdentifierNormalizer;
 import com.theskysid.echobackend.user.dto.UserDTO;
 import com.theskysid.echobackend.auth.jwt.JwtService;
@@ -49,7 +48,7 @@ public class AuthenticationService {
     private boolean secureCookie;
 
     public UserDTO signup(RegisterRequestDTO registerRequestDTO) {
-        String username = IdentifierNormalizer.normalizeUsername(registerRequestDTO.getUsername());
+        String username = IdentifierNormalizer.normalizeIdentifier(registerRequestDTO.getUsername());
         if (username == null || username.isBlank()) {
             throw new RuntimeException("Username is required");
         }
@@ -79,7 +78,7 @@ public class AuthenticationService {
     }
 
     public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
-        String username = IdentifierNormalizer.normalizeUsername(loginRequestDTO.getUsername());
+        String username = IdentifierNormalizer.normalizeIdentifier(loginRequestDTO.getUsername());
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         username, loginRequestDTO.getPassword()));
@@ -90,8 +89,10 @@ public class AuthenticationService {
         return issueLoginResponse(user);
     }
 
-    public LoginResponseDTO loginWithOtp(String identifier, IdentifierType type) {
-        User user = resolveUserForOtpLogin(identifier, type)
+    public LoginResponseDTO loginWithOtp(String email) {
+        String normalized = IdentifierNormalizer.normalizeEmail(email);
+        User user = userRepository.findByEmailIgnoreCase(normalized)
+                .or(() -> findByIdentifier(normalized))
                 .orElseThrow(() -> new RuntimeException("No account linked to this email"));
         return issueLoginResponse(user);
     }
@@ -102,7 +103,7 @@ public class AuthenticationService {
     }
 
     public LoginResponseDTO signupWithOtp(SignupOtpRequestDTO request) {
-        String username = IdentifierNormalizer.normalizeUsername(request.getUsername());
+        String username = IdentifierNormalizer.normalizeIdentifier(request.getUsername());
         String identifier = IdentifierNormalizer.normalizeIdentifier(request.getIdentifier());
 
         if (username == null || username.isBlank()) {
@@ -122,9 +123,9 @@ public class AuthenticationService {
         }
 
         String normalizedIdentifier = IdentifierNormalizer.normalizeEmail(identifier);
-        otpService.verifyOtp(normalizedIdentifier, IdentifierType.EMAIL, request.getOtp());
+        otpService.verifyOtp(normalizedIdentifier, request.getOtp());
 
-        Optional<User> existingUser = findByIdentifier(normalizedIdentifier, IdentifierType.EMAIL);
+        Optional<User> existingUser = userRepository.findByEmailIgnoreCase(normalizedIdentifier);
         Optional<User> usernameOwner = userRepository.findByUsernameIgnoreCase(username);
 
         if (usernameOwner.isPresent() && existingUser.map(user -> !usernameOwner.get().getId().equals(user.getId())).orElse(true)) {
@@ -161,7 +162,7 @@ public class AuthenticationService {
     }
 
     public List<String> getOnlineUsers() {
-        return new java.util.ArrayList<>(onlineUserService.getOnlineUsernames());
+        return List.copyOf(onlineUserService.getOnlineUsernames());
     }
 
     public Optional<User> findByIdentifier(String identifier) {
@@ -172,19 +173,6 @@ public class AuthenticationService {
 
         return userRepository.findByUsernameIgnoreCase(normalized)
                 .or(() -> userRepository.findByEmailIgnoreCase(IdentifierNormalizer.normalizeEmail(normalized)));
-    }
-
-    public Optional<User> findByIdentifier(String identifier, IdentifierType type) {
-        if (type == IdentifierType.EMAIL) {
-            return userRepository.findByEmailIgnoreCase(IdentifierNormalizer.normalizeEmail(identifier));
-        }
-        return Optional.empty();
-    }
-
-    private Optional<User> resolveUserForOtpLogin(String identifier, IdentifierType type) {
-        String normalized = normalizeByType(identifier, type);
-        return findByIdentifier(normalized, type)
-                .or(() -> findByIdentifier(normalized));
     }
 
     public UserDTO convertToUserDTO(User user) {
@@ -207,10 +195,6 @@ public class AuthenticationService {
                 .token(token)
                 .userDTO(userDTO)
                 .build();
-    }
-
-    private String normalizeByType(String identifier, IdentifierType type) {
-        return IdentifierNormalizer.normalizeEmail(identifier);
     }
 
     private boolean hasPassword(User user) {

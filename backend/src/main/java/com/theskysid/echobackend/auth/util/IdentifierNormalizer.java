@@ -15,10 +15,6 @@ public final class IdentifierNormalizer {
         return identifier == null ? "" : identifier.trim();
     }
 
-    public static String normalizeUsername(String username) {
-        return normalizeIdentifier(username);
-    }
-
     /** Usernames address people in chat and URLs, so no internal whitespace. */
     public static boolean hasWhitespace(String value) {
         return value != null && value.chars().anyMatch(Character::isWhitespace);
