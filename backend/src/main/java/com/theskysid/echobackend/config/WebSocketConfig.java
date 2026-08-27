@@ -11,7 +11,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-   @Value("${allowed-origins:https://echomessaging.duckdns.org,http://localhost:5173}")
+   @Value("${allowed-origins:https://airecall.duckdns.org,http://localhost:5173}")
    private String allowedOrigins;
 
    // changes the http to websocket protocol

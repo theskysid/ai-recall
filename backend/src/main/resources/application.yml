@@ -63,7 +63,7 @@ livekit:
 deepgram:
   api-key: ${DEEPGRAM_API_KEY:}
 
-allowed-origins: ${ALLOWED_ORIGINS:https://echomessaging.duckdns.org,http://localhost:5173}
+allowed-origins: ${ALLOWED_ORIGINS:https://airecall.duckdns.org,http://localhost:5173}
 
 logging:
   pattern:

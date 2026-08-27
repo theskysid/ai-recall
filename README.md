@@ -166,7 +166,7 @@ Automated via GitHub Actions (`deploy.yml`). Pushes to `main` trigger lint, buil
 
 | Branch | Environment | EC2 OS            |    Public Ports    | URL                               |
 |--------|-------------|-------------------|:------------------:|:----------------------------------|
-| `main` | Production  | Amazon Linux 2023 | 80 / 443  (Caddy)  | https://echomessaging.duckdns.org |
+| `main` | Production  | Ubuntu            | 80 / 443  (Caddy)  | https://airecall.duckdns.org      |
 
 Caddy is the only ingress; the backend (`8080`) and PostgreSQL (`5433`) are bound to loopback only.
 
