@@ -96,7 +96,8 @@ jobs:
             LIVEKIT_TOKEN_TTL_MINUTES=60
             DEEPGRAM_API_KEY=${{ secrets.DEEPGRAM_API_KEY }}
             GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
-            GROQ_MODEL=llama-3.1-8b-instant
+            GROQ_MODEL=openai/gpt-oss-120b
+            GROQ_FAST_MODEL=openai/gpt-oss-20b
             VITE_API_URL=${{ vars.VITE_API_URL }}
             VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
             VITE_LIVEKIT_URL=${{ secrets.LIVEKIT_URL }}
@@ -104,11 +105,12 @@ jobs:
             echo "APP_TAG=${{ github.sha }}" >> .env
 
             docker compose pull
-            docker compose up -d
+            docker compose up -d --remove-orphans
 
-            # wait up to 2 min for the backend to report healthy
+            # wait up to 2 min for the backend AND the edge to answer
             for i in $(seq 1 24); do
-              if curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
+              if curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"' \
+                 && curl -fsS -o /dev/null http://localhost:80/; then
                 echo "healthy"
                 # SHA-tagged images are never dangling, so plain prune leaves
                 # them forever. -a with a 7d cutoff keeps the running images
@@ -122,5 +124,5 @@ jobs:
 
             echo "health check failed — rolling back to $PREV"
             sed -i "s/^APP_TAG=.*/APP_TAG=$PREV/" .env
-            docker compose up -d
+            docker compose up -d --remove-orphans
             exit 1
