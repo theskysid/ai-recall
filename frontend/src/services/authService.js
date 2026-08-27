@@ -128,7 +128,7 @@ export const authService = {
         }
         catch (error){
             console.error('Signup failed', error);
-            const errorMessage = error.response?.data?.message || 'Signup failed, Please check your credentials';
+            const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Signup failed, Please check your credentials';
             throw new Error(errorMessage);
         }
     },
