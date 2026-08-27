@@ -47,9 +47,10 @@ it: **the channel itself is the memory.** Three parts, all real in the code —
 2. **Decisions are extracted and dated, and supersession is explicit.** When a
    channel settles something it is flagged as a decision; a later decision that
    replaces it marks the older one `superseded` rather than deleting it, and
-   retrieval excludes superseded decisions from the context by default
-   (`recall.retrieval.mode=filter`; `demote` and `baseline` exist as evaluation
-   arms). The record keeps its own history of changing its mind.
+   retrieval excludes superseded decisions from the context —
+   `MemoryVectorRepository.findTop5ActiveOnly` is the only retrieval query, and
+   there is no mode switch. The record keeps its own history of changing its
+   mind.
 3. **Retrieval is channel-scoped and cited.** Answers come back with the message
    and transcript IDs they were drawn from.
 
@@ -66,18 +67,20 @@ language.
   first-class scene, not a squeeze of the desktop one.
 - Sign-in paths: password, email OTP, and Google OAuth. (Phone/SMS OTP was
   removed and must not return.)
-- Self-hosted: Docker Compose on a single EC2 box behind Caddy (TLS/Let's
-  Encrypt); the frontend container's nginx proxies `/api`, `/auth` and `/ws` to
-  the backend so everything is one origin. Embedding runs in-process; there is
-  no external embedding vendor.
+- Self-hosted: Docker Compose on a single EC2 box. The frontend container is
+  Caddy: it terminates TLS (Let's Encrypt) and proxies `/api`, `/auth` and
+  `/ws` to the backend, so everything is one origin and there is one web
+  server, not two. Embedding runs in-process; there is no external embedding
+  vendor.
 
 ## Capabilities and Constraints
 
 Confirmed and working:
 
 - Auth (password, email OTP, Google OAuth2), JWT in an httpOnly cookie.
-- Friendship and real-time 1:1 DMs with per-conversation retention, plus online
-  presence.
+- Friendship and real-time 1:1 DMs with a per-conversation retention window —
+  six hours, one day, or seven days (default one day) — plus online presence.
+  DM content is never embedded into memory.
 - Channels: create with auto-generated invite code, join by code, leave, list.
   Real-time messaging over STOMP with persisted history.
 - LiveKit video calls per channel, backend-minted scoped tokens.
@@ -89,21 +92,24 @@ Confirmed and working:
 - Decision extraction and supersession.
 - Decision timeline endpoint: `GET /api/channels/{id}/decisions` (active +
   superseded, newest first).
-- Retrieval mode is configurable (`recall.retrieval.mode` = filter | demote |
-  baseline); filter is the shipped default.
 - Channel memory panel: decision timeline (active/superseded) and per-call
   transcripts, collapsed above the feed.
+- Profile management: edit profile, and link/unlink email and Google sign-in
+  methods after signup (`/api/profile/**`).
+- Installable as a PWA — fullscreen from the home screen, launching into
+  `/chatarea`.
 
 Constraints future work must respect:
 
 - **Additive only.** Auth, friend chat/DMs, and channels (text, calls, memory)
   are stable. Extend alongside them; do not remove or replace.
 - **Removed and not to be reintroduced:** global/public chat, phone/SMS OTP.
-- Design tokens are defined and commented in `src/index.css` (ground/text/
-  accent/record/alarm scales, light + dark); per-surface CSS files under
-  `src/styles/` consume them. Tailwind v4 is imported utilities-only via
-  `src/tailwind.css` (no Preflight) solely for the shadcn-derived buttons in
-  `src/components/ui/`. There is still no full component library.
+- Design tokens are defined and commented in `src/index.css`: a `--nb-*`
+  notebook base (sheet/rule/ink/bind/seal/stamp) with semantic aliases over it
+  (`--bg`/`--text`/`--accent`/`--record`/`--alarm`); per-surface CSS files under
+  `src/styles/` consume them. Tailwind and shadcn were removed; the app is
+  hand-written CSS throughout, including `src/components/ui/`. There is no
+  component library.
 - Terminology, as used in product surfaces: *channel*, *invite code*, *memory*,
   *decision*, *superseded*, *transcript*, *direct message*. Not: workspace,
   server, thread, assistant, bot. UI copy holds to this, but the RAG answer

@@ -131,7 +131,7 @@ messages — covering the four rows below:
 | Control | Purpose |
 |---|---|
 | Never-superseded decision | Penalty must not degrade normal retrieval |
-| Two independent decisions, similar wording | `replaces()` must return NO — measures false-supersession rate |
+| Two independent decisions, similar wording | `classifyConflict()` must return NO_CONFLICT for both — measures false-supersession rate |
 | Reinstated decision (A → B → back to A) | Chained supersession; the middle decision must end up dead |
 | Query with no matching decision | Must answer "I don't know", not confabulate from nearest neighbour |
 
@@ -214,10 +214,11 @@ with no stale keyword left in the answer there is less for it to match on. This
 is exactly why the answer layer needs hand-labelling and the retrieval layer
 does not.
 
-Controls: the 3 baseline failures are all the unanswerable query ("What time is
-standup?"), where leaked stale context prompted an answer instead of an
-"I don't know". Both suppressed arms scored 12/12 — **suppression cost zero
-correct answers.**
+Controls: the 3 baseline failures are all C3, the reinstated decision
+(9:30 → 11:00 → back to 9:30) — baseline answered with the superseded 11:00am.
+The unanswerable control (C4, Berlin office lease) was declined correctly in
+every arm. Both suppressed arms scored 12/12 — **suppression cost zero correct
+answers.**
 
 ### What this does and does not show
 
@@ -263,7 +264,7 @@ assume away the behaviour under test.
 
 ```bash
 export RECALL_USER=you RECALL_PASS=...
-python3 ai/eval/run_eval.py seed
+python3 ai/eval/run_eval.py seed --tag 3
 ```
 
 Seeding records, per scenario, whether the extractor actually marked t1
@@ -297,5 +298,5 @@ field is keyword triage only; every row keeps its raw answer and an empty
 | `LIMIT 5` in a sparse channel | With <5 active vectors, arm B returns the stale chunk anyway and arms A and B become indistinguishable | Each channel is padded with 8 unrelated decisions (in `corpus.json`). **This mitigation overshot** — it also removed the condition under which arm B fails, collapsing B and C to identical results (see [Results](#results)) |
 | No temporal signal in the prompt | Context is joined with `\n\n`, no timestamps (`RagService`) — the LLM cannot prefer the newer fact even when both are retrieved | Report as a finding; a 4th arm with timestamped context would isolate it |
 | `findTopDecisionsByChannel` LIMIT 3 | Supersession only checks the 3 nearest active decisions, so padding a channel can itself *cause* a supersession miss | Seeding reports supersession recall per scenario; vary padding size to test sensitivity |
-| LLM-based `replaces()` | A non-deterministic 1-token YES/NO gate sits upstream of everything | Treat supersession recall as a separate reported metric, not a precondition |
+| LLM-based `classifyConflict()` | A non-deterministic 1-token SUPERSEDE/UNRESOLVED/NONE gate sits upstream of everything | Treat supersession recall as a separate reported metric, not a precondition |
 | Keyword auto-labelling | Cannot judge stance — "no, we left MongoDB" contains the stale keyword | Contrastive query forms are labelled separately; hand-label before publishing |

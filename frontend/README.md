@@ -10,5 +10,6 @@ npm run build    # production build
 npm run lint     # ESLint
 ```
 
-`VITE_API_URL` points at the backend (`http://localhost:8080` locally) and is
-read at build time — see `.env.example` in the project root.
+`VITE_API_URL` (backend base URL, `http://localhost:8080` locally) and
+`VITE_GOOGLE_CLIENT_ID` (Google sign-in) are read at build time — see
+`.env.example` in the project root.

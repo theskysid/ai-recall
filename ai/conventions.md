@@ -31,10 +31,18 @@
   defaults (`:}`) so the app starts unconfigured and fails cleanly at request time.
 - External HTTP calls use `java.net.http.HttpClient` (Deepgram) or an SDK
   (LiveKit). New env vars must be added to `.env.example`.
-- **LLM** is injected as the `ChatLanguageModel` interface; the concrete bean
-  lives in `config/LlmConfig` (`langchain4j-open-ai` → Groq base URL). Services
-  stay provider-agnostic. LLM calls (decision extraction, supersession, RAG
-  answer) are wrapped in try/catch and fall back safely (raw context / `false`).
+- **LLM** is injected as the `ChatLanguageModel` interface; the concrete beans
+  live in `config/LlmConfig` (`langchain4j-open-ai` → Groq base URL) — the
+  `@Primary` reasoning model, and the fast one reached via
+  `@Qualifier("fastChatLanguageModel")`. Model ids come from
+  `spring.ai.groq.model` / `spring.ai.groq.fast-model`. Services stay
+  provider-agnostic.
+- LLM failures are never coerced into a negative answer. The RAG answer falls
+  back to the raw retrieved context (`RagService`); the decision extractor and
+  the conflict classifier return a distinct `LLM_ERROR` result (never
+  `NOT_A_DECISION` / `NO_CONFLICT`), which is logged with a marker, counted, and
+  treated as "do nothing" — a throttled model must not read as "nobody decided
+  anything".
 - Background work uses `@Async` (`@EnableAsync` on the app class); embedding +
   decision ingestion runs off the request/broadcast thread and only logs on
   failure. LLM calls inside it are synchronous so the DB ends up consistent.
@@ -52,11 +60,13 @@ manually. pgvector's `vector` extension is never created by `ddl-auto`.
 
 ## Error handling
 
-- Services throw `new RuntimeException("message")` for business errors.
-- Controllers wrap calls in try/catch and return
-  `ResponseEntity.badRequest().body(Map.of("error", e.getMessage()))`.
-- Unauthenticated: `if (authentication == null)` →
-  `ResponseEntity.status(UNAUTHORIZED).body(Map.of("error", "Not authenticated"))`.
+- Services throw `new RuntimeException("message")` for a bad request, and
+  `ResponseStatusException` when the status matters (403 for a non-member).
+- Controllers return the DTO directly and never try/catch.
+- `config/ApiExceptionHandler` (`@RestControllerAdvice`) turns both into
+  `{"error": "..."}`.
+- 401 is Spring's, from `SecurityConfig`'s `anyRequest().authenticated()` —
+  nothing in the app code handles it.
 - Current user resolved via
   `authenticationService.resolveAuthenticatedUser(authentication.getName())`.
 - Identifiers normalized through `auth/util/IdentifierNormalizer`.
@@ -65,6 +75,8 @@ manually. pgvector's `vector` extension is never created by `ddl-auto`.
 
 - Minimal: the Spring Boot context-load smoke test
   (`EchoBackendApplicationTests`) plus focused unit tests where logic is worth
-  pinning (`auth/util/IdentifierNormalizerTest`). No integration suite, no
-  frontend tests. Frontend uses ESLint (`npm run lint`). Verify changes
-  by building (`./mvnw package`, `npm run build`) and running the app.
+  pinning (`auth/util/IdentifierNormalizerTest`, `config/LlmConfigTest`, and
+  `memory/service/DecisionServiceTest`, which pins the extractor/classifier
+  parsing). No integration suite, no frontend tests. Frontend uses ESLint
+  (`npm run lint`). Verify changes by building (`./mvnw package`,
+  `npm run build`) and running the app.

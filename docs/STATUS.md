@@ -19,7 +19,7 @@
 - **Vector DB Behavior**: Confirmed that the codebase aligns with the locked decision to use a single Postgres+pgvector store (no separate standalone vector DB). All vectors are stored directly in PostgreSQL within the `memory_vectors` table.
 - **ML Pipeline Location**:
   - **Originally planned**: Separate Python FastAPI sidecar for embeddings.
-  - **Actual**: Implemented natively in Spring Boot (`EmbeddingService`, `AiController`, `EvalController`) via LangChain4j.
+  - **Actual**: Implemented natively in Spring Boot (`EmbeddingService`, `AiController`) via LangChain4j. (`EvalController` existed for the staleness experiment and was removed with the rest of that harness once the experiment closed.)
   - **Status**: This is now a locked decision per `DECISIONS.md`, not an open discrepancy — no action needed.
 
 ## Discrepancies and Clarifications

@@ -19,9 +19,9 @@ A real-time channel app with an AI memory: text chat, LiveKit video calls, Deepg
 | Layer        | Technologies                                                          |
 |--------------|-----------------------------------------------------------------------|
 | **Backend**  | Spring Boot, Java 21, JPA, WebSocket (STOMP/SockJS), JWT              |
-| **Frontend** | React 19, Vite, Tailwind v4, React Router 7, Axios, SockJS, STOMP.js  |
+| **Frontend** | React 19, Vite, hand-written CSS, React Router 7, Axios, SockJS, STOMP.js |
 | **Database** | PostgreSQL 16 + pgvector                                              |
-| **AI**       | langchain4j (local MiniLM embeddings), Groq (Llama 3) for synthesis   |
+| **AI**       | langchain4j (local MiniLM embeddings), Groq (OpenAI-compatible; `GROQ_MODEL` for answers, `GROQ_FAST_MODEL` for the decision gate) |
 | **Calls**    | LiveKit (audio/video), Deepgram (transcription)                       |
 | **Auth**     | Password, Email OTP, Google OAuth2                                    |
 | **Infra**    | Docker, Docker Compose, Caddy (Let's Encrypt), GitHub Actions, AWS EC2 |
@@ -44,6 +44,7 @@ A real-time channel app with an AI memory: text chat, LiveKit video calls, Deepg
 ### Prerequisites
 
 - Docker & Docker Compose
+- For the non-Docker path: JDK 21 and Node 20+
 
 ### Run
 
@@ -69,19 +70,23 @@ docker compose -f docker-compose.local.yml up --build
 >
 > ```bash
 > docker compose -f docker-compose.local.yml exec postgres \
->   psql -U "$DB_USER" -d "$DB_NAME" -c "CREATE EXTENSION IF NOT EXISTS vector;"
+>   sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE EXTENSION IF NOT EXISTS vector;"'
 > ```
 
 ### Without Docker
 
 Postgres (with pgvector) still has to be running and reachable at `SPRING_DATASOURCE_URL`.
+Export the variables from `.env` first (`set -a; source .env; set +a`) and point
+`SPRING_DATASOURCE_URL` at `jdbc:postgresql://localhost:5433/recall` — `postgres` as a hostname
+only resolves inside the compose network. `./mvnw test` boots the full Spring context, so it
+needs the same environment and a reachable database.
 
 ```bash
 cd backend
 ./mvnw spring-boot:run     # run locally
 ./mvnw test                # tests only
 
-cd frontend
+cd ../frontend
 npm install
 npm run dev                # dev server (Vite)
 npm run lint               # ESLint
@@ -125,18 +130,18 @@ ai-recall/
 ├── frontend/
 │   ├── src/                    # React components, pages, services
 │   ├── Dockerfile              # Vite build → Caddy (TLS, static, API proxy)
-│   ├── Caddyfile
+│   ├── Caddyfile               # reverse proxy + TLS (baked into the image)
 │   ├── vite.config.js
 │   └── package.json
 ├── ai/                         # project, architecture & convention docs
-│   └── eval/                   # retrieval evaluation harness
+│   └── eval/                   # closed retrieval experiment: dataset, results, write-up
+├── docs/                       # API, architecture, schema, scope, setup, status
 ├── db/
 │   └── init/
 │       └── 01-enable-pgvector.sql  # runs on first DB init
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml          # CI/CD pipeline
-├── Caddyfile                   # production reverse proxy + TLS
 ├── docker-compose.yml          # Production compose
 ├── docker-compose.local.yml    # Local development compose
 ├── .env.example                # Documented template
@@ -204,7 +209,7 @@ Caddy is the only ingress; the backend (`8080`) and PostgreSQL (`5433`) are boun
 | —        | `/api/friends/**`                                    | Yes  | Friend list, requests, search      |
 | —        | `/api/profile/**`                                    | Yes  | Profile, email/Google linking      |
 
-> `/api/eval/**` exists only when `RECALL_EVAL_ENABLED=true` — see [ai/eval/README.md](ai/eval/README.md). Keep it false in production.
+> Retrieval always excludes superseded decisions; the closed comparison of filter/demote/baseline is recorded in [ai/eval/README.md](ai/eval/README.md).
 
 ### WebSocket (STOMP over SockJS)
 

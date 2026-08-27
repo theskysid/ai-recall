@@ -8,7 +8,8 @@
 - **AI / calls** — LiveKit Server SDK for WebRTC tokens; Deepgram batch API via
   `java.net.http.HttpClient`; langchain4j all-MiniLM-L6-v2 (local, in-process
   embeddings, 384-dim); `langchain4j-open-ai` pointed at **Groq** (OpenAI-
-  compatible, Llama 3) for decision extraction + RAG answer synthesis; pgvector
+  compatible), gpt-oss models — ids come from `GROQ_MODEL` / `GROQ_FAST_MODEL`
+  — for decision extraction + RAG answer synthesis; pgvector
   (`com.pgvector:pgvector`) for similarity search.
 - **Frontend** — React 19, Vite 7, Axios, `@stomp/stompjs` + `sockjs-client`,
   `react-router-dom` 7, `@react-oauth/google`, `@livekit/components-react`,
@@ -30,10 +31,13 @@
 - `backend/` — base package `com.theskysid.echobackend`, by feature:
   `auth`, `friendship`, `messaging` (DMs + presence), `channel`, `call`
   (LiveKit + Deepgram), `memory` (embeddings, pgvector, decisions, RAG),
-  `user`, `config` (incl. `LlmConfig` — the Groq `ChatLanguageModel` bean).
+  `user`, `config` (`LlmConfig` — two Groq `ChatLanguageModel` beans, `@Primary`
+  reasoning + `fastChatLanguageModel` for the per-message hot path, both at
+  temperature 0; `LlmStartupCheck`, which fails startup on a dead model id;
+  `ApiExceptionHandler`; `SecurityConfig`; `WebSocketConfig`).
 - `frontend/src/` — `pages/`, `components/` (`chat/` incl. `AskAiWidget`,
   `MemoryPanel`; `ui/` for shared primitives), `services/` (Axios clients),
-  `hooks/`, `lib/`, `utils/`, `styles/`.
+  `hooks/`, `utils/`, `assets/`, `styles/`.
 
 ## How it connects
 
@@ -50,7 +54,8 @@
 ## Layering conventions
 
 Per feature: `entity/` → `repository/` (`JpaRepository`, `@Query` + `JOIN FETCH`,
-native pgvector queries) → `service/` (`@Service`, `@Transactional`) →
+native pgvector queries) → `service/` (`@Service`; `@Transactional` on the
+write paths that need it — channel, DM, friendship) →
 `controller/` (`@RestController` under `/api/...`, thin). WebSocket handlers in
 `*/websocket/` (exception: the presence handler `messaging/controller/ChatController`).
 DTOs in `dto/`; external config via `application.yml` → `@Value`.

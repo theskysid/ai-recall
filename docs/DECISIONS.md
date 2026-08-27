@@ -5,4 +5,6 @@
 - **BGE-M3 (or local MiniLM)**: Ensures local, free, privacy-friendly embeddings that integrate cleanly in a Java runtime via ONNX/Langchain4j.
 - **Single Postgres+pgvector store**: Eliminates the overhead of managing a separate standalone vector DB by using PostgreSQL's pgvector extension.
 - **Groq-hosted LLM for dev**: Uses ultra-fast inference APIs for synthesis and decision extraction.
-- **GitHub Actions with deploy deferred to Phase 7**: Focuses development efforts on building features locally before automating deployment pipelines.
+- **GitHub Actions with deploy deferred to Phase 7**: Focuses development efforts on building features
+  locally before automating deployment pipelines. *(Since shipped: `.github/workflows/deploy.yml`
+  lints, builds and deploys to EC2 on every push to `main`, health-gated with rollback.)*

@@ -23,15 +23,19 @@ Channels hold text chat, video calls, transcription, and a searchable vector
 - **Vector memory + RAG** — messages and transcripts are embedded locally
   (all-MiniLM-L6-v2, 384-dim) via an async pipeline into pgvector.
   `GET /ask?q=` embeds the query, retrieves the top-5 channel-scoped memories
-  (cosine), and the LLM (Groq / Llama 3) synthesizes a grounded answer,
+  (cosine), and the LLM (Groq, OpenAI-compatible; gpt-oss models, ids from
+  `GROQ_MODEL` / `GROQ_FAST_MODEL`) synthesizes a grounded answer,
   returning `{ answer, sourceIds }`. Frontend **Ask AI** widget pinned above
   each channel feed.
-- **Decisions + supersession** — the LLM flags messages that state a final
-  decision (`is_decision`); a newer decision that replaces an older one sets the
-  old row's `supersedes_id`. Retrieval excludes superseded vectors outright, so
-  a decision the team reversed can never reach the prompt.
+- **Decisions, supersession + conflicts** — the LLM flags messages that state a
+  final decision (`is_decision`); a second call classifies a new decision
+  against the earlier one it clashes with. Either the new one supersedes the old
+  (old row gets `supersedes_id` and status `SUPERSEDED`, excluded from retrieval
+  outright, so a decision the team reversed can never reach the prompt), or
+  neither side wins and both rows are marked `UNRESOLVED` and cross-linked by
+  `conflicts_with_id` — still retrieved normally, only flagged.
 - **Memory panel** — collapsible per-channel panel with decision timeline
-  (active + superseded) and call transcripts
+  (active, superseded, and an unresolved-clash tag) and call transcripts
   (`GET /api/channels/{id}/decisions`, `/transcripts`).
 
 ## Removed

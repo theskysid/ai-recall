@@ -11,7 +11,12 @@ The application requires a `.env` file to be present in the project root. Use `.
 ### Services Needing External Accounts:
 1. **LiveKit Cloud**: Requires `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`.
 2. **Deepgram**: Requires `DEEPGRAM_API_KEY` for audio transcription.
-3. **Groq**: Requires `GROQ_API_KEY` to run the Llama models for synthesis and decision extraction.
+3. **Groq**: Requires `GROQ_API_KEY` for RAG answer synthesis and decision extraction.
+   Two models are used: `GROQ_MODEL` (default `openai/gpt-oss-120b`) answers questions and
+   classifies decision conflicts, and `GROQ_FAST_MODEL` (default `openai/gpt-oss-20b`) runs the
+   per-message decision extractor. Check the ids against
+   <https://console.groq.com/docs/models> before changing them — Groq decommissioned every Llama
+   model, and a dead id makes every call fail while the app still starts.
 4. **Google OAuth**: Requires `GOOGLE_CLIENT_ID` for authentication.
 5. **SMTP Mail Provider**: Requires `MAIL_HOST`, `MAIL_USERNAME`, `MAIL_PASSWORD` for Email OTP functionalities.
 

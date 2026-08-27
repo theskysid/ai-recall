@@ -6,7 +6,7 @@
 Spring Boot (Java 21) backend + React (Vite) frontend, over WebSocket
 (STOMP/SockJS), PostgreSQL 16 + pgvector. Channels support text chat, LiveKit
 video calls, Deepgram transcription, and RAG Q&A over a vector memory
-(local MiniLM embeddings + Groq/Llama 3 answer synthesis). REST reference for
+(local MiniLM embeddings + Groq gpt-oss answer synthesis). REST reference for
 every endpoint, AI included: [docs/API.md](docs/API.md).
 
 ## Read before making changes
@@ -42,7 +42,9 @@ npm run build           # production build
 npm run lint            # ESLint
 ```
 
-Ports: frontend `5173`, backend `8080`, Postgres `5433`.
+Local (`docker-compose.local.yml`) ports: frontend `5173`, backend `8080`,
+Postgres `5433`. The published-image `docker-compose.yml` binds backend and
+Postgres to loopback and publishes only `80`/`443` for Caddy TLS.
 
 ## House rules
 
