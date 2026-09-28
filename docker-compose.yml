@@ -1,10 +1,7 @@
 volumes:
-  postgres_data:
   caddy_data:
   caddy_config:
 
-# json-file logs are unbounded by default — cap them so a chatty container
-# can't fill the instance disk.
 x-logging: &logging
   logging:
     driver: json-file
@@ -13,28 +10,6 @@ x-logging: &logging
       max-file: "3"
 
 services:
-  postgres:
-    image: pgvector/pgvector:pg16
-    container_name: echo-postgres
-    restart: unless-stopped
-    <<: *logging
-    env_file:
-      - ./.env
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "127.0.0.1:5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./db/init:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${DB_USER} -d $${DB_NAME}"]
-      interval: 5s
-      retries: 5
-      timeout: 5s
-
   app:
     image: theskysid/echo-messaging-app:${APP_TAG:-latest}
     container_name: echo-backend
@@ -44,30 +19,24 @@ services:
       - ./.env
     ports:
       - "127.0.0.1:8080:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 40s
 
-  # Serves the SPA and proxies /api, /auth and /ws to the backend, with TLS.
-  # The Caddyfile ships inside the image (see frontend/Dockerfile).
-  frontend:
-    image: theskysid/echo-messaging-frontend:${APP_TAG:-latest}
-    container_name: echo-frontend
+  caddy:
+    image: caddy:2
+    container_name: caddy-proxy
     restart: unless-stopped
     <<: *logging
-    env_file:
-      - ./.env
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - caddy_data:/data
       - caddy_config:/config
+      - ./Caddyfile:/etc/caddy/Caddyfile
     depends_on:
       - app

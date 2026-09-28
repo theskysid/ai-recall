@@ -44,19 +44,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build & push frontend
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/echo-messaging-frontend:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/echo-messaging-frontend:latest
-          build-args: |
-            VITE_API_URL=${{ vars.VITE_API_URL }}
-            VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+
 
       - name: Deploy to EC2 (health-gated, auto-rollback)
         uses: appleboy/ssh-action@v1
@@ -79,9 +67,9 @@ jobs:
             cat > .env <<'ENVEOF'
             DOMAIN=${{ vars.DOMAIN }}
             DB_NAME=recall
-            DB_USER=postgres
+            DB_USER=${{ secrets.DB_USER }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/recall
+            SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             JWT_EXPIRATION=3600000
             ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS }}
@@ -107,10 +95,9 @@ jobs:
             docker compose pull
             docker compose up -d --remove-orphans
 
-            # wait up to 2 min for the backend AND the edge to answer
+            # wait up to 2 min for the backend to answer
             for i in $(seq 1 24); do
-              if curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"' \
-                 && curl -fsS -o /dev/null http://localhost:80/; then
+              if curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
                 echo "healthy"
                 # SHA-tagged images are never dangling, so plain prune leaves
                 # them forever. -a with a 7d cutoff keeps the running images

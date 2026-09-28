@@ -1,0 +1,11 @@
+{$DOMAIN::80} {
+    encode gzip
+
+    request_body {
+        max_size 100MB
+    }
+
+    reverse_proxy /api/* app:8080
+    reverse_proxy /auth/* app:8080
+    reverse_proxy /ws/* app:8080
+}
