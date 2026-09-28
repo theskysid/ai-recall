@@ -17,6 +17,8 @@ services:
     <<: *logging
     env_file:
       - ./.env
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xmx512m"
     ports:
       - "127.0.0.1:8080:8080"
     healthcheck:
