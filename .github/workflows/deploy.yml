@@ -95,9 +95,9 @@ jobs:
             docker compose pull
             docker compose up -d --remove-orphans
 
-            # wait up to 2 min for the backend to answer
-            for i in $(seq 1 24); do
-              if curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
+            # wait up to 3 min for the backend to answer
+            for i in $(seq 1 36); do
+              if curl -fsS http://127.0.0.1:8080/actuator/health | grep -q '"status":"UP"'; then
                 echo "healthy"
                 # SHA-tagged images are never dangling, so plain prune leaves
                 # them forever. -a with a 7d cutoff keeps the running images
