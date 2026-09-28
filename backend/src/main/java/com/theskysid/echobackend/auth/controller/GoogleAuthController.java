@@ -32,6 +32,7 @@ public class GoogleAuthController {
     public ResponseEntity<?> googleLogin(@RequestBody GoogleAuthDTO request) {
         try {
             GoogleAuthResult result = googleOAuthService.authenticateGoogleToken(request.getIdToken());
+            result.userDTO().setToken(result.token());
             ResponseCookie cookie = ResponseCookie.from("JWT", result.token())
                     .httpOnly(true)
                     .secure(secureCookie)
