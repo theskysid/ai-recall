@@ -1373,3 +1373,5 @@
         width: 100%;
     }
 }
+/* Sent, not yet confirmed by the server. */
+.ch-msg.is-pending { opacity: 0.55; }

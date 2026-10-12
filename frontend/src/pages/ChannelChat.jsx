@@ -6,6 +6,7 @@ import AskAiWidget from '../components/chat/AskAiWidget';
 import MemoryPanel from '../components/chat/MemoryPanel';
 import Icon from '../components/ui/Icon';
 import { hueClass } from '../utils/avatarHue';
+import { mergeEcho } from '../utils/mergeEcho';
 import '../styles/ChannelPage.css';
 
 /* The backend sends naive timestamps; treat them as UTC. */
@@ -148,7 +149,7 @@ const ChannelChat = ({
         const id = incoming.id;
         if (id != null && messageIdsRef.current.has(id)) return;
         if (id != null) messageIdsRef.current.add(id);
-        setMessages((prev) => [...prev, incoming]);
+        setMessages((prev) => mergeEcho(prev, incoming, 'sender'));
     }, []);
 
     // Subscribe to the active channel; unsubscribe on switch/unmount to avoid cross-talk.
@@ -187,8 +188,19 @@ const ChannelChat = ({
         e.preventDefault();
         const content = messageInput.trim();
         if (!content || channelId == null) return;
-        sendChannelMessage(channelId, content);
+        if (sendChannelMessage(channelId, content) === false) return;
         setMessageInput('');
+        // Render before the round-trip; handleIncoming swaps this for the server copy.
+        // ponytail: a send that never echoes stays dimmed forever — add a timeout and
+        // a retry affordance if that turns out to happen in practice.
+        setMessages((prev) => [...prev, {
+            id: `pending-${Date.now()}`,
+            sender: currentUser,
+            content,
+            timestamp: new Date().toISOString(),
+            type: 'CHAT',
+            pending: true
+        }]);
     };
 
     const handleLeave = async () => {
@@ -295,7 +307,7 @@ const ChannelChat = ({
                     {divider}
                     <div
                         id={msg.id != null ? `msg-${msg.id}` : undefined}
-                        className={`ch-msg ${isLead ? 'is-lead' : ''} ${isOwn ? 'is-own' : ''} ${msg.id === highlightedId ? 'is-found' : ''}`}
+                        className={`ch-msg ${isLead ? 'is-lead' : ''} ${isOwn ? 'is-own' : ''} ${msg.pending ? 'is-pending' : ''} ${msg.id === highlightedId ? 'is-found' : ''}`}
                     >
                         <div className="ch-msg-gutter">
                             {isLead ? (

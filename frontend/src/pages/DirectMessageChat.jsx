@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { conversationService } from '../services/conversationService';
 import Icon from '../components/ui/Icon';
 import { hueClass } from '../utils/avatarHue';
+import { mergeEcho } from '../utils/mergeEcho';
 import '../styles/DirectMessageChat.css';
 
 const DirectMessageChat = ({
@@ -78,7 +79,7 @@ const DirectMessageChat = ({
 
         if (isRelevant && messageId && !messageIdsRef.current.has(messageId)) {
             messageIdsRef.current.add(messageId);
-            setMessages((prev) => [...prev, incomingMsg]);
+            setMessages((prev) => mergeEcho(prev, incomingMsg, 'senderUsername'));
             setIsTyping(false);
         }
     }, [conversation?.id, currentUser, recipientUsername]);
@@ -194,6 +195,15 @@ const DirectMessageChat = ({
         try {
             stompClient.current.send('/app/dm.sendMessage', {}, JSON.stringify(payload));
             setMessageInput('');
+            // Render before the round-trip; handleIncomingDm swaps in the server copy.
+            // ponytail: a send that never echoes stays dimmed forever — add a timeout
+            // and a retry affordance if that turns out to happen in practice.
+            setMessages((prev) => [...prev, {
+                ...payload,
+                id: `pending-${Date.now()}`,
+                timestamp: new Date().toISOString(),
+                pending: true
+            }]);
         } catch (err) {
             console.error('Failed to send direct message:', err);
         }
@@ -346,7 +356,7 @@ const DirectMessageChat = ({
                     messages.map((msg, index) => {
                         const isOwn = msg.senderUsername === currentUser;
                         return (
-                            <div key={msg.id || index} className={`dm-message ${isOwn ? 'own-message' : 'received-message'}`}>
+                            <div key={msg.id || index} className={`dm-message ${isOwn ? 'own-message' : 'received-message'} ${msg.pending ? 'is-pending' : ''}`}>
                                 <div className="dm-message-header">
                                     <span className="dm-sender-name">{isOwn ? 'You' : msg.senderUsername}</span>
                                     <span className="dm-timestamp">{formatTime(msg.timestamp)}</span>

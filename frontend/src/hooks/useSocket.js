@@ -200,7 +200,7 @@ const useSocket = ({
      */
     const sendChannelMessage = useCallback((channelId, content) => {
         if (channelId == null || !content || !stompClient.current || !stompClient.current.connected) {
-            return;
+            return false;
         }
         stompClient.current.send(`/app/channel/${channelId}/send`, {}, JSON.stringify({
             sender: username,
@@ -208,6 +208,7 @@ const useSocket = ({
             color: userColor,
             type: 'CHAT'
         }));
+        return true;
     }, [username, userColor]);
 
     return {

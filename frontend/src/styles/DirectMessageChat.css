@@ -394,3 +394,6 @@
         padding: 0.65rem 0.8rem;
     }
 }
+
+/* Sent, not yet confirmed by the server. */
+.dm-message.is-pending { opacity: 0.55; }
