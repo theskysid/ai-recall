@@ -3,6 +3,8 @@ import { conversationService } from '../services/conversationService';
 import Icon from '../components/ui/Icon';
 import { hueClass } from '../utils/avatarHue';
 import { mergeEcho } from '../utils/mergeEcho';
+import { groupThread, formatTime, parseTs } from '../utils/thread';
+import '../styles/ChannelPage.css';
 import '../styles/DirectMessageChat.css';
 
 const DirectMessageChat = ({
@@ -209,191 +211,180 @@ const DirectMessageChat = ({
         }
     };
 
-    const normalizeTimestamp = (ts) => {
-        if (!ts) return '';
-        let str = typeof ts === 'string' ? ts : ts.toString();
-        if (typeof str === 'string' && !str.endsWith('Z') && !str.includes('+') && !str.includes('GMT')) {
-            str += 'Z';
-        }
-        return str;
-    };
-
-    const formatTime = (timestamp) => {
-        if (!timestamp) return '';
-        const normalized = normalizeTimestamp(timestamp);
-        const dateObj = new Date(normalized);
-        if (isNaN(dateObj.getTime())) return '';
-        return dateObj.toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
-
-    const formatExpiryDelta = (expiresAt) => {
-        if (!expiresAt) return '';
-        const normalized = normalizeTimestamp(expiresAt);
-        const diffMs = new Date(normalized) - new Date();
+    /* How long the oldest message on screen has left. Shown once, on the
+       first message, because that is the one about to go. */
+    const expiryDelta = (expiresAt) => {
+        const d = parseTs(expiresAt);
+        if (!d) return '';
+        const diffMs = d - new Date();
         if (diffMs <= 0) return 'Expired';
-        const hours = Math.floor(diffMs / (1000 * 60 * 60));
-        const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-        if (hours > 24) {
-            return `${Math.round(hours / 24)}d left`;
-        }
-        if (hours > 0) {
-            return `${hours}h ${mins}m left`;
-        }
+        const hours = Math.floor(diffMs / 3600000);
+        const mins = Math.floor((diffMs % 3600000) / 60000);
+        if (hours > 24) return `${Math.round(hours / 24)}d left`;
+        if (hours > 0) return `${hours}h ${mins}m left`;
         return `${mins}m left`;
     };
 
-    if (isLoading) {
-        return (
-            <div className={`dm-chat-window ${isEmbedded ? 'embedded' : ''}`} style={isEmbedded ? {} : { right: `${positionOffset}px` }}>
-            <div className="dm-chat-header">
-                <div className="dm-recipient-info">
-                    {onBack && (
-                        <button type="button" onClick={onBack} className="mobile-back-button dm-back-btn" aria-label="Back to contacts list">
-                            <Icon name="arrowLeft" size={16} />
-                        </button>
-                    )}
-                    <div className={`dm-avatar ${hueClass(recipientUsername)}`}>{recipientUsername.charAt(0).toUpperCase()}</div>
-                    <h3>{recipientUsername}</h3>
-                </div>
-                <button onClick={onClose} className="dm-close-btn" aria-label="Close chat">
-                    <Icon name="close" size={13} />
-                </button>
-            </div>
-                <div className="dm-loading">Opening your private chat…</div>
-            </div>
-        );
-    }
+    const keepLabel =
+        retentionPolicy === 'SIX_HOURS' ? '6 hours' : retentionPolicy === 'SEVEN_DAYS' ? '7 days' : '1 day';
 
-    if (error) {
-        return (
-            <div className={`dm-chat-window ${isEmbedded ? 'embedded' : ''}`} style={isEmbedded ? {} : { right: `${positionOffset}px` }}>
-            <div className="dm-chat-header">
-                <div className="dm-recipient-info">
-                    {onBack && (
-                        <button type="button" onClick={onBack} className="mobile-back-button dm-back-btn" aria-label="Back to contacts list">
-                            <Icon name="arrowLeft" size={16} />
-                        </button>
+    const renderStream = () => {
+        if (isLoading) {
+            return (
+                <div className="ch-state">
+                    <span className="ch-state-mark"><Icon name="lock" size={15} /></span>
+                    <h4>Opening your chat with {recipientUsername}</h4>
+                    <p>Reading the messages that have not expired yet.</p>
+                </div>
+            );
+        }
+
+        if (error) {
+            return (
+                <div className="ch-state is-bad">
+                    <span className="ch-state-mark"><Icon name="alert" size={15} /></span>
+                    <h4>This conversation would not open</h4>
+                    <p>{error}</p>
+                </div>
+            );
+        }
+
+        if (messages.length === 0) {
+            return (
+                <div className="ch-state">
+                    <span className="ch-state-mark"><Icon name="message" size={15} /></span>
+                    <h4>Nothing here yet</h4>
+                    <p>Say hello. Messages in this conversation clear themselves after {keepLabel}.</p>
+                </div>
+            );
+        }
+
+        return groupThread(messages, 'senderUsername').map(({ msg, day, isLead }, index) => {
+            const isOwn = msg.senderUsername === currentUser;
+            const who = isOwn ? currentUser : msg.senderUsername;
+
+            return (
+                <React.Fragment key={msg.id || index}>
+                    {day && (
+                        <div className="ch-day">
+                            <span>{day}</span>
+                        </div>
                     )}
-                    <div className={`dm-avatar ${hueClass(recipientUsername)}`}>{recipientUsername.charAt(0).toUpperCase()}</div>
-                    <h3>{recipientUsername}</h3>
-                </div>
-                <button onClick={onClose} className="dm-close-btn" aria-label="Close chat">
-                    <Icon name="close" size={13} />
-                </button>
-            </div>
-                <div className="dm-loading">
-                    <p style={{ color: 'var(--brick-2)' }}>{error}</p>
-                    <button onClick={onClose} className="dm-send-btn">Close</button>
-                </div>
-            </div>
-        );
-    }
+                    <div
+                        className={`ch-msg ${isLead ? 'is-lead' : ''} ${isOwn ? 'is-own' : ''} ${msg.pending ? 'is-pending' : ''}`}
+                    >
+                        <div className="ch-msg-gutter">
+                            {isLead ? (
+                                <span className={`ch-msg-avatar ${hueClass(who)}`} aria-hidden="true">
+                                    {who?.charAt(0) || '?'}
+                                </span>
+                            ) : (
+                                <span className="ch-msg-tick">{formatTime(msg.timestamp)}</span>
+                            )}
+                        </div>
+                        <div className="ch-msg-main">
+                            {isLead && (
+                                <div className="ch-msg-head">
+                                    <span className="ch-msg-who">{isOwn ? 'You' : msg.senderUsername}</span>
+                                    <span className="ch-msg-when">{formatTime(msg.timestamp)}</span>
+                                    <span className="ch-msg-marks">
+                                        {index === 0 && msg.expiresAt && (
+                                            <span className="dm-expiry" title="When the oldest message on screen is deleted">
+                                                <Icon name="clock" size={10} />
+                                                {expiryDelta(msg.expiresAt)}
+                                            </span>
+                                        )}
+                                    </span>
+                                </div>
+                            )}
+                            <div className="ch-msg-body">{msg.content}</div>
+                        </div>
+                    </div>
+                </React.Fragment>
+            );
+        });
+    };
 
     return (
-        <div className={`dm-chat-window ${isEmbedded ? 'embedded' : ''}`} style={isEmbedded ? {} : { right: `${positionOffset}px` }}>
-            <div className="dm-chat-header">
-                <div className="dm-recipient-info">
+        <div
+            className={`ch-page dm-panel ${isEmbedded ? 'ch-embedded' : ''}`}
+            style={isEmbedded ? undefined : { right: `${positionOffset}px` }}
+        >
+            <header className="ch-header">
+                <div className="ch-header-id">
                     {onBack && (
-                        <button type="button" onClick={onBack} className="mobile-back-button dm-back-btn" aria-label="Back to contacts list">
-                            <Icon name="arrowLeft" size={16} />
+                        <button type="button" onClick={onBack} className="ch-back" aria-label="Back to contacts">
+                            <Icon name="arrowLeft" size={15} />
                         </button>
                     )}
-                    <div className="dm-avatar-wrapper">
-                        <div className={`dm-avatar ${hueClass(recipientUsername)}`}>
+                    <span className="dm-who">
+                        <span className={`dm-who-avatar ${hueClass(recipientUsername)}`} aria-hidden="true">
                             {recipientUsername.charAt(0).toUpperCase()}
-                        </div>
-                        <div className={`dm-online-badge ${conversation?.otherUserOnline ? 'online' : 'offline'}`} />
-                    </div>
-                    <div className="dm-header-titles">
-                        <h3>
-                            {recipientUsername}
-                            <span className="dm-badge-ephemeral">
-                                <Icon name="clock" size={11} />
-                                Expires
-                            </span>
-                        </h3>
-                    </div>
+                        </span>
+                        <span
+                            className={`dm-presence ${conversation?.otherUserOnline ? 'is-on' : ''}`}
+                            title={conversation?.otherUserOnline ? 'Online now' : 'Offline'}
+                        />
+                    </span>
+                    <h3 className="ch-name">{recipientUsername}</h3>
+                    <span className="dm-keep">
+                        <Icon name="clock" size={11} />
+                        Clears after {keepLabel}
+                    </span>
                 </div>
 
-                <div className="dm-header-actions">
+                <div className="ch-header-actions">
                     <select
-                        className="retention-select"
+                        className="dm-keep-select"
                         value={retentionPolicy}
                         onChange={handleRetentionChange}
-                        title="How long messages are kept"
                         aria-label="How long messages are kept"
                     >
                         <option value="SIX_HOURS">Keep 6 hours</option>
                         <option value="ONE_DAY">Keep 1 day</option>
                         <option value="SEVEN_DAYS">Keep 7 days</option>
                     </select>
-                    {!onBack && (
-                        <button onClick={onClose} className="dm-close-btn" title="Close chat" aria-label="Close chat">
+                    {onClose && !onBack && (
+                        <button onClick={onClose} className="ch-btn ch-btn-icon" title="Close" aria-label="Close chat">
                             <Icon name="close" size={13} />
                         </button>
                     )}
                 </div>
-            </div>
+            </header>
 
-            <div className="dm-messages-container">
-                <div className="dm-ephemeral-banner">
-                    <Icon name="lock" size={12} />
-                    Messages here are deleted after{' '}
-                    <strong>
-                        {retentionPolicy === 'SIX_HOURS' ? '6 hours' : retentionPolicy === 'ONE_DAY' ? '1 day' : '7 days'}
-                    </strong>
-                </div>
-
-                {messages.length === 0 ? (
-                    <div className="dm-no-messages">
-                        <p>Nothing here yet.</p>
-                        <p>Say hello — this conversation clears itself later.</p>
-                    </div>
-                ) : (
-                    messages.map((msg, index) => {
-                        const isOwn = msg.senderUsername === currentUser;
-                        return (
-                            <div key={msg.id || index} className={`dm-message ${isOwn ? 'own-message' : 'received-message'} ${msg.pending ? 'is-pending' : ''}`}>
-                                <div className="dm-message-header">
-                                    <span className="dm-sender-name">{isOwn ? 'You' : msg.senderUsername}</span>
-                                    <span className="dm-timestamp">{formatTime(msg.timestamp)}</span>
-                                </div>
-                                <div className="dm-message-content">{msg.content}</div>
-                                {index === 0 && msg.expiresAt && (
-                                    <div className="dm-message-footer" title={`Top message expires at ${new Date(normalizeTimestamp(msg.expiresAt)).toLocaleString()}`}>
-                                        <Icon name="clock" size={11} />
-                                        {formatExpiryDelta(msg.expiresAt)}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })
-                )}
-
+            <div className="ch-thread">
+                {renderStream()}
                 {isTyping && (
-                    <div className="dm-typing-indicator">
-                        <Icon name="pencil" size={11} />
+                    <div className="dm-typing">
+                        <span className="dm-typing-dots" aria-hidden="true">
+                            <i /><i /><i />
+                        </span>
                         {recipientUsername} is typing
                     </div>
                 )}
                 <div ref={messagesEndRef} />
             </div>
 
-            <div className="dm-input-container">
-                <form onSubmit={sendDm} className="dm-form">
+            <div className="ch-composer">
+                <form onSubmit={sendDm} className="ch-composer-form">
                     <input
                         type="text"
                         placeholder={`Message ${recipientUsername}`}
                         value={messageInput}
                         onChange={handleTypingInput}
-                        className="dm-input"
+                        className="ch-composer-field"
                         maxLength={500}
+                        disabled={!conversation}
+                        aria-label={`Message ${recipientUsername}`}
                     />
-                    <button type="submit" disabled={!messageInput.trim()} className="dm-send-btn" title="Send message">
-                        Send
+                    <button
+                        type="submit"
+                        disabled={!messageInput.trim() || !conversation}
+                        className="ch-send"
+                        title="Send"
+                        aria-label="Send"
+                    >
+                        <Icon name="send" size={14} />
                     </button>
                 </form>
             </div>

@@ -1,23 +1,29 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { channelService } from '../../services/channelService';
-import { callService } from '../../services/callService';
+import React, { useState } from 'react';
 import Icon from '../ui/Icon';
 import '../../styles/ChannelPage.css';
+
+const formatDay = (ts) => {
+    if (!ts) return '';
+    let s = typeof ts === 'string' ? ts : ts.toString();
+    if (!s.endsWith('Z') && !s.includes('+') && !s.includes('GMT')) s += 'Z';
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? '' : d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+};
 
 const formatTime = (ts) => {
     if (!ts) return '';
     let s = typeof ts === 'string' ? ts : ts.toString();
-    if (typeof s === 'string' && !s.endsWith('Z') && !s.includes('+') && !s.includes('GMT')) s += 'Z';
+    if (!s.endsWith('Z') && !s.includes('+') && !s.includes('GMT')) s += 'Z';
     const d = new Date(s);
-    return isNaN(d.getTime()) ? '' : d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
 // CURRENT is the fallback: rows written before the status column existed, and
 // anything the backend sends with an unrecognised value, read as still standing.
 const STATUS_TAG = {
-    SUPERSEDED: { label: 'Superseded', className: 'ch-tag-old' },
-    UNRESOLVED: { label: 'Unresolved', className: 'ch-tag-clash' },
-    CURRENT: { label: 'Active', className: 'ch-tag-live' }
+    SUPERSEDED: { label: 'Superseded', className: 'is-old' },
+    UNRESOLVED: { label: 'Unresolved', className: 'is-clash' },
+    CURRENT: { label: 'Decided', className: 'is-live' }
 };
 
 const statusOf = (d) => {
@@ -25,55 +31,31 @@ const statusOf = (d) => {
     return d.superseded ? 'SUPERSEDED' : 'CURRENT';
 };
 
-const SNIPPET_CHARS = 160;
+/* The channel's memory, as a rail beside the conversation rather than a
+   drawer on top of it. It is the product's whole argument, so it is visible
+   while you read — but it never takes height from the thread.
 
-const MemoryPanel = ({ channelId, onViewMessage }) => {
-    const [collapsed, setCollapsed] = useState(true);
-    const [tab, setTab] = useState('decisions'); // 'decisions' | 'transcripts'
-    const [decisions, setDecisions] = useState([]);
-    const [transcripts, setTranscripts] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
+   Data is fetched by ChannelChat and passed in, because the thread marks the
+   same decisions inline and the two must not disagree. */
+const MemoryPanel = ({
+    channelName,
+    decisions = [],
+    transcripts = [],
+    isLoading,
+    error,
+    onReload,
+    onViewMessage,
+    onClose
+}) => {
+    const [tab, setTab] = useState('decisions');
     const [expandedId, setExpandedId] = useState(null);
     const [viewError, setViewError] = useState('');
-
-    const load = useCallback(async () => {
-        if (channelId == null) return;
-        setIsLoading(true);
-        setError('');
-        try {
-            const [dec, tr] = await Promise.all([
-                channelService.getDecisions(channelId),
-                callService.getTranscripts(channelId)
-            ]);
-            setDecisions(Array.isArray(dec) ? dec : []);
-            setTranscripts(Array.isArray(tr) ? tr : []);
-        } catch (err) {
-            console.error('Memory panel load failed:', err);
-            setError('Could not load channel memory.');
-        } finally {
-            setIsLoading(false);
-        }
-    }, [channelId]);
-
-    // Load whenever opened or the channel changes while open.
-    useEffect(() => {
-        if (!collapsed) load();
-    }, [collapsed, load]);
-
-    // Reset when switching channels.
-    useEffect(() => {
-        setCollapsed(true);
-        setExpandedId(null);
-        setViewError('');
-    }, [channelId]);
 
     // Take a decision back to where it came from.
     //
     // MESSAGE items scroll to the message itself. TRANSCRIPT items open the
     // Transcripts tab and expand the whole call: transcripts render as one
-    // block per call, so there is nothing finer to point at. Addressing an
-    // individual transcript line would need a UI that does not exist yet.
+    // block per call, so there is nothing finer to point at.
     const viewSource = (d) => {
         setViewError('');
         if (d.sourceType === 'TRANSCRIPT') {
@@ -86,168 +68,178 @@ const MemoryPanel = ({ channelId, onViewMessage }) => {
         }
     };
 
-    const hasCounts = !collapsed && !isLoading && !error;
+    const renderBody = () => {
+        if (isLoading) {
+            return (
+                <div className="ch-working" role="status">
+                    <span className="ch-pulse" />
+                    Opening the record…
+                </div>
+            );
+        }
+
+        if (error) {
+            return (
+                <div className="ch-ask-fail" role="alert">
+                    <Icon name="alert" size={14} />
+                    {error}
+                </div>
+            );
+        }
+
+        if (tab === 'decisions') {
+            if (decisions.length === 0) {
+                return (
+                    <p className="ch-rail-blank">
+                        Nothing decided here yet. Decisions are picked out of the conversation
+                        as the channel settles things.
+                    </p>
+                );
+            }
+            return (
+                <ul className="ch-rail-list">
+                    {decisions.map((d) => {
+                        const status = statusOf(d);
+                        const tag = STATUS_TAG[status];
+                        return (
+                            <li key={d.id}>
+                                <article className={`ch-card ${tag.className}`}>
+                                    <div className="ch-card-top">
+                                        <span className={`ch-tag ${tag.className}`}>
+                                            <Icon name="check" size={11} />
+                                            {tag.label}
+                                        </span>
+                                        <span className="ch-card-day">{formatDay(d.createdAt)}</span>
+                                    </div>
+                                    {d.title && <h4 className="ch-card-title">{d.title}</h4>}
+                                    <p className="ch-card-text">{d.content}</p>
+                                    <div className="ch-card-foot">
+                                        <span className="ch-card-src">
+                                            {d.sourceAuthor && (
+                                                <span className="ch-card-who">{d.sourceAuthor}</span>
+                                            )}
+                                            {formatTime(d.createdAt)}
+                                        </span>
+                                        {d.sourceId != null && (
+                                            <button
+                                                type="button"
+                                                className="ch-card-jump"
+                                                onClick={() => viewSource(d)}
+                                            >
+                                                {d.sourceType === 'TRANSCRIPT' ? 'View call' : 'View message'}
+                                                <Icon name="arrowUpRight" size={12} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </article>
+                            </li>
+                        );
+                    })}
+                </ul>
+            );
+        }
+
+        if (transcripts.length === 0) {
+            return (
+                <p className="ch-rail-blank">
+                    No call transcripts yet. Start a call and it will be written down here
+                    when it ends.
+                </p>
+            );
+        }
+        return (
+            <ul className="ch-rail-list">
+                {transcripts.map((t) => {
+                    const open = expandedId === t.id;
+                    return (
+                        <li key={t.id}>
+                            <article className="ch-card">
+                                <button
+                                    type="button"
+                                    className="ch-tr-head"
+                                    onClick={() => setExpandedId(open ? null : t.id)}
+                                    aria-expanded={open}
+                                >
+                                    <Icon name="phone" size={12} />
+                                    Call · {formatDay(t.createdAt)}
+                                    <span className="ch-mem-chevron">
+                                        <Icon name={open ? 'chevronDown' : 'chevronRight'} size={12} />
+                                    </span>
+                                </button>
+                                {open && <p className="ch-tr-text">{t.fullTranscript}</p>}
+                            </article>
+                        </li>
+                    );
+                })}
+            </ul>
+        );
+    };
 
     return (
         <div className="ch-mem">
-            <button
-                type="button"
-                className="ch-mem-toggle"
-                onClick={() => setCollapsed((v) => !v)}
-                aria-expanded={!collapsed}
-            >
-                <Icon name="archive" size={13} />
-                Channel memory
-                {hasCounts && (decisions.length > 0 || transcripts.length > 0) && (
-                    <span className="ch-mem-counts">
-                        {decisions.length > 0 && (
-                            <span className="ch-count ch-count-rec">
-                                {decisions.length} decided
-                            </span>
-                        )}
-                        {transcripts.length > 0 && (
-                            <span className="ch-count">
-                                {transcripts.length} transcribed
-                            </span>
-                        )}
-                    </span>
-                )}
-                <span className="ch-mem-chevron">
-                    <Icon name={collapsed ? 'chevronRight' : 'chevronDown'} size={13} />
-                </span>
-            </button>
+            <header className="ch-rail-head">
+                <h3 className="ch-rail-title">
+                    <Icon name="sparkle" size={15} />
+                    Channel memory
+                </h3>
+                <button
+                    type="button"
+                    className="ch-rail-x"
+                    onClick={onClose}
+                    title="Hide channel memory"
+                    aria-label="Hide channel memory"
+                >
+                    <Icon name="close" size={14} />
+                </button>
+                <p className="ch-rail-sub">
+                    What #{channelName || 'this channel'} settled, without the scrolling.
+                </p>
+            </header>
 
-            {!collapsed && (
-                <div className="ch-mem-body">
-                    <div className="ch-seg" role="tablist">
-                        <button
-                            type="button"
-                            role="tab"
-                            aria-selected={tab === 'decisions'}
-                            className={`ch-seg-btn ${tab === 'decisions' ? 'is-on' : ''}`}
-                            onClick={() => setTab('decisions')}
-                        >
-                            <Icon name="pin" size={12} />
-                            Decisions
-                        </button>
-                        <button
-                            type="button"
-                            role="tab"
-                            aria-selected={tab === 'transcripts'}
-                            className={`ch-seg-btn ${tab === 'transcripts' ? 'is-on' : ''}`}
-                            onClick={() => setTab('transcripts')}
-                        >
-                            <Icon name="note" size={12} />
-                            Transcripts
-                        </button>
-                        <span className="ch-seg-spacer" />
-                        <button
-                            type="button"
-                            className="ch-seg-refresh"
-                            onClick={load}
-                            title="Refresh channel memory"
-                            aria-label="Refresh channel memory"
-                            disabled={isLoading}
-                        >
-                            <Icon name="refresh" size={13} />
-                        </button>
-                    </div>
+            <div className="ch-rail-tabs" role="tablist">
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={tab === 'decisions'}
+                    className={`ch-rail-tab ${tab === 'decisions' ? 'is-on' : ''}`}
+                    onClick={() => setTab('decisions')}
+                >
+                    <Icon name="check" size={13} />
+                    Decisions
+                    {decisions.length > 0 && <span className="ch-rail-n">{decisions.length}</span>}
+                </button>
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={tab === 'transcripts'}
+                    className={`ch-rail-tab ${tab === 'transcripts' ? 'is-on' : ''}`}
+                    onClick={() => setTab('transcripts')}
+                >
+                    <Icon name="note" size={13} />
+                    Transcripts
+                    {transcripts.length > 0 && <span className="ch-rail-n">{transcripts.length}</span>}
+                </button>
+                <span className="ch-seg-spacer" />
+                <button
+                    type="button"
+                    className="ch-rail-refresh"
+                    onClick={onReload}
+                    title="Refresh channel memory"
+                    aria-label="Refresh channel memory"
+                    disabled={isLoading}
+                >
+                    <Icon name="refresh" size={13} />
+                </button>
+            </div>
 
-                    {viewError && (
-                        <div className="ch-ask-fail" role="status">
-                            <Icon name="alert" size={14} />
-                            {viewError}
-                        </div>
-                    )}
-
-                    {isLoading ? (
-                        <div className="ch-working" role="status">
-                            <span className="ch-pulse" />
-                            Opening the record…
-                        </div>
-                    ) : error ? (
-                        <div className="ch-ask-fail" role="alert">
-                            <Icon name="alert" size={14} />
-                            {error}
-                        </div>
-                    ) : tab === 'decisions' ? (
-                        decisions.length === 0 ? (
-                            <p className="ch-note">
-                                Nothing decided here yet. Decisions are picked out of the
-                                conversation as the channel settles things.
-                            </p>
-                        ) : (
-                            <div className="ch-mem-scroll">
-                                <ul className="ch-mem-list">
-                                    {decisions.map((d) => {
-                                        const status = statusOf(d);
-                                        const tag = STATUS_TAG[status];
-                                        const snippet = (d.content || '').length > SNIPPET_CHARS
-                                            ? `${d.content.slice(0, SNIPPET_CHARS).trimEnd()}…`
-                                            : d.content;
-                                        return (
-                                            <li key={d.id}>
-                                                <div className={`ch-dec ${status === 'SUPERSEDED' ? 'is-old' : ''} ${status === 'UNRESOLVED' ? 'is-clash' : ''}`}>
-                                                    <span className="ch-dec-dot" />
-                                                    <div>
-                                                        {d.title && <p className="ch-dec-title">{d.title}</p>}
-                                                        <p className="ch-dec-text">{snippet}</p>
-                                                        <div className="ch-dec-meta">
-                                                            <span>{formatTime(d.createdAt)}</span>
-                                                            <span className={`ch-tag ${tag.className}`}>{tag.label}</span>
-                                                            {d.sourceId != null && (
-                                                                <button
-                                                                    type="button"
-                                                                    className="ch-dec-jump"
-                                                                    onClick={() => viewSource(d)}
-                                                                >
-                                                                    {d.sourceType === 'TRANSCRIPT' ? 'View call' : 'View message'}
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                            </div>
-                        )
-                    ) : (
-                        transcripts.length === 0 ? (
-                            <p className="ch-note">
-                                No call transcripts yet. Start a call and it will be written
-                                down here when it ends.
-                            </p>
-                        ) : (
-                            <div className="ch-mem-scroll">
-                                <ul className="ch-mem-list">
-                                    {transcripts.map((t) => {
-                                        const open = expandedId === t.id;
-                                        return (
-                                            <li key={t.id}>
-                                                <button
-                                                    type="button"
-                                                    className="ch-tr-head"
-                                                    onClick={() => setExpandedId(open ? null : t.id)}
-                                                    aria-expanded={open}
-                                                >
-                                                    <Icon name="phone" size={12} />
-                                                    Call · {formatTime(t.createdAt)}
-                                                    <span className="ch-mem-chevron">
-                                                        <Icon name={open ? 'chevronDown' : 'chevronRight'} size={12} />
-                                                    </span>
-                                                </button>
-                                                {open && <p className="ch-tr-text">{t.fullTranscript}</p>}
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                            </div>
-                        )
-                    )}
+            {viewError && (
+                <div className="ch-ask-fail" role="status">
+                    <Icon name="alert" size={14} />
+                    {viewError}
                 </div>
             )}
+
+            <div className="ch-rail-scroll">{renderBody()}</div>
         </div>
     );
 };

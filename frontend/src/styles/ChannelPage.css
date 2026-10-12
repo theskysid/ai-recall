@@ -23,10 +23,15 @@
        as the landing and the flyleaf. The `--ch-` names stay:
        ~400 selectors below ask for them, and the roles never
        changed — only what colour wears each role. */
-    --ch-bg: var(--bg);
-    --ch-raised: var(--chrome);
-    --ch-raised-2: var(--raised);
-    --ch-raised-3: var(--raised-2);
+    /* The conversation is the sheet, and a sheet is the brightest thing
+       in the room — everything around it (rail, sidebar, chrome) is the
+       desk it is lying on. Without that one step of separation the whole
+       workspace reads as a single flat field with nowhere for the eye to
+       land, which is most of what makes an interface feel dated. */
+    --ch-bg: #ffffff;
+    --ch-raised: var(--bg);
+    --ch-raised-2: var(--nb-sheet-2);
+    --ch-raised-3: var(--nb-sheet-3);
 
     --ch-line: rgba(20, 32, 43, 0.09);
     --ch-line-2: var(--nb-rule);
@@ -106,9 +111,9 @@
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--ch-line);
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--ch-line-2);
     background: var(--ch-bg);
 }
 
@@ -142,39 +147,50 @@
     flex-shrink: 0;
     display: grid;
     place-items: center;
-    width: 26px;
-    height: 26px;
-    border: 1px solid var(--ch-line-2);
-    border-radius: var(--ch-r-2);
-    background: var(--ch-raised);
+    width: 42px;
+    height: 42px;
+    border-radius: var(--ch-r-3);
+    background: var(--ch-raised-2);
     color: var(--ch-fg-2);
+}
+
+.ch-header-text {
+    min-width: 0;
+    flex: 1;
 }
 
 .ch-name {
     min-width: 0;
-    font-size: 14.5px;
-    font-weight: 600;
-    letter-spacing: -0.012em;
-    line-height: 1.25;
+    font-size: 21px;
+    font-weight: 650;
+    letter-spacing: -0.023em;
+    line-height: 1.2;
     color: var(--ch-fg);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* The channel's own description, set when it was created. First thing
-   to go when the panel narrows — the name and the actions matter more. */
+/* One line under the name carrying everything that is true of the
+   channel but not its identity: what it is for, and who is in it. */
+.ch-sub {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    margin-top: 2px;
+    font-size: 13px;
+    color: var(--ch-fg-3);
+}
+
 .ch-desc {
     min-width: 0;
-    flex: 1;
-    font-size: 12.5px;
-    color: var(--ch-fg-3);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.ch-desc::before {
+.ch-desc+.ch-members::before {
     content: '·';
     margin-right: 7px;
     color: var(--ch-line-3);
@@ -185,9 +201,6 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--ch-fg-3);
 }
 
 .ch-members svg {
@@ -378,26 +391,33 @@
     color: var(--ch-bg);
 }
 
-/* ═══ Intelligence console ════════════════════════════════════
-   The flagship. A full-bleed band directly under the header, one
-   step brighter than the page, holding the ask field and the
-   memory it draws on. Not a card — the answer inside it is the
-   only bordered block, so nothing nests. */
+/* ═══ Body ═══════════════════════════════════════════════════
+   Two columns under the header: the conversation, and the record it
+   produced. The rail is a sibling of the thread, never a band above
+   it, so an open memory costs the thread no height. */
 
-.ch-intel {
-    flex-shrink: 0;
-    background: var(--ch-raised);
-    border-bottom: 1px solid var(--ch-line-2);
+.ch-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+}
+
+.ch-main {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Ask Recall sits over the thread, not in a band above it: a single
    button until it is wanted, the same panel markup once it is. Both
    anchor to .ch-page, which is already positioned. */
 .ch-ask-fab {
-    position: absolute;
-    right: 18px;
-    bottom: 72px;
-    z-index: 5;
+    flex-shrink: 0;
+    width: 100%;
+    justify-content: center;
+    margin: 0;
     display: inline-flex;
     align-items: center;
     gap: 7px;
@@ -422,14 +442,11 @@
 
 .ch-ask {
     position: absolute;
-    right: 18px;
-    bottom: 72px;
+    inset: 0;
     z-index: 6;
     display: flex;
     flex-direction: column;
-    width: min(360px, calc(100% - 36px));
-    max-height: min(62vh, 520px);
-    padding: 12px;
+    padding: 14px;
     border: 1px solid var(--ch-line-2);
     border-radius: var(--ch-r-3);
     background: var(--ch-bg);
@@ -710,34 +727,337 @@
     letter-spacing: 0.005em;
 }
 
-/* ═══ Channel memory ══════════════════════════════════════════ */
+/* ═══ Channel memory — the rail ══════════════════════════════
+   The product's whole argument is that the record is already there,
+   so it reads beside the conversation rather than on top of it. It
+   is a column, not a drawer: it never takes height from the thread
+   and it never clips its own last row. ═══════════════════════════ */
+
+.ch-rail {
+    position: relative;
+    flex: 0 0 374px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border-left: 1px solid var(--ch-line-2);
+    background: var(--ch-raised);
+    padding-bottom: 14px;
+}
+
+/* The ask button sits in the rail's own padding, clear of the list. */
+.ch-rail>.ch-ask-fab {
+    margin: 0 14px;
+    width: auto;
+}
 
 .ch-mem {
-    border-top: none;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
 }
 
-.ch-mem-toggle {
+.ch-rail-head {
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2px 8px;
+    padding: 18px 16px 12px;
+}
+
+.ch-rail-title {
     display: flex;
     align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 10px 14px;
-    border: none;
-    background: transparent;
-    color: var(--ch-fg-2);
-    font-size: 12.5px;
-    font-weight: 500;
-    letter-spacing: -0.004em;
-    text-align: left;
-    transition: background 0.13s, color 0.13s;
-}
-
-.ch-mem-toggle:hover {
-    background: var(--ch-raised-2);
+    gap: 9px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.016em;
     color: var(--ch-fg);
 }
 
-.ch-mem-toggle>svg:first-child {
+.ch-rail-title svg {
+    color: var(--ch-you);
+}
+
+.ch-rail-x {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: var(--ch-r-2);
+    background: transparent;
+    color: var(--ch-fg-3);
+    transition: background 0.13s, color 0.13s;
+}
+
+.ch-rail-x:hover {
+    background: var(--ch-raised-3);
+    color: var(--ch-fg);
+}
+
+.ch-rail-sub {
+    grid-column: 1 / -1;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ch-fg-3);
+}
+
+/* ── Tabs ──────────────────────────────────────────
+   Underlined, with the count carried in the tab itself — the number
+   is the useful part, so it should not need a second row. */
+.ch-rail-tabs {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--ch-line-2);
+}
+
+.ch-rail-tab {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 0 11px;
+    border: none;
+    background: none;
+    font-size: 13.5px;
+    font-weight: 500;
+    letter-spacing: -0.008em;
+    color: var(--ch-fg-3);
+    transition: color 0.13s;
+}
+
+.ch-rail-tab svg {
+    color: var(--ch-fg-4, var(--ch-fg-3));
+}
+
+.ch-rail-tab:hover {
+    color: var(--ch-fg-2);
+}
+
+.ch-rail-tab.is-on {
+    color: var(--ch-fg);
+}
+
+.ch-rail-tab.is-on svg {
+    color: var(--ch-you);
+}
+
+.ch-rail-tab.is-on::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 -1px;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    background: var(--ch-you);
+}
+
+.ch-rail-n {
+    min-width: 18px;
+    padding: 1px 5px;
+    border-radius: 999px;
+    background: var(--ch-raised-3);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    color: var(--ch-fg-2);
+}
+
+.ch-rail-tab.is-on .ch-rail-n {
+    background: var(--ch-you-dim);
+    color: var(--ch-you);
+}
+
+.ch-rail-refresh {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: var(--ch-r-2);
+    background: transparent;
+    color: var(--ch-fg-3);
+    transition: background 0.13s, color 0.13s;
+}
+
+.ch-rail-refresh:hover:not(:disabled) {
+    background: var(--ch-raised-3);
+    color: var(--ch-fg);
+}
+
+.ch-rail-refresh:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+/* ── The list ──────────────────────────────────────
+   This is the only thing on the page that scrolls independently of
+   the thread, and it has the whole rail to do it in. */
+.ch-rail-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 14px;
+}
+
+.ch-rail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    list-style: none;
+}
+
+.ch-rail-blank {
+    padding: 8px 2px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ch-fg-3);
+}
+
+/* ── A decision, as a card ─────────────────────────
+   Raised off the rail's ground because each one is a separate
+   finding, not a row in a table. */
+.ch-card {
+    padding: 12px 13px 11px;
+    border: 1px solid var(--ch-line-2);
+    border-radius: var(--ch-r-3);
+    background: var(--ch-bg);
+    box-shadow: 0 1px 2px rgba(20, 32, 43, 0.04);
+    transition: border-color 0.14s, box-shadow 0.14s;
+}
+
+.ch-card:hover {
+    border-color: var(--ch-line-3);
+    box-shadow: 0 4px 12px -6px rgba(20, 32, 43, 0.18);
+}
+
+/* Superseded is still part of the record — it reads back, quietly,
+   rather than disappearing. */
+.ch-card.is-old {
+    background: var(--ch-raised);
+    box-shadow: none;
+}
+
+.ch-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.ch-card-day {
+    flex-shrink: 0;
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ch-fg-3);
+}
+
+.ch-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: -0.004em;
+}
+
+.ch-tag.is-live {
+    background: var(--ch-rec-dim);
+    color: var(--ch-rec);
+}
+
+.ch-tag.is-old {
+    background: var(--ch-raised-3);
+    color: var(--ch-fg-3);
+}
+
+.ch-tag.is-old svg {
+    display: none;
+}
+
+.ch-tag.is-clash {
+    background: var(--ch-bad-dim);
+    color: var(--ch-bad);
+}
+
+.ch-card-title {
+    margin-bottom: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.013em;
+    line-height: 1.35;
+    color: var(--ch-fg);
+}
+
+.ch-card.is-old .ch-card-title {
+    text-decoration: line-through;
+    text-decoration-color: var(--ch-line-3);
+    color: var(--ch-fg-2);
+}
+
+.ch-card-text {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ch-fg-2);
+    overflow-wrap: anywhere;
+}
+
+.ch-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px solid var(--ch-line);
+}
+
+.ch-card-src {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    font-size: 11.5px;
+    color: var(--ch-fg-3);
+}
+
+.ch-card-who {
+    font-weight: 500;
+    color: var(--ch-fg-2);
+}
+
+.ch-card-jump {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    border: none;
+    background: none;
+    padding: 0;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--ch-you);
+    transition: opacity 0.13s;
+}
+
+.ch-card-jump:hover {
+    opacity: 0.72;
+}
+
+.ch-working {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 2px;
+    font-size: 13px;
     color: var(--ch-fg-3);
 }
 
@@ -747,243 +1067,18 @@
     color: var(--ch-fg-3);
 }
 
-.ch-mem-counts {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    margin-left: 2px;
-}
-
-.ch-count {
-    padding: 2px 6px;
-    border-radius: var(--ch-r-1);
-    background: var(--ch-raised-3);
-    color: var(--ch-fg-2);
-    font-size: 11px;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-}
-
-.ch-count-rec {
-    background: var(--ch-rec-dim);
-    color: var(--ch-rec);
-}
-
-.ch-mem-body {
-    padding: 0 14px 12px;
-}
-
-/* ── Segmented control ────────────────────────────── */
-.ch-seg {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    padding: 3px;
-    border: 1px solid var(--ch-line);
-    border-radius: var(--ch-r-2);
-    background: var(--ch-bg);
-}
-
-.ch-seg-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 9px;
-    border: none;
-    border-radius: var(--ch-r-1);
-    background: transparent;
-    color: var(--ch-fg-3);
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: -0.004em;
-    transition: background 0.13s, color 0.13s;
-}
-
-.ch-seg-btn:hover {
-    color: var(--ch-fg);
-}
-
-.ch-seg-btn.is-on {
-    background: var(--ch-raised-3);
-    color: var(--ch-fg);
-}
-
-.ch-seg-spacer {
-    flex: 1;
-}
-
-.ch-seg-refresh {
-    display: grid;
-    place-items: center;
-    width: 24px;
-    height: 24px;
-    border: none;
-    border-radius: var(--ch-r-1);
-    background: transparent;
-    color: var(--ch-fg-3);
-    transition: background 0.13s, color 0.13s, opacity 0.13s;
-}
-
-.ch-seg-refresh:hover:not(:disabled) {
-    background: var(--ch-raised-3);
-    color: var(--ch-fg);
-}
-
-.ch-seg-refresh:disabled {
-    opacity: 0.4;
-    cursor: default;
-}
-
-/* ── Memory list ──────────────────────────────────── */
-.ch-mem-scroll {
-    max-height: 232px;
-    margin-top: 10px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-}
-
-.ch-mem-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.ch-mem-list>li+li {
-    border-top: 1px solid var(--ch-line);
-}
-
-.ch-note {
-    padding: 12px 2px;
-    max-width: 60ch;
-    font-size: 12.5px;
-    line-height: 1.6;
-    color: var(--ch-fg-3);
-}
-
-.ch-working {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 2px;
-    font-size: 12.5px;
-    color: var(--ch-fg-2);
-}
-
-/* Decisions */
-.ch-dec {
-    display: flex;
-    gap: 9px;
-    padding: 10px 2px;
-}
-
-.ch-dec-dot {
-    flex-shrink: 0;
-    width: 6px;
-    height: 6px;
-    margin-top: 6px;
-    border-radius: 50%;
-    background: var(--ch-rec);
-}
-
-.ch-dec.is-old .ch-dec-dot {
-    background: transparent;
-    box-shadow: inset 0 0 0 1px var(--ch-fg-3);
-}
-
-/* Contested: still standing, so it keeps a filled dot — just not the
-   record's green, which would read as settled. */
-.ch-dec.is-clash .ch-dec-dot {
-    background: var(--ch-bad);
-}
-
-.ch-dec-title {
-    margin: 0 0 2px;
-    max-width: 68ch;
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.4;
-    color: var(--ch-fg);
-}
-
-.ch-dec.is-old .ch-dec-title {
-    color: var(--ch-fg-2);
-}
-
-/* With a title above it, the body text is the supporting line. */
-.ch-dec-title + .ch-dec-text {
-    color: var(--ch-fg-2);
-}
-
-.ch-dec-text {
-    margin: 0;
-    max-width: 68ch;
-    font-size: 13px;
-    line-height: 1.55;
-    color: var(--ch-fg);
-}
-
-.ch-dec.is-old .ch-dec-text {
-    color: var(--ch-fg-2);
-}
-
-.ch-dec-meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 5px;
-    font-size: 11.5px;
-    color: var(--ch-fg-3);
-}
-
-.ch-tag {
-    padding: 1px 6px;
-    border-radius: var(--ch-r-1);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: -0.002em;
-}
-
-.ch-tag-live {
-    background: var(--ch-rec-dim);
-    color: var(--ch-rec);
-}
-
-.ch-tag-old {
-    background: var(--ch-raised-3);
-    color: var(--ch-fg-2);
-}
-
-.ch-tag-clash {
-    background: var(--ch-bad-dim);
-    color: var(--ch-bad);
-}
-
-.ch-dec-jump {
-    padding: 0;
-    border: 0;
-    background: none;
-    font: inherit;
-    color: var(--ch-you);
-    cursor: pointer;
-}
-
-.ch-dec-jump:hover {
-    text-decoration: underline;
-}
-
 /* Transcripts */
 .ch-tr-head {
     display: flex;
     align-items: center;
     gap: 7px;
     width: 100%;
-    padding: 10px 2px;
     border: none;
     background: transparent;
     color: var(--ch-fg);
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 500;
-    letter-spacing: -0.004em;
+    letter-spacing: -0.006em;
     text-align: left;
     transition: color 0.13s;
 }
@@ -997,9 +1092,9 @@
 }
 
 .ch-tr-text {
-    margin: 0;
-    padding: 0 2px 12px 18px;
-    max-width: 70ch;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--ch-line);
     font-size: 12.5px;
     line-height: 1.65;
     color: var(--ch-fg-2);
@@ -1375,3 +1470,191 @@
 }
 /* Sent, not yet confirmed by the server. */
 .ch-msg.is-pending { opacity: 0.55; }
+
+/* ═══ Thread behaviour ════════════════════════════════════════
+   The day a message was sent is the one piece of context that
+   scrolls away fastest, so the divider stays at the top of the
+   thread while that day's messages pass under it. */
+.ch-day {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    /* The label sits in a pill; the rules either side of it would
+       show the thread running underneath, so the strip is opaque. */
+    background: var(--ch-bg);
+    padding-top: 14px;
+}
+
+.ch-msg.is-lead:first-child,
+.ch-day+.ch-msg.is-lead {
+    margin-top: 6px;
+}
+
+.ch-thread {
+    /* Reaching the end of the thread should not start scrolling the
+       page behind it, and on iOS should not rubber-band the shell. */
+    overscroll-behavior: contain;
+    scroll-padding-bottom: 12px;
+}
+
+/* ═══ Touch ═══════════════════════════════════════════════════
+   Pointer-coarse, not narrow: the panel can be 420px wide on a
+   desktop with a mouse, where 28px controls and hover-revealed
+   timestamps are both fine. These rules are about the finger.
+   ═════════════════════════════════════════════════════════════ */
+@media (hover: none) {
+
+    /* Under 16px, iOS Safari zooms the whole page when the field
+       takes focus and never zooms back out. */
+    .ch-composer-field,
+    .ch-ask-field {
+        font-size: 16px;
+    }
+
+    /* There is no hover to reveal it, so the timestamp on a grouped
+       message is permanent — quiet, but readable. */
+    .ch-msg-tick {
+        opacity: 1;
+        color: var(--ch-fg-3);
+    }
+
+    /* Nothing you tap should be smaller than a fingertip. The visual
+       size is unchanged; the touchable box grows around it. */
+    .ch-send,
+    .ch-btn,
+    .ch-btn-icon,
+    .ch-back,
+    .ch-ask-close,
+    .ch-ask-go {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .ch-composer-form {
+        padding: 5px 5px 5px 14px;
+    }
+
+    /* Home-bar phones draw over the bottom of the viewport. */
+    .ch-composer {
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+
+    /* Hover tinting on a touch device only ever fires as a stuck
+       highlight on the last thing tapped. */
+    .ch-msg:hover {
+        background: transparent;
+    }
+}
+
+/* One hand, one column: a phone has the whole panel to itself, so
+   the reading measure can be wider than the three-up case allows. */
+@media (max-width: 560px) {
+
+    .ch-msg,
+    .ch-day {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .ch-msg-body {
+        font-size: 15px;
+    }
+}
+
+/* ═══ Decisions in the thread ═════════════════════════════════
+   A decision is extracted into the rail, but it was still said by a
+   person at a time in a conversation — so it is marked where it was
+   said, in the record's own green, rather than only in a list that
+   loses the context it came from. */
+
+.ch-decided {
+    position: relative;
+    /* Sized to the decision, not to the column: a settled thing is short,
+       and a card stretched to the full measure stops reading as a mark on
+       one message and starts reading as a section. */
+    width: fit-content;
+    max-width: min(100%, 58ch);
+    margin-top: 3px;
+    padding: 10px 13px 11px;
+    border: 1px solid var(--ch-rec-line);
+    border-radius: var(--ch-r-3);
+    background: var(--ch-rec-dim);
+}
+
+.ch-decided-tag {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: -0.004em;
+    color: var(--ch-rec);
+}
+
+.ch-decided-text {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--ch-fg);
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+/* ═══ Composer ════════════════════════════════════════════════ */
+
+/* What the app does with what you type, said once, under the box
+   that takes it — the product's promise at the point of the act. */
+.ch-composer-note {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 7px;
+    padding: 0 2px;
+    font-size: 12px;
+    color: var(--ch-fg-3);
+}
+
+.ch-composer-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--ch-rec);
+}
+
+/* ═══ Rail, narrow ════════════════════════════════════════════
+   Below this the window cannot hold a conversation and a rail side by
+   side. The memory does not go away — it stops being a column and
+   becomes a sheet over the thread, on the same toggle. */
+@media (max-width: 1180px) {
+    .ch-rail {
+        position: absolute;
+        inset: 0 0 0 auto;
+        z-index: 8;
+        flex-basis: min(374px, 100%);
+        width: min(374px, 100%);
+        box-shadow: -18px 0 48px -22px rgba(20, 32, 43, 0.4);
+        animation: ch-rail-in 0.22s var(--ch-ease) both;
+    }
+
+    .ch-body {
+        position: relative;
+    }
+}
+
+@keyframes ch-rail-in {
+    from {
+        opacity: 0;
+        transform: translateX(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ch-rail {
+        animation: none;
+    }
+}

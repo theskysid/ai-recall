@@ -1,399 +1,159 @@
-/* ═══════════════════════════════════════════════════════
-   Message panel — shared by direct messages and channels.
-   A document, like the channel thread: no bubbles, no alignment
-   by author. Your own name carries the accent.
-   ═══════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   Direct message panel
 
-.dm-chat-window {
-    position: fixed;
-    bottom: 0;
-    right: 380px;
-    width: 360px;
-    height: 520px;
-    z-index: 1050;
-    display: flex;
-    flex-direction: column;
-    background: var(--ink-870);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--r-3) var(--r-3) 0 0;
-    box-shadow: var(--shadow-3);
-    animation: slideUp var(--t-3) var(--ease);
-}
+   The thread, the header shell and the composer are the channel's,
+   from ChannelPage.css — a DM is the same record, with one
+   correspondent instead of a room, so it should not look like a
+   different product. Only what is true of a DM and not of a
+   channel lives here: who you are talking to, whether they are
+   online, how long the conversation keeps itself, and the typing
+   line. Every selector is a descendant of `.ch-page`, so the
+   `--ch-*` tokens resolve. ══════════════════════════════════════ */
 
-.dm-chat-window.embedded {
-    position: relative;
-    inset: auto;
-    width: 100%;
-    height: 100%;
-    border: none;
-    border-radius: 0;
-    background: var(--ink-900);
-    box-shadow: none;
-    z-index: 1;
-    animation: fadeIn var(--t-2) var(--ease);
-}
-
-/* ── Header ────────────────────────────────────── */
-.dm-chat-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    min-height: 58px;
-    padding: 0.7rem 0.9rem;
-    border-bottom: 1px solid var(--line);
-    background: var(--ink-870);
-    flex-shrink: 0;
-}
-
-.dm-recipient-info {
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-    min-width: 0;
-}
-
-.dm-back-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
-    border: 1px solid var(--line);
-    border-radius: var(--r-2);
-    background: transparent;
-    color: var(--paper);
-    transition: background var(--transition-base);
-}
-
-.dm-back-btn:active {
-    background: rgba(20, 32, 43, 0.065);
-}
-
-.dm-avatar-wrapper {
+/* ── Who ───────────────────────────────────────────
+   A channel leads with a hash; a DM leads with a face. */
+.dm-who {
     position: relative;
     flex-shrink: 0;
+    display: grid;
+    place-items: center;
 }
 
-.dm-avatar {
-    width: 34px;
-    height: 34px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--r-2);
-    background: var(--avatar-hue, var(--ink-840));
-    color: var(--avatar-ink, var(--amber));
-    font-family: var(--font-display);
-    font-size: 1.15rem;
+.dm-who-avatar {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--avatar-hue, var(--ch-raised-3));
+    color: var(--avatar-ink, var(--ch-fg-2));
+    font-size: 11.5px;
+    font-weight: 600;
     line-height: 1;
+    text-transform: uppercase;
 }
 
-.dm-online-badge {
+/* Presence rides the avatar rather than taking a row of its own. */
+.dm-presence {
     position: absolute;
-    bottom: -2px;
-    right: -2px;
+    right: -1px;
+    bottom: -1px;
     width: 9px;
     height: 9px;
+    border: 2px solid var(--ch-bg);
     border-radius: 50%;
-    border: 2px solid var(--ink-870);
+    background: var(--ch-fg-3);
 }
 
-.dm-online-badge.online {
-    background: var(--verdigris);
+.dm-presence.is-on {
+    background: var(--ch-rec);
 }
 
-.dm-online-badge.offline {
-    background: var(--paper-4);
-}
-
-.dm-header-titles {
-    min-width: 0;
-}
-
-.dm-header-titles h3 {
-    display: flex;
+/* ── Retention ─────────────────────────────────────
+   A DM deletes itself, which is the one thing about this surface a
+   person must not have to go looking for. It is stated in the
+   header, next to the name, and set from the control beside it. */
+.dm-keep {
+    display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.93rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    color: var(--paper);
-    overflow: hidden;
-    text-overflow: ellipsis;
+    gap: 4px;
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border: 1px solid var(--ch-line-2);
+    border-radius: 999px;
+    font-size: 11px;
+    letter-spacing: -0.004em;
+    color: var(--ch-fg-3);
     white-space: nowrap;
 }
 
-.dm-badge-ephemeral,
-.channel-member-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    flex-shrink: 0;
-    font-family: var(--font-mono);
-    font-size: 0.58rem;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--paper-3);
-    border: 1px solid var(--line);
-    border-radius: var(--r-full);
-    padding: 0.1rem 0.5rem;
-}
-
-.dm-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    flex-shrink: 0;
-}
-
-.retention-select {
-    background: var(--ink-840);
-    border: 1px solid var(--line);
-    border-radius: var(--r-2);
-    color: var(--paper-2);
-    padding: 0.35rem 0.4rem;
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    outline: none;
-    transition: border-color var(--transition-base), color var(--transition-base);
-}
-
-.retention-select:hover,
-.retention-select:focus {
-    border-color: var(--amber-line);
-    color: var(--paper);
-}
-
-.retention-select option {
-    background: var(--ink-840);
-    color: var(--paper);
-    font-family: var(--font-sans);
-}
-
-.dm-close-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
+.dm-keep-select {
     height: 28px;
-    border: 1px solid var(--line);
-    border-radius: var(--r-2);
-    background: transparent;
-    color: var(--paper-3);
-    font-size: 0.75rem;
-    transition: background var(--transition-base), color var(--transition-base),
-        border-color var(--transition-base);
+    padding: 0 6px;
+    border: 1px solid var(--ch-line-2);
+    border-radius: var(--ch-r-2);
+    background: var(--ch-raised);
+    color: var(--ch-fg-2);
+    font-family: inherit;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.14s, color 0.14s;
 }
 
-.dm-close-btn:hover {
-    border-color: var(--brick-line);
-    background: var(--brick-dim);
-    color: var(--brick-2);
+.dm-keep-select:hover,
+.dm-keep-select:focus-visible {
+    border-color: var(--ch-line-3);
+    color: var(--ch-fg);
 }
 
-/* ── Message stream ────────────────────────────── */
-.dm-messages-container {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1.05rem;
-    padding: 1.15rem 1.25rem 1.4rem;
-}
-
-.dm-loading,
-.dm-no-messages {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    height: 100%;
-    text-align: center;
-    color: var(--paper-3);
-    font-size: 0.88rem;
-}
-
-.dm-no-messages p:first-child {
-    font-family: var(--font-display);
-    font-size: 1.3rem;
-    color: var(--paper-2);
-}
-
-.dm-ephemeral-banner {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    margin-bottom: 0.3rem;
-    padding: 0.5rem 0.75rem;
-    border: 1px dashed var(--line-strong);
-    border-radius: var(--r-2);
-    font-family: var(--font-mono);
-    font-size: 0.63rem;
-    letter-spacing: 0.06em;
-    color: var(--paper-3);
-    text-align: center;
-}
-
-.dm-ephemeral-banner strong {
-    color: var(--amber);
-    font-weight: 500;
-}
-
-/* A record, like the channel thread — every message starts at the same
-   left edge. Who said it is the name, not the side it sits on. */
-.dm-message {
-    display: flex;
-    flex-direction: column;
-    animation: rise var(--t-2) var(--ease);
-}
-
-.dm-message-header {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 0.15rem 0.5rem;
-    margin-bottom: 0.15rem;
-}
-
-.dm-sender-name {
-    font-size: 0.87rem;
-    font-weight: 600;
-    letter-spacing: -0.011em;
-    color: var(--paper);
-}
-
-.dm-message.own-message .dm-sender-name {
-    color: var(--amber);
-}
-
-.dm-timestamp {
-    font-size: 0.72rem;
-    color: var(--paper-3);
-    font-variant-numeric: tabular-nums;
-}
-
-.dm-message-content {
-    max-width: 74ch;
-    font-size: 0.92rem;
-    line-height: 1.62;
-    color: var(--paper);
-    word-wrap: break-word;
-    overflow-wrap: anywhere;
-    white-space: pre-wrap;
-}
-
-.dm-message-footer {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    margin-top: 0.2rem;
-    font-size: 0.68rem;
-    color: var(--paper-3);
-}
-
-.dm-typing-indicator {
-    align-self: flex-start;
+/* How long the oldest message on screen has left, shown once beside
+   its name — the countdown belongs to that message, not the window. */
+.dm-expiry {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.35rem 0.7rem;
-    border: 1px solid var(--line);
-    border-radius: var(--r-full);
-    background: var(--ink-870);
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    letter-spacing: 0.05em;
-    color: var(--paper-3);
-    animation: pulseGlow 1.6s var(--ease) infinite;
+    gap: 3px;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ch-fg-3);
 }
 
-/* ── Composer ──────────────────────────────────── */
-.dm-input-container {
+/* ── Typing ────────────────────────────────────────
+   Three dots walking, because that is what everyone already reads
+   as "still writing". Held at the foot of the thread so it never
+   pushes a message out from under the reader's eye. */
+.dm-typing {
     flex-shrink: 0;
-    padding: 0.7rem 0.9rem;
-    border-top: 1px solid var(--line);
-    background: var(--ink-870);
-}
-
-.dm-form {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
+    padding: 6px 26px 10px;
+    font-size: 12px;
+    color: var(--ch-fg-3);
 }
 
-.dm-input {
-    flex: 1;
-    min-width: 0;
-    padding: 0.65rem 0.85rem;
-    border: 1px solid var(--line);
-    border-radius: var(--r-2);
-    background: var(--ink-840);
-    color: var(--paper);
-    font-size: 0.92rem;
-    outline: none;
-    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+.dm-typing-dots {
+    display: inline-flex;
+    gap: 3px;
 }
 
-.dm-input::placeholder {
-    color: var(--paper-4);
+.dm-typing-dots i {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--ch-fg-3);
+    animation: dmTyping 1.2s var(--ch-ease) infinite;
 }
 
-.dm-input:focus {
-    border-color: var(--amber);
-    box-shadow: 0 0 0 3px var(--amber-dim);
+.dm-typing-dots i:nth-child(2) {
+    animation-delay: 0.15s;
 }
 
-.dm-send-btn {
-    flex-shrink: 0;
-    padding: 0.65rem 1.05rem;
-    border: 1px solid transparent;
-    border-radius: var(--r-2);
-    background: var(--amber);
-    color: var(--ink-950);
-    font-family: var(--font-mono);
-    font-size: 0.66rem;
-    font-weight: 600;
-    letter-spacing: -0.005em;
-    transition: background var(--transition-base), color var(--transition-base),
-        border-color var(--transition-base);
+.dm-typing-dots i:nth-child(3) {
+    animation-delay: 0.3s;
 }
 
-.dm-send-btn:hover:not(:disabled) {
-    background: var(--amber-2);
+@keyframes dmTyping {
+    0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+    30% { opacity: 1; transform: translateY(-2px); }
 }
 
-.dm-send-btn:disabled {
-    background: transparent;
-    border-color: var(--line);
-    color: var(--paper-4);
-    cursor: not-allowed;
-}
-
-/* ── Responsive ────────────────────────────────── */
-@media (max-width: 480px) {
-    .dm-chat-header {
-        min-height: 52px;
-        padding: 0.6rem 0.7rem;
-    }
-
-    .dm-messages-container {
-        padding: 0.95rem 0.8rem 1.2rem;
-    }
-
-    .dm-input-container {
-        padding: 0.6rem 0.7rem;
-    }
-
-    .dm-send-btn {
-        padding: 0.65rem 0.8rem;
+@media (prefers-reduced-motion: reduce) {
+    .dm-typing-dots i {
+        animation: none;
+        opacity: 0.6;
     }
 }
 
-/* Sent, not yet confirmed by the server. */
-.dm-message.is-pending { opacity: 0.55; }
+/* The name and the control already say it; the badge is the first
+   thing to go when the header runs out of room. */
+@container (max-width: 460px) {
+    .dm-keep {
+        display: none;
+    }
+}
+
+@container (max-width: 380px) {
+    .dm-keep-select {
+        max-width: 92px;
+    }
+}

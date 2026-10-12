@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { channelService } from '../services/channelService';
 import { callService } from '../services/callService';
 import LiveCallRoom from './LiveCallRoom';
@@ -7,33 +7,8 @@ import MemoryPanel from '../components/chat/MemoryPanel';
 import Icon from '../components/ui/Icon';
 import { hueClass } from '../utils/avatarHue';
 import { mergeEcho } from '../utils/mergeEcho';
+import { groupThread, formatTime } from '../utils/thread';
 import '../styles/ChannelPage.css';
-
-/* The backend sends naive timestamps; treat them as UTC. */
-const parseTs = (timestamp) => {
-    if (!timestamp) return null;
-    let str = typeof timestamp === 'string' ? timestamp : timestamp.toString();
-    if (typeof str === 'string' && !str.endsWith('Z') && !str.includes('+') && !str.includes('GMT')) {
-        str += 'Z';
-    }
-    const d = new Date(str);
-    return isNaN(d.getTime()) ? null : d;
-};
-
-const sameDay = (a, b) =>
-    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-
-const dayLabel = (d) => {
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
-    if (sameDay(d, today)) return 'Today';
-    if (sameDay(d, yesterday)) return 'Yesterday';
-    return d.toLocaleDateString([], { month: 'long', day: 'numeric' });
-};
-
-/* Messages from the same person inside this window read as one run. */
-const RUN_MS = 5 * 60 * 1000;
 
 
 const ChannelChat = ({
@@ -57,6 +32,15 @@ const ChannelChat = ({
     const [inCall, setInCall] = useState(false);
     const [callParticipants, setCallParticipants] = useState(0);
     const [copiedInvite, setCopiedInvite] = useState(false);
+
+    /* The rail is the channel's memory, open by default on a screen wide
+       enough to hold it — the whole point of the product is that the record
+       is there without going to look for it. CSS hides it below 1100px. */
+    const [railOpen, setRailOpen] = useState(() => window.innerWidth > 1180);
+    const [decisions, setDecisions] = useState([]);
+    const [transcripts, setTranscripts] = useState([]);
+    const [memLoading, setMemLoading] = useState(false);
+    const [memError, setMemError] = useState('');
 
     // Leave any active call when switching channels.
     useEffect(() => {
@@ -143,6 +127,43 @@ const ChannelChat = ({
             isMounted = false;
         };
     }, [channelId]);
+
+    /* Decisions are read once here rather than inside the rail, because the
+       thread needs them too — a message that settled something is marked where
+       it was said, not only in the list. */
+    const loadMemory = useCallback(async () => {
+        if (channelId == null) return;
+        setMemLoading(true);
+        setMemError('');
+        try {
+            const [dec, tr] = await Promise.all([
+                channelService.getDecisions(channelId),
+                callService.getTranscripts(channelId)
+            ]);
+            setDecisions(Array.isArray(dec) ? dec : []);
+            setTranscripts(Array.isArray(tr) ? tr : []);
+        } catch (err) {
+            console.error('Channel memory load failed:', err);
+            setMemError('Could not load channel memory.');
+        } finally {
+            setMemLoading(false);
+        }
+    }, [channelId]);
+
+    useEffect(() => {
+        setDecisions([]);
+        setTranscripts([]);
+        loadMemory();
+    }, [loadMemory]);
+
+    /* message id -> the decision it produced, for the in-thread marker. */
+    const decisionByMessage = useMemo(() => {
+        const m = new Map();
+        decisions.forEach((d) => {
+            if (d.sourceType !== 'TRANSCRIPT' && d.sourceId != null) m.set(d.sourceId, d);
+        });
+        return m;
+    }, [decisions]);
 
     const handleIncoming = useCallback((incoming) => {
         if (!incoming || incoming.type !== 'CHAT') return;
@@ -242,11 +263,6 @@ const ChannelChat = ({
         }
     };
 
-    const formatTime = (timestamp) => {
-        const d = parseTs(timestamp);
-        return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-    };
-
     const renderThread = () => {
         if (isLoading) {
             return (
@@ -278,36 +294,20 @@ const ChannelChat = ({
             );
         }
 
-        let lastDate = null;
-        let lastSender = null;
-
-        return messages.map((msg, index) => {
-            const date = parseTs(msg.timestamp);
+        return groupThread(messages, 'sender').map(({ msg, day, isLead }, index) => {
             const isOwn = msg.sender === currentUser;
-
-            const startsDay = !!date && (!lastDate || !sameDay(date, lastDate));
-            const isLead =
-                startsDay ||
-                msg.sender !== lastSender ||
-                !date ||
-                !lastDate ||
-                date - lastDate > RUN_MS;
-
-            const divider = startsDay ? (
-                <div className="ch-day">
-                    <span>{dayLabel(date)}</span>
-                </div>
-            ) : null;
-
-            lastDate = date || lastDate;
-            lastSender = msg.sender;
+            const decided = msg.id != null && decisionByMessage.has(msg.id);
 
             return (
                 <React.Fragment key={msg.id || index}>
-                    {divider}
+                    {day && (
+                        <div className="ch-day">
+                            <span>{day}</span>
+                        </div>
+                    )}
                     <div
                         id={msg.id != null ? `msg-${msg.id}` : undefined}
-                        className={`ch-msg ${isLead ? 'is-lead' : ''} ${isOwn ? 'is-own' : ''} ${msg.pending ? 'is-pending' : ''} ${msg.id === highlightedId ? 'is-found' : ''}`}
+                        className={`ch-msg ${isLead ? 'is-lead' : ''} ${isOwn ? 'is-own' : ''} ${msg.pending ? 'is-pending' : ''} ${decided ? 'is-decided' : ''} ${msg.id === highlightedId ? 'is-found' : ''}`}
                     >
                         <div className="ch-msg-gutter">
                             {isLead ? (
@@ -331,7 +331,17 @@ const ChannelChat = ({
                                     <span className="ch-msg-marks" />
                                 </div>
                             )}
-                            <div className="ch-msg-body">{msg.content}</div>
+                            {decided ? (
+                                <div className="ch-decided">
+                                    <p className="ch-decided-tag">
+                                        <Icon name="check" size={12} />
+                                        Decision made
+                                    </p>
+                                    <p className="ch-decided-text">{msg.content}</p>
+                                </div>
+                            ) : (
+                                <div className="ch-msg-body">{msg.content}</div>
+                            )}
                         </div>
                     </div>
                 </React.Fragment>
@@ -349,20 +359,25 @@ const ChannelChat = ({
                         </button>
                     )}
                     <span className="ch-hash" aria-hidden="true">
-                        <Icon name="hash" size={13} />
+                        <Icon name="hash" size={19} />
                     </span>
-                    <h3 className="ch-name">{channel?.name}</h3>
-                    {channel?.description && (
-                        <span className="ch-desc" title={channel.description}>
-                            {channel.description}
-                        </span>
-                    )}
-                    {channel?.memberCount != null && (
-                        <span className="ch-members" title={`${channel.memberCount} members`}>
-                            <Icon name="people" size={12} />
-                            {channel.memberCount}
-                        </span>
-                    )}
+                    <div className="ch-header-text">
+                        <h3 className="ch-name">{channel?.name}</h3>
+                        <p className="ch-sub">
+                            {channel?.description && (
+                                <span className="ch-desc" title={channel.description}>
+                                    {channel.description}
+                                </span>
+                            )}
+                            {channel?.memberCount != null && (
+                                <span className="ch-members" title={`${channel.memberCount} members`}>
+                                    <Icon name="people" size={12} />
+                                    {channel.memberCount}
+                                    {channel.memberCount === 1 ? ' member' : ' members'}
+                                </span>
+                            )}
+                        </p>
+                    </div>
                 </div>
 
                 <div className="ch-header-actions">
@@ -378,6 +393,15 @@ const ChannelChat = ({
                             <span className="ch-invite-code">{channel.inviteCode}</span>
                         </button>
                     )}
+                    <button
+                        type="button"
+                        onClick={() => setRailOpen((v) => !v)}
+                        className={`ch-btn ch-btn-outline ch-rail-toggle ${railOpen ? 'is-on' : ''}`}
+                        title={railOpen ? 'Hide channel memory' : 'Show channel memory'}
+                        aria-pressed={railOpen}
+                    >
+                        <Icon name="archive" size={14} />
+                    </button>
                     <button
                         onClick={() => setInCall((v) => !v)}
                         className={`ch-btn ${inCall ? 'ch-btn-live' : 'ch-btn-outline'}`}
@@ -429,34 +453,51 @@ const ChannelChat = ({
                 </div>
             )}
 
-            {!inCall && (
-                <div className="ch-intel">
-                    <AskAiWidget channelId={channelId} channelName={channel?.name} />
-                    <MemoryPanel channelId={channelId} onViewMessage={viewMessage} />
+            <div className="ch-body" style={inCall ? { display: 'none' } : undefined}>
+                <div className="ch-main">
+                    {/* Kept mounted through a call so scroll position and history survive. */}
+                    <div className="ch-thread">
+                        {renderThread()}
+                        <div ref={messagesEndRef} />
+                    </div>
+
+                    <div className="ch-composer">
+                        <form onSubmit={sendMessage} className="ch-composer-form">
+                            <input
+                                type="text"
+                                placeholder={`Message #${channel?.name || ''}`}
+                                value={messageInput}
+                                onChange={(e) => setMessageInput(e.target.value)}
+                                className="ch-composer-field"
+                                maxLength={2000}
+                                aria-label={`Message #${channel?.name || ''}`}
+                            />
+                            <button type="submit" disabled={!messageInput.trim()} className="ch-send" title="Send" aria-label="Send">
+                                <Icon name="send" size={14} />
+                            </button>
+                        </form>
+                        <p className="ch-composer-note">
+                            <span className="ch-composer-dot" aria-hidden="true" />
+                            Everything said here is kept and searchable.
+                        </p>
+                    </div>
                 </div>
-            )}
 
-            {/* Kept mounted through a call so scroll position and history survive. */}
-            <div className="ch-thread" style={inCall ? { display: 'none' } : undefined}>
-                {renderThread()}
-                <div ref={messagesEndRef} />
-            </div>
-
-            <div className="ch-composer" style={inCall ? { display: 'none' } : undefined}>
-                <form onSubmit={sendMessage} className="ch-composer-form">
-                    <input
-                        type="text"
-                        placeholder={`Message #${channel?.name || ''}`}
-                        value={messageInput}
-                        onChange={(e) => setMessageInput(e.target.value)}
-                        className="ch-composer-field"
-                        maxLength={2000}
-                        aria-label={`Message #${channel?.name || ''}`}
-                    />
-                    <button type="submit" disabled={!messageInput.trim()} className="ch-send" title="Send" aria-label="Send">
-                        <Icon name="send" size={14} />
-                    </button>
-                </form>
+                {railOpen && (
+                    <aside className="ch-rail" aria-label="Channel memory">
+                        <MemoryPanel
+                            channelName={channel?.name}
+                            decisions={decisions}
+                            transcripts={transcripts}
+                            isLoading={memLoading}
+                            error={memError}
+                            onReload={loadMemory}
+                            onViewMessage={viewMessage}
+                            onClose={() => setRailOpen(false)}
+                        />
+                        <AskAiWidget channelId={channelId} channelName={channel?.name} />
+                    </aside>
+                )}
             </div>
         </div>
     );
