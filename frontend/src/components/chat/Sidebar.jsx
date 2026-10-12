@@ -26,8 +26,20 @@ const Sidebar = ({ chat, friends, ui, layout }) => {
 
     return (
         <div className={`sidebar ${mobileSidebarOpen ? 'sidebar-mobile-open' : ''}`}>
+            {/* Who you are and how many of you are here — the first thing a
+                workspace should answer, and what the old uppercase
+                "Channels & people" label was taking the room to not say. */}
             <div className="sidebar-header">
-                <h3>Channels &amp; people</h3>
+                <span className={`ws-mark ${hueClass(username)}`} aria-hidden="true">
+                    {username.charAt(0).toUpperCase() || 'R'}
+                </span>
+                <div className="ws-id">
+                    <p className="ws-name">{username}</p>
+                    <p className="ws-meta">
+                        <span className="ws-dot" aria-hidden="true" />
+                        {onlineUsers.size} online
+                    </p>
+                </div>
                 <div className="sidebar-header-actions">
                     <button
                         onClick={() => loadFriendsData(true)}
@@ -153,6 +165,13 @@ const Sidebar = ({ chat, friends, ui, layout }) => {
                         })}
                     </>
                 )}
+            </div>
+            <div className="sidebar-foot">
+                <Icon name="sparkle" size={14} />
+                <p>
+                    <strong>A little less forgetting.</strong>
+                    Every channel keeps its own record.
+                </p>
             </div>
         </div>
     );

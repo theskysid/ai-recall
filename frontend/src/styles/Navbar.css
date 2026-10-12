@@ -553,3 +553,63 @@
         border-color: var(--nb-rule);
     }
 }
+/* ═══════════════════════════════════════════════════════════════
+   The workspace bar
+
+   On the landing and the flyleaf the navbar is a masthead, and the
+   compressed uppercase furniture above is right for it. Inside the
+   workspace it is an application bar: it spans the window rather
+   than a centred measure, and its links are read dozens of times a
+   day, which uppercase micro-type at 0.16em tracking is the wrong
+   setting for. Everything here is scoped to .navbar-compact so the
+   masthead keeps its own voice. ═════════════════════════════════ */
+
+.navbar-compact .navbar-container {
+    max-width: none;
+    padding: 0 18px;
+}
+
+.navbar-compact.navbar--notebook .navbar-link,
+.navbar-compact.navbar--notebook .logout-btn {
+    font-size: 14px;
+    font-weight: 500;
+    font-stretch: 100%;
+    text-transform: none;
+    letter-spacing: -0.009em;
+}
+
+.navbar-compact .navbar-link {
+    padding: 0.45rem 0.7rem;
+    border-radius: var(--r-2);
+    transition: background var(--t-1) var(--ease), color var(--t-1) var(--ease);
+}
+
+.navbar-compact .navbar-link:hover {
+    background: rgba(20, 32, 43, 0.045);
+}
+
+.navbar-compact.navbar--notebook .navbar-brand-text {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.028em;
+}
+
+/* The identity chip: a face, a name, and the way out — in that order,
+   which is the order they are wanted in. */
+.navbar-compact .navbar-user {
+    gap: 0.5rem;
+    padding: 0.3rem 0.35rem 0.3rem 0.7rem;
+    border-radius: var(--r-full);
+}
+
+.navbar-compact .user-info {
+    font-size: 13.5px;
+    font-weight: 500;
+    letter-spacing: -0.009em;
+    color: var(--text-2);
+}
+
+.navbar-compact .logout-btn {
+    padding: 0.3rem 0.65rem;
+    border-radius: var(--r-full);
+}
