@@ -7,33 +7,8 @@ import MemoryPanel from '../components/chat/MemoryPanel';
 import Icon from '../components/ui/Icon';
 import { hueClass } from '../utils/avatarHue';
 import { mergeEcho } from '../utils/mergeEcho';
+import { groupThread, formatTime } from '../utils/thread';
 import '../styles/ChannelPage.css';
-
-/* The backend sends naive timestamps; treat them as UTC. */
-const parseTs = (timestamp) => {
-    if (!timestamp) return null;
-    let str = typeof timestamp === 'string' ? timestamp : timestamp.toString();
-    if (typeof str === 'string' && !str.endsWith('Z') && !str.includes('+') && !str.includes('GMT')) {
-        str += 'Z';
-    }
-    const d = new Date(str);
-    return isNaN(d.getTime()) ? null : d;
-};
-
-const sameDay = (a, b) =>
-    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-
-const dayLabel = (d) => {
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
-    if (sameDay(d, today)) return 'Today';
-    if (sameDay(d, yesterday)) return 'Yesterday';
-    return d.toLocaleDateString([], { month: 'long', day: 'numeric' });
-};
-
-/* Messages from the same person inside this window read as one run. */
-const RUN_MS = 5 * 60 * 1000;
 
 
 const ChannelChat = ({
@@ -242,11 +217,6 @@ const ChannelChat = ({
         }
     };
 
-    const formatTime = (timestamp) => {
-        const d = parseTs(timestamp);
-        return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-    };
-
     const renderThread = () => {
         if (isLoading) {
             return (
@@ -278,33 +248,16 @@ const ChannelChat = ({
             );
         }
 
-        let lastDate = null;
-        let lastSender = null;
-
-        return messages.map((msg, index) => {
-            const date = parseTs(msg.timestamp);
+        return groupThread(messages, 'sender').map(({ msg, day, isLead }, index) => {
             const isOwn = msg.sender === currentUser;
-
-            const startsDay = !!date && (!lastDate || !sameDay(date, lastDate));
-            const isLead =
-                startsDay ||
-                msg.sender !== lastSender ||
-                !date ||
-                !lastDate ||
-                date - lastDate > RUN_MS;
-
-            const divider = startsDay ? (
-                <div className="ch-day">
-                    <span>{dayLabel(date)}</span>
-                </div>
-            ) : null;
-
-            lastDate = date || lastDate;
-            lastSender = msg.sender;
 
             return (
                 <React.Fragment key={msg.id || index}>
-                    {divider}
+                    {day && (
+                        <div className="ch-day">
+                            <span>{day}</span>
+                        </div>
+                    )}
                     <div
                         id={msg.id != null ? `msg-${msg.id}` : undefined}
                         className={`ch-msg ${isLead ? 'is-lead' : ''} ${isOwn ? 'is-own' : ''} ${msg.pending ? 'is-pending' : ''} ${msg.id === highlightedId ? 'is-found' : ''}`}

@@ -1375,3 +1375,93 @@
 }
 /* Sent, not yet confirmed by the server. */
 .ch-msg.is-pending { opacity: 0.55; }
+
+/* ═══ Thread behaviour ════════════════════════════════════════
+   The day a message was sent is the one piece of context that
+   scrolls away fastest, so the divider stays at the top of the
+   thread while that day's messages pass under it. */
+.ch-day {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    /* The label sits in a pill; the rules either side of it would
+       show the thread running underneath, so the strip is opaque. */
+    background: var(--ch-bg);
+    padding-top: 14px;
+}
+
+.ch-msg.is-lead:first-child,
+.ch-day+.ch-msg.is-lead {
+    margin-top: 6px;
+}
+
+.ch-thread {
+    /* Reaching the end of the thread should not start scrolling the
+       page behind it, and on iOS should not rubber-band the shell. */
+    overscroll-behavior: contain;
+    scroll-padding-bottom: 12px;
+}
+
+/* ═══ Touch ═══════════════════════════════════════════════════
+   Pointer-coarse, not narrow: the panel can be 420px wide on a
+   desktop with a mouse, where 28px controls and hover-revealed
+   timestamps are both fine. These rules are about the finger.
+   ═════════════════════════════════════════════════════════════ */
+@media (hover: none) {
+
+    /* Under 16px, iOS Safari zooms the whole page when the field
+       takes focus and never zooms back out. */
+    .ch-composer-field,
+    .ch-ask-field {
+        font-size: 16px;
+    }
+
+    /* There is no hover to reveal it, so the timestamp on a grouped
+       message is permanent — quiet, but readable. */
+    .ch-msg-tick {
+        opacity: 1;
+        color: var(--ch-fg-3);
+    }
+
+    /* Nothing you tap should be smaller than a fingertip. The visual
+       size is unchanged; the touchable box grows around it. */
+    .ch-send,
+    .ch-btn,
+    .ch-btn-icon,
+    .ch-back,
+    .ch-ask-close,
+    .ch-ask-go {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .ch-composer-form {
+        padding: 5px 5px 5px 14px;
+    }
+
+    /* Home-bar phones draw over the bottom of the viewport. */
+    .ch-composer {
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+
+    /* Hover tinting on a touch device only ever fires as a stuck
+       highlight on the last thing tapped. */
+    .ch-msg:hover {
+        background: transparent;
+    }
+}
+
+/* One hand, one column: a phone has the whole panel to itself, so
+   the reading measure can be wider than the three-up case allows. */
+@media (max-width: 560px) {
+
+    .ch-msg,
+    .ch-day {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .ch-msg-body {
+        font-size: 15px;
+    }
+}

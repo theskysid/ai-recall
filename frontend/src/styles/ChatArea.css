@@ -6,7 +6,7 @@
 
 .chat-container {
     display: flex;
-    height: calc(100vh - 64px);
+    height: calc(100dvh - 64px);
     background: var(--ink-900);
     color: var(--paper);
     position: relative;
