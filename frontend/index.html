@@ -6,7 +6,8 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="description" content="Recall — team chat that keeps the record. Channels, calls that transcribe themselves, decisions that stay dated, and a memory you can question." />
-    <meta name="theme-color" content="#0c0c0e" />
+    <meta name="theme-color" content="#f4f7f6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#141a20" media="(prefers-color-scheme: dark)" />
     <!-- Installed to the home screen, Recall launches chrome-free (fullscreen). -->
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -14,6 +15,25 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Recall" />
     <title>Recall — chat with a memory</title>
+    <!--
+      Resolve the theme before first paint. Running here rather than in React
+      is the whole point: a frame of the light sheet before a dark theme
+      loads is the flash every themed app is judged on. It also means the
+      stylesheet can be written against one explicit [data-theme] selector
+      instead of being duplicated under a prefers-color-scheme query.
+    -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('recall-theme');
+          var system = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          document.documentElement.dataset.theme = saved === 'dark' || saved === 'light' ? saved : system;
+        } catch (e) {
+          /* Private mode can throw on localStorage; the light sheet is the default. */
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
   </head>
   <body>
     <!--

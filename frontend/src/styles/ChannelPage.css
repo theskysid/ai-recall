@@ -28,14 +28,14 @@
        desk it is lying on. Without that one step of separation the whole
        workspace reads as a single flat field with nowhere for the eye to
        land, which is most of what makes an interface feel dated. */
-    --ch-bg: #ffffff;
+    --ch-bg: var(--surface);
     --ch-raised: var(--bg);
     --ch-raised-2: var(--nb-sheet-2);
     --ch-raised-3: var(--nb-sheet-3);
 
-    --ch-line: rgba(20, 32, 43, 0.09);
+    --ch-line: rgb(var(--veil) / 0.09);
     --ch-line-2: var(--nb-rule);
-    --ch-line-3: rgba(20, 32, 43, 0.2);
+    --ch-line-3: rgb(var(--veil) / 0.2);
 
     /* ── Text: three steps, all ≥4.5:1 on --ch-bg ─── */
     --ch-fg: var(--text);
@@ -44,7 +44,8 @@
 
     /* ── You — the binding ────────────────────────── */
     --ch-you: var(--accent);
-    --ch-you-dim: rgba(109, 31, 40, 0.09);
+    --ch-you-text: var(--accent-text);
+    --ch-you-dim: var(--accent-dim);
 
     /* ── The record — the countersign ─────────────── */
     --ch-rec: var(--record);
@@ -102,7 +103,7 @@
     border-bottom: none;
     border-radius: var(--ch-r-3) var(--ch-r-3) 0 0;
     overflow: hidden;
-    box-shadow: 0 24px 56px -20px rgba(20, 32, 43, 0.22);
+    box-shadow: 0 24px 56px -20px rgb(var(--shade) / 0.22);
 }
 
 /* ═══ Header ══════════════════════════════════════════════════ */
@@ -426,7 +427,7 @@
     border: none;
     border-radius: 999px;
     background: var(--ch-you);
-    color: #fff;
+    color: var(--on-accent);
     font-size: 13.5px;
     font-weight: 600;
     letter-spacing: -0.006em;
@@ -450,7 +451,7 @@
     border: 1px solid var(--ch-line-2);
     border-radius: var(--ch-r-3);
     background: var(--ch-bg);
-    box-shadow: 0 22px 52px -18px rgba(20, 32, 43, 0.32);
+    box-shadow: 0 22px 52px -18px rgb(var(--shade) / 0.32);
     animation: ch-answer-in 0.26s var(--ch-ease) both;
 }
 
@@ -777,7 +778,7 @@
 }
 
 .ch-rail-title svg {
-    color: var(--ch-you);
+    color: var(--ch-you-text);
 }
 
 .ch-rail-x {
@@ -844,7 +845,7 @@
 }
 
 .ch-rail-tab.is-on svg {
-    color: var(--ch-you);
+    color: var(--ch-you-text);
 }
 
 .ch-rail-tab.is-on::after {
@@ -869,7 +870,7 @@
 
 .ch-rail-tab.is-on .ch-rail-n {
     background: var(--ch-you-dim);
-    color: var(--ch-you);
+    color: var(--ch-you-text);
 }
 
 .ch-rail-refresh {
@@ -927,13 +928,13 @@
     border: 1px solid var(--ch-line-2);
     border-radius: var(--ch-r-3);
     background: var(--ch-bg);
-    box-shadow: 0 1px 2px rgba(20, 32, 43, 0.04);
+    box-shadow: 0 1px 2px rgb(var(--shade) / 0.04);
     transition: border-color 0.14s, box-shadow 0.14s;
 }
 
 .ch-card:hover {
     border-color: var(--ch-line-3);
-    box-shadow: 0 4px 12px -6px rgba(20, 32, 43, 0.18);
+    box-shadow: 0 4px 12px -6px rgb(var(--shade) / 0.18);
 }
 
 /* Superseded is still part of the record — it reads back, quietly,
@@ -1044,7 +1045,7 @@
     padding: 0;
     font-size: 11.5px;
     font-weight: 500;
-    color: var(--ch-you);
+    color: var(--ch-you-text);
     transition: opacity 0.13s;
 }
 
@@ -1157,7 +1158,7 @@
 /* Barely there — enough to anchor the hover timestamp, not
    enough to read as a row. */
 .ch-msg:hover {
-    background: rgba(20, 32, 43, 0.022);
+    background: rgb(var(--veil) / 0.022);
 }
 
 /* Arrived here from "View message" in the memory panel. Held for a moment,
@@ -1233,7 +1234,7 @@
 }
 
 .ch-msg.is-own .ch-msg-who {
-    color: var(--ch-you);
+    color: var(--ch-you-text);
 }
 
 .ch-msg-when {
@@ -1363,7 +1364,7 @@
 
 .ch-send:not(:disabled) {
     background: var(--ch-you);
-    color: #ffffff;
+    color: var(--on-accent);
 }
 
 .ch-send:not(:disabled):hover {
@@ -1632,7 +1633,7 @@
         z-index: 8;
         flex-basis: min(374px, 100%);
         width: min(374px, 100%);
-        box-shadow: -18px 0 48px -22px rgba(20, 32, 43, 0.4);
+        box-shadow: -18px 0 48px -22px rgb(var(--shade) / 0.4);
         animation: ch-rail-in 0.22s var(--ch-ease) both;
     }
 

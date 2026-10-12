@@ -30,7 +30,7 @@
             var(--nb-bind) 42%,
             var(--nb-bind) 66%,
             var(--nb-bind-2) 100%);
-    box-shadow: 7px 0 20px -6px rgba(20, 32, 43, 0.42);
+    box-shadow: 7px 0 20px -6px rgb(var(--shade) / 0.42);
     pointer-events: none;
 }
 
@@ -336,12 +336,12 @@
 .auth-submit-btn:hover:not(:disabled) {
     background: var(--nb-stamp-2);
     border-color: var(--nb-stamp-2);
-    box-shadow: 2px 3px 0 rgba(20, 32, 43, 0.16);
+    box-shadow: 2px 3px 0 rgb(var(--shade) / 0.16);
 }
 
 .auth-submit-btn:active:not(:disabled) {
     transform: translateY(1px);
-    box-shadow: 1px 1px 0 rgba(20, 32, 43, 0.16);
+    box-shadow: 1px 1px 0 rgb(var(--shade) / 0.16);
 }
 
 .auth-submit-btn:focus-visible {
@@ -475,7 +475,7 @@
                 var(--nb-bind) 42%,
                 var(--nb-bind) 66%,
                 var(--nb-bind-2) 100%);
-        box-shadow: 0 7px 18px -6px rgba(20, 32, 43, 0.42);
+        box-shadow: 0 7px 18px -6px rgb(var(--shade) / 0.42);
     }
 
     .fl-bind::after {

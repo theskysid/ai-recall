@@ -41,7 +41,7 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(20, 32, 43, 0.38);
+    background: rgb(var(--shade) / 0.5);
     z-index: 45;
     animation: fadeIn var(--t-2) var(--ease);
 }
@@ -167,13 +167,13 @@
 }
 
 .sidebar-refresh-icon:hover {
-    background: rgba(20, 32, 43, 0.045);
+    background: rgb(var(--veil) / 0.045);
     color: var(--paper);
 }
 
 .sidebar-refresh-icon.spin {
     animation: spin 0.7s linear infinite;
-    color: var(--amber);
+    color: var(--accent-text);
 }
 
 /* ── Tabs ──────────────────────────────────────── */
@@ -227,7 +227,7 @@
 }
 
 .sidebar-tab-btn.active svg {
-    color: var(--amber);
+    color: var(--accent-text);
 }
 
 .sidebar-tab-btn.active::after {
@@ -306,11 +306,11 @@
 
 .friend-sidebar-item:hover,
 .user-item:hover:not(.current-user) {
-    background: rgba(20, 32, 43, 0.045);
+    background: rgb(var(--veil) / 0.045);
 }
 
 .friend-sidebar-item.menu-active {
-    background: rgba(20, 32, 43, 0.045);
+    background: rgb(var(--veil) / 0.045);
     border-color: var(--line-strong);
 }
 
@@ -400,7 +400,7 @@
     font-family: var(--font-mono);
     font-size: 0.6rem;
     letter-spacing: -0.005em;
-    color: var(--amber);
+    color: var(--accent-text);
     margin-left: 0.35rem;
 }
 
@@ -453,7 +453,7 @@
 }
 
 .friend-menu-trigger-btn:hover {
-    background: rgba(20, 32, 43, 0.065);
+    background: rgb(var(--veil) / 0.065);
     color: var(--paper);
 }
 
@@ -514,7 +514,7 @@
 }
 
 .close-menu-btn:hover {
-    background: rgba(20, 32, 43, 0.065);
+    background: rgb(var(--veil) / 0.065);
     color: var(--paper);
 }
 
@@ -598,7 +598,7 @@
 }
 
 .workspace-empty-btn:hover {
-    border-color: var(--amber);
+    border-color: var(--accent-text);
     background: var(--amber);
     color: var(--ink-950);
 }
@@ -673,7 +673,7 @@
 }
 
 .mobile-back-button:active {
-    background: rgba(20, 32, 43, 0.065);
+    background: rgb(var(--veil) / 0.065);
 }
 
 /* ── Top bar ───────────────────────────────────── */
@@ -728,7 +728,7 @@
 
 .tg-topbar-menu-btn:active,
 .tg-topbar-compose-btn:active {
-    background: rgba(20, 32, 43, 0.065);
+    background: rgb(var(--veil) / 0.065);
 }
 
 .tg-hamburger-line {
@@ -746,7 +746,7 @@
 
 .tg-topbar-compose-btn {
     border-color: var(--amber-line);
-    color: var(--amber);
+    color: var(--accent-text);
 }
 
 .tg-compose-badge {
@@ -777,7 +777,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(244, 247, 246, 0.95);
+    background: var(--chrome-solid);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--line);
@@ -818,7 +818,7 @@
 }
 
 .tg-search-bar:focus-within {
-    border-color: var(--amber);
+    border-color: var(--accent-text);
     background: var(--ink-840);
 }
 
@@ -893,8 +893,8 @@
 
 .tg-section-add:active {
     background: var(--ink-840);
-    color: var(--amber);
-    border-color: var(--amber);
+    color: var(--accent-text);
+    border-color: var(--accent-text);
 }
 
 .tg-section-empty {
@@ -921,7 +921,7 @@
 }
 
 .tg-channel-row:active {
-    background: rgba(20, 32, 43, 0.045);
+    background: rgb(var(--veil) / 0.045);
 }
 
 /* Active marker matches the desktop channel list (Channels.css .channel-item):
@@ -951,7 +951,7 @@
     border: 1px solid var(--line-strong);
     border-radius: var(--r-2);
     background: var(--ink-840);
-    color: var(--amber);
+    color: var(--accent-text);
     font-family: var(--font-display);
     font-size: 1.4rem;
     line-height: 1;
@@ -1000,7 +1000,7 @@
 
 .tg-chat-row:active,
 .tg-chat-row.tg-menu-open {
-    background: rgba(20, 32, 43, 0.045);
+    background: rgb(var(--veil) / 0.045);
 }
 
 .tg-avatar-wrapper {
@@ -1135,7 +1135,7 @@
 }
 
 .tg-ctx-item:active {
-    background: rgba(20, 32, 43, 0.065);
+    background: rgb(var(--veil) / 0.065);
 }
 
 .tg-ctx-item.tg-ctx-danger {
@@ -1191,7 +1191,7 @@
     position: fixed;
     inset: 0;
     z-index: 1000;
-    background: rgba(20, 32, 43, 0.4);
+    background: rgb(var(--shade) / 0.52);
     animation: fadeIn var(--t-2) var(--ease);
 }
 
@@ -1234,7 +1234,7 @@
     border: 1px solid var(--line-strong);
     border-radius: var(--r-2);
     background: var(--ink-840);
-    color: var(--amber);
+    color: var(--accent-text);
     font-family: var(--font-display);
     font-size: 1.4rem;
     line-height: 1;
@@ -1289,7 +1289,7 @@
 
 .tg-drawer-item:hover,
 .tg-drawer-item:active {
-    background: rgba(20, 32, 43, 0.045);
+    background: rgb(var(--veil) / 0.045);
 }
 
 .tg-drawer-item-icon {
@@ -1365,7 +1365,7 @@
 .sidebar-foot svg {
     flex-shrink: 0;
     margin-top: 1px;
-    color: var(--accent);
+    color: var(--accent-text);
 }
 
 .sidebar-foot strong {

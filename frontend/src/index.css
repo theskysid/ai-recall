@@ -28,6 +28,23 @@
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
+  /* ── The two inks everything tints with ──────
+     --veil tints a surface (hover, hairline, scrollbar): it is the ink on
+     the light sheet, and the paper on the dark one, so a wash always moves
+     away from the ground it sits on. --shade casts: shadows and scrims push
+     a thing back, which is darkening in either theme. */
+  --veil: 20 32 43;
+  --shade: 20 32 43;
+
+  /* The brightest surface in the room — the sheet the conversation is
+     written on. Everything else is the desk it lies on. */
+  --surface: #ffffff;
+
+  /* Chrome that sits over scrolling content: translucent while it is
+     glassy, near-opaque where it must stay legible. */
+  --chrome-veil: rgba(244, 247, 246, 0.84);
+  --chrome-solid: rgba(244, 247, 246, 0.95);
+
   /* ── Ground ───────────────────────────────────
      The workspace stands on the same stock the notebook is
      printed on — cold engineering sheet, never white. The six
@@ -40,7 +57,7 @@
   --raised-2: var(--nb-sheet-3);
   --raised-3: #cedad6;
 
-  --rule: rgba(20, 32, 43, 0.10);
+  --rule: rgb(var(--veil) / 0.10);
   --rule-strong: var(--nb-rule);
   --rule-loud: var(--nb-rule-strong);
 
@@ -64,6 +81,11 @@
   --accent-dim: rgba(109, 31, 40, 0.08);
   --accent-line: rgba(109, 31, 40, 0.26);
   --accent-wash: #f0e2df;
+  /* The accent as a fill wants depth; the accent as text or a border wants
+     to clear 4.5:1 against the ground. On the light sheet one colour does
+     both, so these are the same value here and diverge only in the dark. */
+  --accent-text: var(--accent);
+  --on-accent: #ffffff;
 
   /* ── The record — the countersign ───────────── */
   --record: var(--nb-seal);
@@ -132,9 +154,9 @@
   --r-full: 999px;
 
   /* ── Depth — on white, shadow is the only lift ─ */
-  --shadow-1: 0 1px 2px rgba(20, 32, 43, 0.06);
-  --shadow-2: 0 8px 24px -10px rgba(20, 32, 43, 0.16);
-  --shadow-3: 0 24px 56px -20px rgba(20, 32, 43, 0.22);
+  --shadow-1: 0 1px 2px rgb(var(--shade) / 0.06);
+  --shadow-2: 0 8px 24px -10px rgb(var(--shade) / 0.16);
+  --shadow-3: 0 24px 56px -20px rgb(var(--shade) / 0.22);
 
   /* ── Motion ─────────────────────────────────── */
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -148,7 +170,7 @@
   --bg-root: var(--bg);
   --bg-surface: var(--chrome);
   --bg-surface-glass: rgba(244, 247, 246, 0.86);
-  --bg-surface-glass-light: rgba(20, 32, 43, 0.035);
+  --bg-surface-glass-light: rgb(var(--veil) / 0.035);
   --bg-card: var(--ink-840);
   --bg-elevated: var(--ink-840);
   --border-glass: var(--line);
@@ -190,7 +212,7 @@
   --transition-smooth: var(--t-3) var(--ease);
   --gradient-primary: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%);
   --gradient-accent: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%);
-  --gradient-surface: linear-gradient(180deg, rgba(20, 32, 43, 0.025), transparent);
+  --gradient-surface: linear-gradient(180deg, rgb(var(--veil) / 0.025), transparent);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -245,8 +267,8 @@
   /* Pre-printed quadrille, sea green, two weights of rule */
   --nb-grid: rgba(24, 92, 78, 0.05);
   --nb-grid-major: rgba(24, 92, 78, 0.10);
-  --nb-rule: rgba(20, 32, 43, 0.13);
-  --nb-rule-strong: rgba(20, 32, 43, 0.24);
+  --nb-rule: rgb(var(--veil) / 0.13);
+  --nb-rule-strong: rgb(var(--veil) / 0.24);
 
   /* ── Iron-gall ink ─────────────────────────────────────────── */
   --nb-ink: #14202b;
@@ -405,20 +427,20 @@ h4 {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(20, 32, 43, 0.17);
+  background: rgb(var(--veil) / 0.17);
   border: 3px solid transparent;
   background-clip: content-box;
   border-radius: var(--r-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(20, 32, 43, 0.3);
+  background: rgb(var(--veil) / 0.3);
   background-clip: content-box;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(20, 32, 43, 0.2) transparent;
+  scrollbar-color: rgb(var(--veil) / 0.2) transparent;
 }
 
 ::selection {
@@ -543,4 +565,92 @@ h4 {
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+}
+/* ═══════════════════════════════════════════════════════════════
+   The same book, under a lamp
+
+   Not an inversion: a dark theme that simply flips the ink and the
+   sheet turns the oxblood binding into something that cannot be
+   read and the countersign into a smear. The roles are what carry
+   over — accent is still the binding, record is still the
+   countersign, alarm is still the correction stamp — and each one
+   is re-picked to hold its meaning and its contrast against a dark
+   ground rather than to be the same hex rotated.
+
+   One selector, because the theme is resolved to an explicit
+   `data-theme` by the bootstrap in index.html before first paint:
+   system preference and a stored choice both land here, so the
+   palette is written once instead of twice.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* `.nb` declares the notebook palette on the element itself, so any subtree
+   wearing it would keep the light values no matter what :root says —
+   inheritance takes the nearest declaring ancestor, not the most specific
+   selector. The dark values have to be offered to that class too. */
+:root[data-theme="dark"],
+:root[data-theme="dark"] .nb {
+  /* A wash now lightens; a shadow still darkens, and harder, because a
+     dark ground gives a soft shadow nothing to fall on. */
+  --veil: 232 237 241;
+  --shade: 0 0 0;
+
+  --surface: #1b2228;
+  --chrome-veil: rgba(16, 21, 26, 0.84);
+  --chrome-solid: rgba(16, 21, 26, 0.95);
+
+  /* ── The sheet ─── slate, with the sheet's own blue in it ──── */
+  --nb-sheet: #141a20;
+  --nb-sheet-2: #1a2128;
+  --nb-sheet-3: #232c34;
+
+  --nb-grid: rgba(120, 200, 180, 0.045);
+  --nb-grid-major: rgba(120, 200, 180, 0.085);
+
+  /* ── Ink, now the paper ─────────────────────────────────────
+     Not pure white: a sheet read under a lamp is never #fff, and
+     full-white text on near-black vibrates. Measured on --nb-sheet:
+     14.9 / 8.6 / 5.7 : 1. */
+  --nb-ink: #e8edf1;
+  --nb-ink-2: #aab8c2;
+  --nb-ink-3: #8595a1;
+
+  /* ── The binding ────────────────────────────────────────────
+     Deep enough to carry white at 5:1 when it is a fill. */
+  --nb-bind: #8e2b35;
+  --nb-bind-2: #a03540;
+  --nb-bind-ink: #f6dfe1;
+
+  /* ── Correction stamp ──────────────────────────────────────── */
+  --nb-stamp: #ef6a52;
+  --nb-stamp-2: #f6836d;
+  --nb-stamp-dim: rgba(239, 106, 82, 0.14);
+  --nb-stamp-line: rgba(239, 106, 82, 0.36);
+
+  /* ── Countersigned ─────────────────────────────────────────── */
+  --nb-seal: #4fbb97;
+  --nb-seal-dim: rgba(79, 187, 151, 0.13);
+  --nb-seal-line: rgba(79, 187, 151, 0.34);
+
+  /* ── Derived: the steps index.css states outright ───────────
+     The chrome is darker than the sheet here, where in the light
+     theme it is lighter — in both cases it is the step away from
+     the surface being read. */
+  --chrome: #10151a;
+  --raised-3: #2d3741;
+  --text-3: #94a3ae;
+  --text-4: #7f8e9a;
+
+  /* The binding at reading contrast, for text, icons and borders. */
+  --accent-text: #e0737e;
+  --on-accent: #ffffff;
+  --accent-dim: rgba(224, 115, 126, 0.13);
+  --accent-line: rgba(224, 115, 126, 0.32);
+  --accent-wash: #3a2229;
+
+  --record-2: #76d3b4;
+
+  --bg-surface-glass: rgba(16, 21, 26, 0.86);
+  --bg-surface-glass-light: rgb(var(--veil) / 0.05);
+
+  color-scheme: dark;
 }

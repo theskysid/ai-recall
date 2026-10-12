@@ -11,7 +11,7 @@
     align-items: center;
     justify-content: center;
     padding: 1.5rem;
-    background: rgba(20, 32, 43, 0.62);
+    background: rgb(var(--shade) / 0.62);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     animation: fadeIn var(--t-2) var(--ease);
@@ -78,13 +78,13 @@
 }
 
 .ffm-refresh-btn:hover {
-    background: rgba(20, 32, 43, 0.045);
+    background: rgb(var(--veil) / 0.045);
     color: var(--paper);
 }
 
 .ffm-refresh-btn.spin {
     animation: spin 0.7s linear infinite;
-    color: var(--amber);
+    color: var(--accent-text);
 }
 
 .ffm-close-btn:hover {
@@ -145,7 +145,7 @@
 }
 
 .ffm-tab.active svg {
-    color: var(--amber);
+    color: var(--accent-text);
 }
 
 .ffm-tab.active::after {
@@ -214,7 +214,7 @@
 }
 
 .ffm-search-wrap:focus-within {
-    border-color: var(--amber);
+    border-color: var(--accent-text);
     box-shadow: 0 0 0 3px var(--amber-dim);
 }
 
@@ -274,7 +274,7 @@
 }
 
 .ffm-person-row:hover {
-    background: rgba(20, 32, 43, 0.028);
+    background: rgb(var(--veil) / 0.028);
 }
 
 .ffm-person-avatar {
@@ -287,7 +287,7 @@
     border: 1px solid var(--line-strong);
     border-radius: var(--r-2);
     background: var(--ink-840);
-    color: var(--amber);
+    color: var(--accent-text);
     font-family: var(--font-display);
     font-size: 1.25rem;
     line-height: 1;
@@ -344,7 +344,7 @@
 }
 
 .ffm-btn-add:hover {
-    border-color: var(--amber);
+    border-color: var(--accent-text);
     background: var(--amber);
     color: var(--ink-950);
 }
@@ -414,7 +414,7 @@
 }
 
 .ffm-badge-pending {
-    color: var(--amber);
+    color: var(--accent-text);
     background: var(--amber-dim);
     border-color: var(--amber-line);
 }

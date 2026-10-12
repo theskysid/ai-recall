@@ -40,7 +40,7 @@
 .channels-add-btn:hover {
     border-color: var(--amber-line);
     background: var(--amber-dim);
-    color: var(--amber);
+    color: var(--accent-text);
 }
 
 .channels-list {
@@ -80,7 +80,7 @@
 }
 
 .channel-item:hover {
-    background: rgba(20, 32, 43, 0.045);
+    background: rgb(var(--veil) / 0.045);
     color: var(--paper);
 }
 
@@ -101,7 +101,7 @@
 }
 
 .channel-item.active .channel-item-hash {
-    color: var(--amber);
+    color: var(--accent-text);
 }
 
 .channel-item-name {
@@ -176,7 +176,7 @@
 
 .channel-input:focus,
 .channel-textarea:focus {
-    border-color: var(--amber);
+    border-color: var(--accent-text);
     background: var(--ink-840);
     box-shadow: 0 0 0 3px var(--amber-dim);
 }
@@ -228,7 +228,7 @@
 }
 
 .channel-call-btn.active {
-    border-color: var(--amber);
+    border-color: var(--accent-text);
     background: var(--amber);
     color: var(--ink-950);
 }

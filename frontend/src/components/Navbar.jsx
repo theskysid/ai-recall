@@ -1,6 +1,8 @@
 import { useState } from "react";
 import {Link, useNavigate, useLocation} from "react-router-dom";
 import {authService} from "../services/authService.js";
+import Icon from './ui/Icon';
+import useTheme from '../hooks/useTheme';
 import '../styles/Navbar.css';
 
 const Navbar = () => {
@@ -9,6 +11,7 @@ const Navbar = () => {
     const isAuthenticated = authService.isAuthenticated();
     const currentUser = authService.getCurrentUser();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const { theme, toggle } = useTheme();
 
     const isChatPage = location.pathname === '/chatarea';
     // One book, one running head: every surface wears the notebook masthead.
@@ -63,6 +66,15 @@ const Navbar = () => {
                             >
                                 Profile
                             </Link>
+                            <button
+                                type="button"
+                                className="theme-toggle"
+                                onClick={toggle}
+                                title={theme === 'dark' ? 'Switch to the light sheet' : 'Switch to the dark sheet'}
+                                aria-label={theme === 'dark' ? 'Switch to the light sheet' : 'Switch to the dark sheet'}
+                            >
+                                <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={15} />
+                            </button>
                             <div className="navbar-user">
                                 <span className="user-status-dot"></span>
                                 <span className="user-info">
