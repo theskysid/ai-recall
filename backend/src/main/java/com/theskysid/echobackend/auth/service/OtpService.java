@@ -5,6 +5,7 @@ import com.theskysid.echobackend.auth.otp.entity.OtpVerification.IdentifierType;
 import com.theskysid.echobackend.auth.otp.repository.OtpVerificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -21,6 +22,7 @@ public class OtpService {
 
     private static final int EXPIRY_MINUTES = 5;
     private static final int MAX_REQUESTS = 3;
+    private static final int MAX_FAILED_ATTEMPTS = 5;
     private static final int RATE_LIMIT_WINDOW_MINUTES = 10;
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
@@ -28,6 +30,7 @@ public class OtpService {
     @Autowired
     private OtpVerificationRepository otpRepository;
 
+    @Transactional
     public String createForEmail(String email) {
         OtpVerification record = otpRepository
                 .findByIdentifierAndType(email, TYPE)
@@ -44,24 +47,31 @@ public class OtpService {
 
         String otp = String.valueOf(100000 + SECURE_RANDOM.nextInt(900000));
         record.setOtpCode(otp);
+        record.setFailedAttempts(0);
         record.setExpiry(LocalDateTime.now().plusMinutes(EXPIRY_MINUTES));
         record.setRequestCount(record.getRequestCount() + 1);
         otpRepository.save(record);
         return otp;
     }
 
+    // Failed guesses must commit their counter even though verification throws.
+    @Transactional(noRollbackFor = OtpVerificationException.class)
     public void verifyOtp(String email, String otpCode) {
         OtpVerification record = otpRepository
                 .findByIdentifierAndType(email, TYPE)
-                .orElseThrow(() -> new RuntimeException("No OTP found for " + email));
+                .orElseThrow(() -> new OtpVerificationException("No OTP found for " + email));
 
         if (LocalDateTime.now().isAfter(record.getExpiry())) {
-            otpRepository.delete(record);
-            throw new RuntimeException("OTP expired");
+            throw new OtpVerificationException("OTP expired");
         }
 
+        if (record.getFailedAttempts() >= MAX_FAILED_ATTEMPTS) {
+            throw new OtpVerificationException("Too many incorrect attempts. Request a new OTP.");
+        }
         if (!record.getOtpCode().equals(otpCode)) {
-            throw new RuntimeException("Invalid OTP");
+            record.setFailedAttempts(record.getFailedAttempts() + 1);
+            otpRepository.save(record);
+            throw new OtpVerificationException("Invalid OTP");
         }
 
         otpRepository.delete(record);
@@ -83,5 +93,11 @@ public class OtpService {
 
     static int expiryMinutes() {
         return EXPIRY_MINUTES;
+    }
+
+    public static class OtpVerificationException extends RuntimeException {
+        public OtpVerificationException(String message) {
+            super(message);
+        }
     }
 }

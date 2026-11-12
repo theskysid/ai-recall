@@ -91,8 +91,8 @@ public class ConversationController {
                 .timestamp(LocalDateTime.now())
                 .build();
 
-        messagingTemplate.convertAndSend("/user/" + otherUser.getUsername() + "/queue/dm", notification);
-        messagingTemplate.convertAndSend("/user/" + currentUser.getUsername() + "/queue/dm", notification);
+        messagingTemplate.convertAndSendToUser(otherUser.getUsername(), "/queue/dm", notification);
+        messagingTemplate.convertAndSendToUser(currentUser.getUsername(), "/queue/dm", notification);
 
         return toConversationDTO(updated, currentUser);
     }

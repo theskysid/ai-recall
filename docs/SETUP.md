@@ -47,3 +47,21 @@ cd frontend
 npm install
 npm run dev             # Starts the Vite dev server
 ```
+
+## Regression Tests
+
+Run backend unit and WebSocket tests without external services:
+
+```bash
+cd backend
+./mvnw -Dtest='*Test,!EchoBackendApplicationTests' test
+```
+
+The PostgreSQL regression tests verify concurrent OTP guesses and deleting channels
+with history. Use a disposable local database named `recall_regression`; these tests
+recreate their tables. The separate test context does not need pgvector or API keys.
+
+```bash
+RECALL_TEST_DB_URL='jdbc:postgresql://127.0.0.1:5432/recall_regression?user=postgres' \
+  ./mvnw -Dtest=PersistenceRegressionIT test
+```

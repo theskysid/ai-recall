@@ -44,8 +44,11 @@
 - REST under `/api/**` (JWT) and `/auth/**`. RAG: `GET /api/channels/{id}/ask?q=`
   → `{ answer, sourceIds }` (member-gated).
 - WebSocket at `/ws` (SockJS/STOMP). Channels: send `/app/channel/{id}/send`,
-  subscribe `/topic/channel/{id}`. DMs: `/app/dm.sendMessage` → `/user/{u}/queue/dm`.
-  Presence only on `/topic/public`. Config in `config/WebSocketConfig`.
+  subscribe `/topic/channel/{id}`. DMs: `/app/dm.sendMessage` → `/user/queue/dm`.
+  STOMP CONNECT authenticates by JWT; the inbound interceptor gates destinations
+  and membership, and delivery rechecks membership after leave. Private queues
+  resolve through the authenticated principal. Presence only on `/topic/public`.
+  Config in `config/WebSocketConfig`.
 - Async ingestion (`@EnableAsync`): `ChannelService.postMessage` and
   `TranscriptionController` (after the transcript row is saved)
   fire `MemoryIngestionService` `@Async` methods → embed + LLM decision/supersession

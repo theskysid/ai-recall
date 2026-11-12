@@ -94,6 +94,11 @@ const persistUser = (data) => {
 
 export const authService = {
 
+    getSocketAuthHeaders: () => {
+        const user = authService.getCurrentUser();
+        return user?.token ? { Authorization: `Bearer ${user.token}` } : {};
+    },
+
     login: async (username, password) => {
         try{
 

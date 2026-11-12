@@ -3,12 +3,17 @@ package com.theskysid.echobackend.channel.repository;
 import com.theskysid.echobackend.channel.entity.Channel;
 import com.theskysid.echobackend.channel.entity.ChannelMessage;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
 public interface ChannelMessageRepository extends JpaRepository<ChannelMessage, Long> {
+
+    @Modifying
+    @Query("DELETE FROM ChannelMessage m WHERE m.channel = :channel")
+    void deleteAllByChannel(@Param("channel") Channel channel);
 
     /**
      * Find all persisted CHAT messages for a channel, oldest first.

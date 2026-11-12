@@ -7,7 +7,7 @@
 | Local Auth | Working | Signup, login, logout, OTP flow implemented. |
 | Google OAuth | Working | Endpoint `/auth/google/login` is implemented. |
 | Channels | Working | Create, join, leave, message fetching are wired up. |
-| Direct Messages | Working | Handled separately from Channels, via `Conversations` and STOMP `/user/{username}/queue/dm`. |
+| Direct Messages | Working | Handled separately from Channels, via `Conversations` and STOMP `/user/queue/dm`. |
 | Presence | Working | Handled via `/app/chat.addUser` broadcasting to `/topic/public`. |
 | LiveKit Calling | Working | Token generation (`/call-token`) is functional. |
 | Call Transcription | **In Progress** | Wireup exists but **text extraction quality issue** is known. |

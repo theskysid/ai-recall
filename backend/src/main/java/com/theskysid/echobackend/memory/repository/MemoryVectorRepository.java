@@ -12,6 +12,10 @@ import java.util.UUID;
 
 public interface MemoryVectorRepository extends JpaRepository<MemoryVector, UUID> {
 
+    @Modifying
+    @Query("DELETE FROM MemoryVector m WHERE m.channelId = :channelId")
+    void deleteAllByChannelId(@Param("channelId") Long channelId);
+
     /**
      * Retrieve the top 5 most similar *active* vectors for a channel — superseded
      * decisions are excluded by the WHERE clause and can never reach the prompt.

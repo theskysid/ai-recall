@@ -37,7 +37,7 @@ public class DirectMessageWsController {
     @Transactional
     public void sendDirectMessage(@Payload DirectMessageRequestDTO request, SimpMessageHeaderAccessor headerAccessor) {
         try {
-            String senderUsername = resolveSenderUsername(request, headerAccessor);
+            String senderUsername = resolveSenderUsername(headerAccessor);
             if (senderUsername == null || senderUsername.isBlank()) {
                 logger.warn("DM send failed: sender username could not be resolved");
                 return;
@@ -63,11 +63,8 @@ public class DirectMessageWsController {
 
             User recipient = conversation.getOtherParticipant(sender);
 
-            String recipientDestination = "/user/" + recipient.getUsername() + "/queue/dm";
-            messagingTemplate.convertAndSend(recipientDestination, dto);
-
-            String senderDestination = "/user/" + sender.getUsername() + "/queue/dm";
-            messagingTemplate.convertAndSend(senderDestination, dto);
+            messagingTemplate.convertAndSendToUser(recipient.getUsername(), "/queue/dm", dto);
+            messagingTemplate.convertAndSendToUser(sender.getUsername(), "/queue/dm", dto);
 
             logger.info("Direct message sent from {} to {} in conversation {}", sender.getUsername(), recipient.getUsername(), conversation.getId());
         } catch (Exception e) {
@@ -79,7 +76,7 @@ public class DirectMessageWsController {
     @Transactional
     public void handleTyping(@Payload DirectMessageRequestDTO request, SimpMessageHeaderAccessor headerAccessor) {
         try {
-            String senderUsername = resolveSenderUsername(request, headerAccessor);
+            String senderUsername = resolveSenderUsername(headerAccessor);
             if (senderUsername == null || senderUsername.isBlank()) {
                 return;
             }
@@ -109,24 +106,16 @@ public class DirectMessageWsController {
                     .timestamp(LocalDateTime.now())
                     .build();
 
-            String recipientDestination = "/user/" + recipient.getUsername() + "/queue/dm";
-            messagingTemplate.convertAndSend(recipientDestination, typingDto);
+            messagingTemplate.convertAndSendToUser(recipient.getUsername(), "/queue/dm", typingDto);
         } catch (Exception e) {
             logger.error("Error handling DM typing indicator: {}", e.getMessage());
         }
     }
 
-    private String resolveSenderUsername(DirectMessageRequestDTO request, SimpMessageHeaderAccessor headerAccessor) {
+    private String resolveSenderUsername(SimpMessageHeaderAccessor headerAccessor) {
         if (headerAccessor.getUser() != null && headerAccessor.getUser().getName() != null) {
             return headerAccessor.getUser().getName();
         }
-        if (headerAccessor.getSessionAttributes() != null && headerAccessor.getSessionAttributes().get("username") != null) {
-            return (String) headerAccessor.getSessionAttributes().get("username");
-        }
-        // No fallback to request.getSenderUsername(): that field is client-controlled,
-        // so honouring it let any connected client send a DM as anyone else. Both
-        // sources above are server-side — the handshake principal, or the username
-        // this session registered through /chat.addUser.
         return null;
     }
 

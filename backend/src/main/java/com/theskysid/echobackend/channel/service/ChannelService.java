@@ -7,6 +7,8 @@ import com.theskysid.echobackend.channel.repository.ChannelMembershipRepository;
 import com.theskysid.echobackend.channel.repository.ChannelMessageRepository;
 import com.theskysid.echobackend.channel.repository.ChannelRepository;
 import com.theskysid.echobackend.memory.service.MemoryIngestionService;
+import com.theskysid.echobackend.memory.repository.MemoryVectorRepository;
+import com.theskysid.echobackend.call.repository.CallTranscriptRepository;
 import com.theskysid.echobackend.user.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,6 +33,12 @@ public class ChannelService {
 
     @Autowired
     private MemoryIngestionService memoryIngestionService;
+
+    @Autowired
+    private CallTranscriptRepository callTranscriptRepository;
+
+    @Autowired
+    private MemoryVectorRepository memoryVectorRepository;
 
     // Unambiguous alphabet (no 0/O/1/I) for readable, shareable invite codes.
     private static final String INVITE_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -102,7 +110,7 @@ public class ChannelService {
      */
     @Transactional
     public void leaveChannel(User user, Long channelId) {
-        Channel channel = channelRepository.findById(channelId)
+        Channel channel = channelRepository.findByIdForUpdate(channelId)
                 .orElseThrow(() -> new RuntimeException("Channel not found"));
 
         ChannelMembership membership = channelMembershipRepository.findByChannelAndUser(channel, user)
@@ -119,6 +127,9 @@ public class ChannelService {
         // Owner left — find the longest-standing remaining member to inherit the channel.
         List<ChannelMembership> remaining = channelMembershipRepository.findByChannelOrderByJoinedAtAsc(channel);
         if (remaining.isEmpty()) {
+            memoryVectorRepository.deleteAllByChannelId(channelId);
+            callTranscriptRepository.deleteAllByChannel(channel);
+            channelMessageRepository.deleteAllByChannel(channel);
             channelRepository.delete(channel);
             return;
         }

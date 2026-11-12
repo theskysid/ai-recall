@@ -6,8 +6,8 @@ Everything is authenticated except the routes marked **public**
 (`SecurityConfig` permits `/auth/login`, `/auth/signup`, `/auth/signup/verify`,
 `/auth/email-otp/**`, `/auth/google/**`, `/actuator/health`, `/ws/**`;
 `anyRequest().authenticated()` covers the rest). The JWT travels in an httpOnly
-`JWT` cookie set by login / signup verify / OTP verify / Google login — not an
-`Authorization` header.
+`JWT` cookie set by login / signup verify / OTP verify / Google login, or an
+`Authorization: Bearer <JWT>` header.
 
 ### Authentication (`/auth`)
 - `POST /auth/signup` — **public**, body `{username, email, password}`
@@ -19,6 +19,9 @@ Everything is authenticated except the routes marked **public**
 - `POST /auth/google/login` — **public**, body `{idToken}`, sets the `JWT` cookie
 - `POST /auth/email-otp/send` — **public**, body `{email}`
 - `POST /auth/email-otp/verify` — **public**, body `{email, otp}`, sets the `JWT` cookie
+
+Each OTP allows five incorrect verification attempts. After that, request a new
+code; sending remains limited to three requests per ten minutes per email.
 
 ### Channels (`/api/channels`)
 - `GET /api/channels` - List channels
@@ -68,11 +71,17 @@ Everything is authenticated except the routes marked **public**
 
 - Endpoint: `/ws`
 
+The SockJS HTTP handshake is public, but STOMP `CONNECT` requires a verified
+`Authorization: Bearer <JWT>` native header or an authenticated handshake cookie.
+Payload usernames do not establish identity. Channel subscriptions, sends, and
+deliveries require current membership. Clients may send only to the app mappings
+below, not directly to broker topics or queues.
+
 ### Server to Client (Topics/Queues)
 - `/topic/public` - Broadcasts global online presence (`JOIN`)
 - `/topic/channel/{channelId}` - Broadcasts messages/events for a specific channel
-- `/user/{username}/queue/dm` - Personal queue for direct messages
-- `/user/{username}/queue/friends` - Personal queue for friend request and acceptance events
+- `/user/queue/dm` - Authenticated user's direct messages
+- `/user/queue/friends` - Authenticated user's friend request and acceptance events
 
 ### Client to Server (App mappings)
 - `SEND /app/chat.addUser` - Register session and broadcast online status

@@ -2,6 +2,7 @@ package com.theskysid.echobackend.memory.service;
 
 import com.theskysid.echobackend.call.entity.CallTranscript;
 import com.theskysid.echobackend.channel.entity.ChannelMessage;
+import com.theskysid.echobackend.channel.repository.ChannelRepository;
 import com.theskysid.echobackend.memory.entity.MemoryVector;
 import com.theskysid.echobackend.memory.entity.SourceType;
 import com.theskysid.echobackend.memory.repository.MemoryVectorRepository;
@@ -10,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +33,12 @@ public class MemoryIngestionService {
     @Autowired
     private DecisionService decisionService;
 
+    @Autowired
+    private ChannelRepository channelRepository;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+
     /**
      * Embed a channel message and store it as a MEMORY vector. Runs off the
      * main thread so it never blocks the WebSocket broadcast.
@@ -48,8 +57,7 @@ public class MemoryIngestionService {
                     .sourceType(SourceType.MESSAGE)
                     .sourceId(message.getId())
                     .build();
-            decisionService.processSupersession(vector);
-            memoryVectorRepository.save(vector);
+            storeIfChannelExists(vector);
         } catch (Exception e) {
             logger.warn("Failed to ingest message {} into memory: {}", message.getId(), e.getMessage());
         }
@@ -78,12 +86,23 @@ public class MemoryIngestionService {
                         .sourceType(SourceType.TRANSCRIPT)
                         .sourceId(transcript.getId())
                         .build();
-                decisionService.processSupersession(vector);
-                memoryVectorRepository.save(vector);
+                storeIfChannelExists(vector);
             }
         } catch (Exception e) {
             logger.warn("Failed to ingest transcript {} into memory: {}", transcript.getId(), e.getMessage());
         }
+    }
+
+    private void storeIfChannelExists(MemoryVector vector) {
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            // Serialize with channel deletion, so queued ingestion cannot recreate
+            // orphaned memories after the last member leaves.
+            if (channelRepository.findByIdForShare(vector.getChannelId()).isEmpty()) {
+                return;
+            }
+            decisionService.processSupersession(vector);
+            memoryVectorRepository.save(vector);
+        });
     }
 
     /**

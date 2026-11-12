@@ -3,12 +3,17 @@ package com.theskysid.echobackend.call.repository;
 import com.theskysid.echobackend.call.entity.CallTranscript;
 import com.theskysid.echobackend.channel.entity.Channel;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
 public interface CallTranscriptRepository extends JpaRepository<CallTranscript, Long> {
+
+    @Modifying
+    @Query("DELETE FROM CallTranscript t WHERE t.channel = :channel")
+    void deleteAllByChannel(@Param("channel") Channel channel);
 
     /**
      * Find all transcripts for a channel, most recent first.

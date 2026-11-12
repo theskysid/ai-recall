@@ -38,5 +38,5 @@ flowchart TD
 - **WebSocket / STOMP**: Used for real-time bidirectional events. The frontend connects to `/ws` and subscribes to:
   - `/topic/public` (global online user presence)
   - `/topic/channel/{channelId}` (channel messages)
-  - `/user/{username}/queue/dm` (direct messages)
+  - `/user/queue/dm` (direct messages)
   Messages are sent via endpoints like `/app/channel/{channelId}/send` and `/app/dm.sendMessage`.

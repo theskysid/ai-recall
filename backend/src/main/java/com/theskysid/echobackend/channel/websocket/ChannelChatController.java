@@ -36,7 +36,7 @@ public class ChannelChatController {
      * The payload field is client-controlled: trusting it let any connected client
      * post to any channel as any member of it, since postMessage only checks that
      * the *claimed* sender belongs to the channel. The principal comes from the
-     * SockJS handshake, which the JWT filter authenticates.
+     * JWT-authenticated STOMP connection or the authenticated SockJS handshake.
      */
     @MessageMapping("/channel/{channelId}/send")
     public void sendChannelMessage(@DestinationVariable Long channelId,

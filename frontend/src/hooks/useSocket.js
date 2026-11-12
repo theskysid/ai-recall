@@ -64,11 +64,11 @@ const useSocket = ({
 
             socketRef.current = new SockJS(`${import.meta.env.VITE_API_URL}/ws`);
             stompClient.current = Stomp.over(socketRef.current);
+            // STOMP's default debug output includes CONNECT authorization headers.
+            stompClient.current.debug = () => {};
 
             stompClient.current.connect({
-                'client-id': username,
-                'session-id': Date.now().toString(),
-                'username': username
+                ...authService.getSocketAuthHeaders()
             }, () => {
                 if (reconnectTimeoutRef.current) {
                     clearTimeout(reconnectTimeoutRef.current);
@@ -101,7 +101,7 @@ const useSocket = ({
                 });
 
                 // Ephemeral DM queue subscription
-                stompClient.current.subscribe(`/user/${username}/queue/dm`, (msg) => {
+                stompClient.current.subscribe('/user/queue/dm', (msg) => {
                     const dmMessage = JSON.parse(msg.body);
                     const otherUser = dmMessage.senderUsername === username ? dmMessage.recipientUsername : dmMessage.senderUsername;
                     const handler = dmHandlers?.current?.get(otherUser);
@@ -124,7 +124,7 @@ const useSocket = ({
                 });
 
                 // Real-time notifications for Friend System updates
-                stompClient.current.subscribe(`/user/${username}/queue/friends`, (msg) => {
+                stompClient.current.subscribe('/user/queue/friends', (msg) => {
                     const event = JSON.parse(msg.body);
                     if (event?.type === 'FRIEND_REQUEST_RECEIVED') {
                         pushNotification(`New friend request from ${event.username}`);

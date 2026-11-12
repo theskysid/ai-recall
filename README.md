@@ -218,13 +218,18 @@ Caddy is the only ingress; the backend (`8080`) and PostgreSQL (`5433`) are boun
 | Connect   | `/ws`                            | SockJS handshake endpoint         |
 | Subscribe | `/topic/public`                  | Presence / online-user JOIN events|
 | Subscribe | `/topic/channel/{channelId}`     | Channel messages & typing         |
-| Subscribe | `/user/{username}/queue/dm`      | Direct messages stream            |
+| Subscribe | `/user/queue/dm`                 | Authenticated user's direct messages |
+| Subscribe | `/user/queue/friends`            | Authenticated user's friend events |
 | Send      | `/app/chat.addUser`              | Announce presence (go online)     |
 | Send      | `/app/channel/{channelId}/send`  | Send channel message              |
 | Send      | `/app/dm.sendMessage`            | Send direct message               |
 | Send      | `/app/dm.typing`                 | DM typing indicator               |
 
 > Full API documentation: [`docs/API.md`](docs/API.md)
+
+STOMP `CONNECT` requires an `Authorization: Bearer <JWT>` header or an authenticated
+handshake cookie. Channel subscriptions and sends require current membership;
+private queue subscriptions do not include a username.
 
 ---
 

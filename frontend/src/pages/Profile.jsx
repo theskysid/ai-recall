@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { authService } from "../services/authService.js";
@@ -27,33 +27,33 @@ const Profile = () => {
 
   const [actionLoading, setActionLoading] = useState("");
 
-  useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
-    try {
-      setIsLoading(true);
-      const data = await authService.getProfile();
-      setProfile(data);
-      setDisplayName(data.displayName || "");
-      setBio(data.bio || "");
-      setUsername(data.username || "");
-    } catch (error) {
-      showMessage(error.message || "Failed to load profile", "error");
-      if (error.response?.status === 401) {
-        navigate("/login");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const showMessage = (msg, type) => {
+  const showMessage = useCallback((msg, type) => {
     setMessage(msg);
     setMessageType(type);
     setTimeout(() => setMessage(""), 4000);
-  };
+  }, []);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        setIsLoading(true);
+        const data = await authService.getProfile();
+        setProfile(data);
+        setDisplayName(data.displayName || "");
+        setBio(data.bio || "");
+        setUsername(data.username || "");
+      } catch (error) {
+        showMessage(error.message || "Failed to load profile", "error");
+        if (error.response?.status === 401) {
+          navigate("/login");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, [navigate, showMessage]);
 
   const handleSaveProfile = async () => {
     setIsSaving(true);

@@ -29,10 +29,13 @@ public class ChatController {
     @MessageMapping("/chat.addUser")
     @SendTo("/topic/public")
     public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
-        String username = IdentifierNormalizer.normalizeIdentifier(chatMessage.getSender());
+        if (headerAccessor.getUser() == null) {
+            return null;
+        }
+        String username = IdentifierNormalizer.normalizeIdentifier(headerAccessor.getUser().getName());
         String sessionId = headerAccessor.getSessionId();
 
-        if (username.isBlank() || userRepository.findByUsernameIgnoreCase(username).isEmpty()) {
+        if (username == null || username.isBlank() || userRepository.findByUsernameIgnoreCase(username).isEmpty()) {
             return null;
         }
 

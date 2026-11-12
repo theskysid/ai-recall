@@ -29,6 +29,9 @@ public class OtpVerification {
     @Column(nullable = false)
     private int requestCount;
 
+    @Column(nullable = false, columnDefinition = "integer not null default 0")
+    private int failedAttempts;
+
     @Column(nullable = false)
     private LocalDateTime windowStart;
 
