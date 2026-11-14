@@ -5,7 +5,7 @@ export const friendService = {
      * Get all accepted friends
      */
     getFriends: async () => {
-        const response = await api.get('/api/friends');
+        const response = await api.get('/api/friends', { timeout: 15000 });
         return response.data;
     },
 
@@ -13,7 +13,7 @@ export const friendService = {
      * Get pending incoming friend requests
      */
     getIncomingRequests: async () => {
-        const response = await api.get('/api/friends/requests/incoming');
+        const response = await api.get('/api/friends/requests/incoming', { timeout: 15000 });
         return response.data;
     },
 

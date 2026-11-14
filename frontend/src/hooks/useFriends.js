@@ -3,6 +3,8 @@ import { friendService } from '../services/friendService';
 
 const useFriends = ({ setOpenChats, setUnreadDms, pushNotification }) => {
     const [friendsList, setFriendsList] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
     const [incomingRequestsCount, setIncomingRequestsCount] = useState(0);
     const [isSidebarRefreshing, setIsSidebarRefreshing] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -31,6 +33,8 @@ const useFriends = ({ setOpenChats, setUnreadDms, pushNotification }) => {
 
     const loadFriendsData = useCallback(async (showSpin = false) => {
         if (!isMountedRef.current) return;
+        setIsLoading(true);
+        setLoadError('');
         if (showSpin) setIsSidebarRefreshing(true);
         try {
             const [friends, incoming] = await Promise.all([
@@ -43,7 +47,9 @@ const useFriends = ({ setOpenChats, setUnreadDms, pushNotification }) => {
             }
         } catch (error) {
             console.error('Error loading friends data:', error);
+            if (isMountedRef.current) setLoadError('Could not load your contacts. Please try again.');
         } finally {
+            if (isMountedRef.current) setIsLoading(false);
             if (showSpin && isMountedRef.current) {
                 setTimeout(() => setIsSidebarRefreshing(false), 400);
             }
@@ -97,6 +103,8 @@ const useFriends = ({ setOpenChats, setUnreadDms, pushNotification }) => {
 
     return {
         friendsList,
+        isLoading,
+        loadError,
         setFriendsList,
         incomingRequestsCount,
         setIncomingRequestsCount,

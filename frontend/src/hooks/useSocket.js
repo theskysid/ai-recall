@@ -16,6 +16,7 @@ const useSocket = ({
 }) => {
     const [onlineUsers, setOnlineUsers] = useState(new Set());
     const [isConnected, setIsConnected] = useState(false);
+    const [connectionAttempt, setConnectionAttempt] = useState(0);
 
     const stompClient = useRef(null);
     const socketRef = useRef(null);
@@ -179,7 +180,9 @@ const useSocket = ({
             isMountedRef.current = false;
             cleanupConnection();
         };
-    }, [username, userColor, loadFriendsData, pushNotification, friendsListRef, dmHandlers, setUnreadDms, setRefreshTrigger]);
+    }, [username, userColor, loadFriendsData, pushNotification, friendsListRef, dmHandlers, setUnreadDms, setRefreshTrigger, connectionAttempt]);
+
+    const reconnect = useCallback(() => setConnectionAttempt((attempt) => attempt + 1), []);
 
     /**
      * Subscribe to a channel's topic. Returns the STOMP subscription (call
@@ -222,6 +225,7 @@ const useSocket = ({
         onlineUsers,
         setOnlineUsers,
         isConnected,
+        reconnect,
         subscribeToChannel,
         sendChannelMessage
     };

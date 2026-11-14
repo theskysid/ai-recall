@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { authService } from "../services/authService.js";
 import Icon from "../components/ui/Icon";
+import LoadingScreen from "../components/LoadingScreen";
 import "../styles/Auth.css";
 
 const Login = () => {
@@ -13,6 +14,7 @@ const Login = () => {
   const [otp, setOtp] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const navigate = useNavigate();
@@ -91,17 +93,19 @@ const Login = () => {
   const handleGoogleSuccess = async (credentialResponse) => {
     setMessage("");
     setIsLoading(true);
+    setIsGoogleLoading(true);
     try {
       const result = await authService.googleLogin(
         credentialResponse.credential
       );
       if (result.success) {
-        setMessage("Login successful!");
-        setTimeout(() => navigate("/chatarea"), 1500);
+        navigate("/chatarea", { replace: true, state: { fromGoogleSignIn: true } });
+        return;
       }
+      throw new Error("Google sign-in did not complete. Please try again.");
     } catch (error) {
       setMessage(error.message);
-    } finally {
+      setIsGoogleLoading(false);
       setIsLoading(false);
     }
   };
@@ -109,6 +113,10 @@ const Login = () => {
   const isSuccess =
     message.toLowerCase().includes("successful") ||
     message.toLowerCase().includes("sent");
+
+  if (isGoogleLoading) {
+    return <LoadingScreen message="Signing you in…" />;
+  }
 
   return (
     <div className="login-container nb">

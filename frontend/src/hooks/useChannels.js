@@ -3,6 +3,8 @@ import { channelService } from '../services/channelService';
 
 const useChannels = () => {
     const [channels, setChannels] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
     const isMountedRef = useRef(true);
 
     useEffect(() => {
@@ -13,6 +15,9 @@ const useChannels = () => {
     }, []);
 
     const loadChannels = useCallback(async () => {
+        if (!isMountedRef.current) return;
+        setIsLoading(true);
+        setLoadError('');
         try {
             const data = await channelService.getChannels();
             if (isMountedRef.current) {
@@ -20,6 +25,9 @@ const useChannels = () => {
             }
         } catch (error) {
             console.error('Error loading channels:', error);
+            if (isMountedRef.current) setLoadError('Could not load your channels. Please try again.');
+        } finally {
+            if (isMountedRef.current) setIsLoading(false);
         }
     }, []);
 
@@ -50,6 +58,8 @@ const useChannels = () => {
 
     return {
         channels,
+        isLoading,
+        loadError,
         setChannels,
         loadChannels,
         upsertChannel,

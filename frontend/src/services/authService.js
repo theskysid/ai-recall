@@ -290,7 +290,7 @@ export const authService = {
 
     googleLogin: async (idToken) => {
         try {
-            const response = await api.post('/auth/google/login', { idToken });
+            const response = await api.post('/auth/google/login', { idToken }, { timeout: 15000 });
 
             return persistUser(response.data);
         } catch (error) {

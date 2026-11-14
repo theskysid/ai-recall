@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { channelService } from '../services/channelService';
 import useSocket from '../hooks/useSocket';
@@ -13,13 +13,18 @@ import Sidebar from '../components/chat/Sidebar';
 import MobileLayout from '../components/chat/MobileLayout';
 import DesktopLayout from '../components/chat/DesktopLayout';
 import NotificationStack from '../components/chat/NotificationStack';
+import LoadingScreen from '../components/LoadingScreen';
 import '../styles/ChatArea.css';
 
 const isMobileViewport = () => window.innerWidth <= 768;
 
 const ChatArea = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [currentUser] = useState(() => authService.getCurrentUser());
+    const [isOpeningChat, setIsOpeningChat] = useState(() => Boolean(location.state?.fromGoogleSignIn));
+    const [startupTimedOut, setStartupTimedOut] = useState(false);
+    const [startupAttempt, setStartupAttempt] = useState(0);
 
     useEffect(() => {
         if (!currentUser) {
@@ -94,7 +99,7 @@ const ChatArea = () => {
         };
         container.addEventListener('scroll', onScroll, { passive: true });
         return () => container.removeEventListener('scroll', onScroll);
-    }, [mobileActiveView]); // re-attach when view changes
+    }, [mobileActiveView, isOpeningChat]); // Attach once the loading screen reveals the layout.
 
 
     // Friend System & Ephemeral DM states
@@ -133,6 +138,8 @@ const ChatArea = () => {
 
     const {
         friendsList,
+        isLoading: friendsLoading,
+        loadError: friendsLoadError,
         incomingRequestsCount,
         isSidebarRefreshing,
         refreshTrigger,
@@ -154,7 +161,8 @@ const ChatArea = () => {
         onlineUsers,
         isConnected,
         subscribeToChannel,
-        sendChannelMessage
+        sendChannelMessage,
+        reconnect
     } = useSocket({
         username,
         userColor,
@@ -166,7 +174,30 @@ const ChatArea = () => {
         setRefreshTrigger
     });
 
-    const { channels, upsertChannel, removeChannel } = useChannels();
+    const {
+        channels, upsertChannel, removeChannel, loadChannels,
+        isLoading: channelsLoading, loadError: channelsLoadError
+    } = useChannels();
+
+    useEffect(() => {
+        if (!isOpeningChat || friendsLoading || channelsLoading || friendsLoadError || channelsLoadError || !isConnected) return;
+        setIsOpeningChat(false);
+        navigate('/chatarea', { replace: true, state: null });
+    }, [isOpeningChat, friendsLoading, channelsLoading, friendsLoadError, channelsLoadError, isConnected, navigate]);
+
+    useEffect(() => {
+        if (!isOpeningChat) return;
+        const timer = setTimeout(() => setStartupTimedOut(true), 15000);
+        return () => clearTimeout(timer);
+    }, [isOpeningChat, startupAttempt]);
+
+    const retryOpeningChat = () => {
+        setStartupTimedOut(false);
+        setStartupAttempt((attempt) => attempt + 1);
+        loadFriendsData();
+        loadChannels();
+        reconnect();
+    };
 
     const activeChannel = channels.find((c) => c.id === activeChannelId) || null;
 
@@ -310,6 +341,19 @@ const ChatArea = () => {
 
     if (!currentUser) {
         return null;
+    }
+
+    if (isOpeningChat) {
+        const startupError = friendsLoadError || channelsLoadError ||
+            (startupTimedOut ? 'Could not connect to your chats. Please try again.' : '');
+        return (
+            <LoadingScreen
+                message={startupError || 'Opening your chats…'}
+                error={Boolean(startupError)}
+                onRetry={retryOpeningChat}
+                onBack={() => navigate('/login', { replace: true })}
+            />
+        );
     }
 
     return (

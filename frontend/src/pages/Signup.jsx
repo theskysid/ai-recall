@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { authService } from "../services/authService.js";
+import LoadingScreen from "../components/LoadingScreen";
 import "../styles/Auth.css";
 
 const Signup = () => {
@@ -11,6 +12,7 @@ const Signup = () => {
   const [otp, setOtp] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const navigate = useNavigate();
@@ -68,20 +70,26 @@ const Signup = () => {
   const handleGoogleSuccess = async (credentialResponse) => {
     setMessage("");
     setIsLoading(true);
+    setIsGoogleLoading(true);
     try {
       const result = await authService.googleLogin(
         credentialResponse.credential
       );
       if (result.success) {
-        setMessage("Account created! Redirecting...");
-        setTimeout(() => navigate("/chatarea"), 1500);
+        navigate("/chatarea", { replace: true, state: { fromGoogleSignIn: true } });
+        return;
       }
+      throw new Error("Google sign-in did not complete. Please try again.");
     } catch (error) {
       setMessage(error.message);
-    } finally {
+      setIsGoogleLoading(false);
       setIsLoading(false);
     }
   };
+
+  if (isGoogleLoading) {
+    return <LoadingScreen message="Signing you in…" />;
+  }
 
   const isSuccess =
     message.toLowerCase().includes("successfully") ||

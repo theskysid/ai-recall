@@ -5,7 +5,7 @@ export const channelService = {
      * Get all channels the current user belongs to.
      */
     getChannels: async () => {
-        const response = await api.get('/api/channels');
+        const response = await api.get('/api/channels', { timeout: 15000 });
         return response.data;
     },
 
