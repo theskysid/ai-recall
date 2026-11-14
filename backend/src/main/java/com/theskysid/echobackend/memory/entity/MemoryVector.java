@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -43,7 +44,8 @@ public class MemoryVector {
     // Whether this vector represents an extracted "decision".
     // DB default lets ddl-auto add the column to already-populated tables.
     @Builder.Default
-    @Column(name = "is_decision", nullable = false, columnDefinition = "boolean not null default false")
+    @ColumnDefault("false")
+    @Column(name = "is_decision", nullable = false)
     private boolean isDecision = false;
 
     // Short human label for the item, generated at ingestion. Nullable on
@@ -58,8 +60,8 @@ public class MemoryVector {
     // superseded rows are corrected by backfillStatuses() on startup.
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    @Column(name = "status", nullable = false,
-            columnDefinition = "varchar(20) not null default 'CURRENT'")
+    @ColumnDefault("'CURRENT'")
+    @Column(name = "status", nullable = false, length = 20)
     private MemoryStatus status = MemoryStatus.CURRENT;
 
     // If set, the id of the newer decision that replaced this one. When present,

@@ -22,6 +22,16 @@ The application requires a `.env` file to be present in the project root. Use `.
 
 *Note: Embeddings use local `all-MiniLM-L6-v2` via langchain4j and do not require an API key.*
 
+### Managed PostgreSQL (including Neon)
+
+The backend runs `CREATE EXTENSION IF NOT EXISTS vector` before Hibernate creates
+the memory tables. The database role must be allowed to enable this extension;
+otherwise, have the database owner enable it once. This also runs for databases
+that do not use the local Docker initialization scripts.
+
+Schema errors now stop startup so the deployment health check can reject a
+release with missing memory tables instead of reporting it as healthy.
+
 ## Running Locally
 
 ### 1. Full Stack (Dockerized)

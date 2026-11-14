@@ -22,6 +22,13 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
+  # Managed databases do not run the local Docker init scripts. Enable
+  # pgvector before Hibernate creates the memory table, on every deployment.
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/enable-pgvector.sql
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -29,6 +36,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        hbm2ddl.halt_on_error: true
     open-in-view: false
 
   # Email OTP — SMTP config

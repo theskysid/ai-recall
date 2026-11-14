@@ -398,9 +398,11 @@ const ChannelChat = ({
                         onClick={() => setRailOpen((v) => !v)}
                         className={`ch-btn ch-btn-outline ch-rail-toggle ${railOpen ? 'is-on' : ''}`}
                         title={railOpen ? 'Hide channel memory' : 'Show channel memory'}
+                        aria-label={railOpen ? 'Hide channel memory' : 'Show channel memory'}
                         aria-pressed={railOpen}
                     >
                         <Icon name="archive" size={14} />
+                        <span>Memory</span>
                     </button>
                     <button
                         onClick={() => setInCall((v) => !v)}
