@@ -24,6 +24,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -106,6 +107,7 @@ class DecisionServiceTest {
         oldVector = vector(OLD_DECISION);
         oldVector.setId(UUID.randomUUID());
         oldVector.setDecision(true);
+        when(memoryVectorRepository.findByIdForUpdate(oldVector.getId())).thenReturn(Optional.of(oldVector));
 
         when(memoryVectorRepository.findTopDecisionsByChannel(anyLong(), anyString()))
                 .thenReturn(List.of(oldVector));
@@ -132,8 +134,32 @@ class DecisionServiceTest {
             replies.add(classify);
         }
         MemoryVector v = vector(content);
-        decisionService.processSupersession(v);
+        decisionService.applySupersession(v, decisionService.prepareSupersession(v));
         return v;
+    }
+
+    @Test
+    void preparationDoesNotWriteOrLockDatabaseRowsDuringModelCalls() {
+        replies.addAll(List.of("YES", "A title", "SUPERSEDE"));
+        MemoryVector newer = vector("We decided to replace Widgetron.");
+        var prepared = decisionService.prepareSupersession(newer);
+        assertEquals(1, prepared.size());
+        assertEquals(MemoryStatus.CURRENT, oldVector.getStatus());
+        verify(memoryVectorRepository, never()).save(any());
+        verify(memoryVectorRepository, never()).findByIdForUpdate(any());
+    }
+
+    @Test
+    void aSlowModelReplyCannotOverwriteANewerDecisionState() {
+        replies.addAll(List.of("YES", "A title", "SUPERSEDE"));
+        MemoryVector newer = vector("We decided to replace Widgetron.");
+        var prepared = decisionService.prepareSupersession(newer);
+        UUID alreadyReplacedBy = UUID.randomUUID();
+        oldVector.setStatus(MemoryStatus.SUPERSEDED);
+        oldVector.setSupersedesId(alreadyReplacedBy);
+        decisionService.applySupersession(newer, prepared);
+        assertEquals(alreadyReplacedBy, oldVector.getSupersedesId());
+        verify(memoryVectorRepository, never()).save(oldVector);
     }
 
     // ── The five content categories ──────────────────────────────────────

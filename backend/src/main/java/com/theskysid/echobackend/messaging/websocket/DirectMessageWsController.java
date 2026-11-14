@@ -1,12 +1,13 @@
 package com.theskysid.echobackend.messaging.websocket;
 
+import com.theskysid.echobackend.config.ChatLatencyInterceptor;
+import com.theskysid.echobackend.config.WebSocketAuthorizationInterceptor;
 import com.theskysid.echobackend.messaging.dto.DirectMessageDTO;
 import com.theskysid.echobackend.messaging.dto.DirectMessageRequestDTO;
 import com.theskysid.echobackend.messaging.entity.Conversation;
 import com.theskysid.echobackend.messaging.entity.DirectMessage;
 import com.theskysid.echobackend.messaging.service.DirectMessageService;
 import com.theskysid.echobackend.user.entity.User;
-import com.theskysid.echobackend.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,43 +29,24 @@ public class DirectMessageWsController {
     private DirectMessageService directMessageService;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
     @MessageMapping("/dm.sendMessage")
-    @Transactional
     public void sendDirectMessage(@Payload DirectMessageRequestDTO request, SimpMessageHeaderAccessor headerAccessor) {
         try {
-            String senderUsername = resolveSenderUsername(headerAccessor);
-            if (senderUsername == null || senderUsername.isBlank()) {
-                logger.warn("DM send failed: sender username could not be resolved");
-                return;
-            }
-
-            User sender = userRepository.findByUsernameIgnoreCase(senderUsername)
-                    .orElseThrow(() -> new RuntimeException("Sender not found"));
-
-            Conversation conversation;
-            if (request.getConversationId() != null) {
-                conversation = directMessageService.getConversation(request.getConversationId(), sender);
-            } else if (request.getRecipientUsername() != null && !request.getRecipientUsername().isBlank()) {
-                User recipient = userRepository.findByUsernameIgnoreCase(request.getRecipientUsername())
-                        .orElseThrow(() -> new RuntimeException("Recipient not found"));
-                conversation = directMessageService.getOrCreateConversation(sender, recipient);
-            } else {
-                logger.warn("DM send failed: missing conversationId and recipientUsername");
-                return;
-            }
-
-            DirectMessage saved = directMessageService.sendMessage(conversation, sender, request.getContent());
+            Long senderId = authenticatedSenderId(headerAccessor);
+            if (senderId == null) return;
+            DirectMessage saved = directMessageService.sendMessage(request.getConversationId(), senderId,
+                    headerAccessor.getUser().getName(), request.getRecipientUsername(), request.getContent());
+            User sender = saved.getSender();
+            Conversation conversation = saved.getConversation();
             DirectMessageDTO dto = toDTO(saved);
+            dto.setClientMessageId(request.getClientMessageId());
 
             User recipient = conversation.getOtherParticipant(sender);
 
-            messagingTemplate.convertAndSendToUser(recipient.getUsername(), "/queue/dm", dto);
-            messagingTemplate.convertAndSendToUser(sender.getUsername(), "/queue/dm", dto);
+            messagingTemplate.convertAndSendToUser(recipient.getUsername(), "/queue/dm", dto, ChatLatencyInterceptor.deliveryHeaders(headerAccessor));
+            messagingTemplate.convertAndSendToUser(sender.getUsername(), "/queue/dm", dto, ChatLatencyInterceptor.deliveryHeaders(headerAccessor));
 
             logger.info("Direct message sent from {} to {} in conversation {}", sender.getUsername(), recipient.getUsername(), conversation.getId());
         } catch (Exception e) {
@@ -76,24 +58,12 @@ public class DirectMessageWsController {
     @Transactional
     public void handleTyping(@Payload DirectMessageRequestDTO request, SimpMessageHeaderAccessor headerAccessor) {
         try {
-            String senderUsername = resolveSenderUsername(headerAccessor);
-            if (senderUsername == null || senderUsername.isBlank()) {
-                return;
-            }
-
-            User sender = userRepository.findByUsernameIgnoreCase(senderUsername)
-                    .orElseThrow(() -> new RuntimeException("Sender not found"));
-
-            Conversation conversation;
-            if (request.getConversationId() != null) {
-                conversation = directMessageService.getConversation(request.getConversationId(), sender);
-            } else if (request.getRecipientUsername() != null && !request.getRecipientUsername().isBlank()) {
-                User recipient = userRepository.findByUsernameIgnoreCase(request.getRecipientUsername())
-                        .orElseThrow(() -> new RuntimeException("Recipient not found"));
-                conversation = directMessageService.getOrCreateConversation(sender, recipient);
-            } else {
-                return;
-            }
+            Long senderId = authenticatedSenderId(headerAccessor);
+            if (senderId == null) return;
+            var access = directMessageService.getSocketConversation(request.getConversationId(), senderId,
+                    headerAccessor.getUser().getName(), request.getRecipientUsername());
+            User sender = access.sender();
+            Conversation conversation = access.conversation();
 
             User recipient = conversation.getOtherParticipant(sender);
 
@@ -106,17 +76,15 @@ public class DirectMessageWsController {
                     .timestamp(LocalDateTime.now())
                     .build();
 
-            messagingTemplate.convertAndSendToUser(recipient.getUsername(), "/queue/dm", typingDto);
+            messagingTemplate.convertAndSendToUser(recipient.getUsername(), "/queue/dm", typingDto, ChatLatencyInterceptor.deliveryHeaders(headerAccessor));
         } catch (Exception e) {
             logger.error("Error handling DM typing indicator: {}", e.getMessage());
         }
     }
 
-    private String resolveSenderUsername(SimpMessageHeaderAccessor headerAccessor) {
-        if (headerAccessor.getUser() != null && headerAccessor.getUser().getName() != null) {
-            return headerAccessor.getUser().getName();
-        }
-        return null;
+    private Long authenticatedSenderId(SimpMessageHeaderAccessor headers) {
+        if (headers.getUser() == null || !(headers.getHeader(WebSocketAuthorizationInterceptor.AUTHENTICATED_USER_ID) instanceof Long id)) return null;
+        return id;
     }
 
     private DirectMessageDTO toDTO(DirectMessage message) {

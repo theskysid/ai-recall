@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Component
 public class WebSocketAuthorizationInterceptor implements ChannelInterceptor {
@@ -33,7 +34,9 @@ public class WebSocketAuthorizationInterceptor implements ChannelInterceptor {
     private static final Pattern CHANNEL_TOPIC = Pattern.compile("/topic/channel/([1-9][0-9]*)");
     private static final Pattern CHANNEL_SEND = Pattern.compile("/app/channel/([1-9][0-9]*)/send");
 
-    private record SessionUser(Long id, String username) {}
+    public static final String AUTHENTICATED_USER_ID = "chatAuthenticatedUserId";
+
+    private record SessionUser(Long id, String username, AtomicLong lastTypingNanos) {}
 
     private final Map<String, SessionUser> sessionUsers = new ConcurrentHashMap<>();
 
@@ -63,27 +66,35 @@ public class WebSocketAuthorizationInterceptor implements ChannelInterceptor {
                 throw denied();
             }
             headers.setUser(new UsernamePasswordAuthenticationToken(user.getUsername(), null, List.of()));
-            sessionUsers.put(headers.getSessionId(), new SessionUser(user.getId(), user.getUsername()));
+            sessionUsers.put(headers.getSessionId(), new SessionUser(user.getId(), user.getUsername(), new AtomicLong(Long.MIN_VALUE)));
             return message;
         }
 
-        User user = sessionUser(headers.getSessionId());
+        SessionUser user = headers.getSessionId() == null ? null : sessionUsers.get(headers.getSessionId());
         Principal principal = headers.getUser();
-        if (user == null || principal == null || !user.getUsername().equals(principal.getName())) {
-            throw denied();
-        }
-        if (headers.getMessageType() == SimpMessageType.HEARTBEAT || command == StompCommand.UNSUBSCRIBE) {
-            return message;
-        }
+        if (user == null || principal == null || !user.username().equals(principal.getName())) throw denied();
 
         String destination = headers.getDestination();
+        if (command == StompCommand.SEND &&
+                ("/app/dm.sendMessage".equals(destination) || "/app/dm.typing".equals(destination))) {
+            // Dropping excess typing frames performs no action and needs no database trip.
+            if ("/app/dm.typing".equals(destination) && !allowTyping(user)) return null;
+            // The controller resolves this server-owned id and checks the current name.
+            // Do not resolve by username: an old session must never impersonate a renamed account.
+            headers.setHeader(AUTHENTICATED_USER_ID, user.id());
+            return message;
+        }
+        if (headers.getMessageType() == SimpMessageType.HEARTBEAT || command == StompCommand.UNSUBSCRIBE) return message;
+
         if (command == StompCommand.SUBSCRIBE) {
             if (destination != null && List.of("/topic/public", "/user/queue/dm", "/user/queue/friends").contains(destination)) {
+                requireCurrentAccount(user);
                 return message;
             }
             requireChannelMember(user, destination, CHANNEL_TOPIC);
         } else if (command == StompCommand.SEND) {
-            if (destination != null && List.of("/app/chat.addUser", "/app/dm.sendMessage", "/app/dm.typing").contains(destination)) {
+            if ("/app/chat.addUser".equals(destination)) {
+                requireCurrentAccount(user);
                 return message;
             }
             // Clients cannot publish directly to broker topics or private queues.
@@ -94,25 +105,36 @@ public class WebSocketAuthorizationInterceptor implements ChannelInterceptor {
         return message;
     }
 
-    /** Recheck existing subscriptions after membership changes, including leave. */
+    /** Recheck current account identity and membership without fetching full entities. */
     public Message<?> authorizeDelivery(Message<?> message) {
-        if (SimpMessageHeaderAccessor.getMessageType(message.getHeaders()) != SimpMessageType.MESSAGE) {
-            return message;
-        }
+        if (SimpMessageHeaderAccessor.getMessageType(message.getHeaders()) != SimpMessageType.MESSAGE) return message;
+        String sessionId = SimpMessageHeaderAccessor.getSessionId(message.getHeaders());
+        SessionUser user = sessionId == null ? null : sessionUsers.get(sessionId);
+        if (user == null) return null;
         try {
-            User user = sessionUser(SimpMessageHeaderAccessor.getSessionId(message.getHeaders()));
-            if (user == null) {
-                return null;
-            }
             String destination = SimpMessageHeaderAccessor.getDestination(message.getHeaders());
             if (destination != null && CHANNEL_TOPIC.matcher(destination).matches()) {
                 requireChannelMember(user, destination, CHANNEL_TOPIC);
+            } else {
+                requireCurrentAccount(user);
             }
             return message;
         } catch (RuntimeException e) {
-            // Fail closed if membership cannot be established.
-            return null;
+            return null; // Fail closed if current access cannot be established.
         }
+    }
+
+    private boolean allowTyping(SessionUser user) {
+        long now = System.nanoTime();
+        for (;;) {
+            long previous = user.lastTypingNanos().get();
+            if (previous != Long.MIN_VALUE && now - previous < 1_000_000_000L) return false;
+            if (user.lastTypingNanos().compareAndSet(previous, now)) return true;
+        }
+    }
+
+    private void requireCurrentAccount(SessionUser user) {
+        if (!userRepository.existsByIdAndUsername(user.id(), user.username())) throw denied();
     }
 
     @EventListener
@@ -147,23 +169,11 @@ public class WebSocketAuthorizationInterceptor implements ChannelInterceptor {
         return userRepository.findByUsernameIgnoreCase(principal.getName()).orElseThrow(this::denied);
     }
 
-    private User sessionUser(String sessionId) {
-        SessionUser sessionUser = sessionId == null ? null : sessionUsers.get(sessionId);
-        if (sessionUser == null) {
-            return null;
-        }
-        // A renamed account must reconnect before its old user queue can deliver.
-        return userRepository.findById(sessionUser.id())
-                .filter(user -> user.getUsername().equals(sessionUser.username())).orElse(null);
-    }
-
-    private void requireChannelMember(User user, String destination, Pattern pattern) {
+    private void requireChannelMember(SessionUser user, String destination, Pattern pattern) {
         var match = pattern.matcher(destination == null ? "" : destination);
-        if (!match.matches()) {
-            throw denied();
-        }
+        if (!match.matches()) throw denied();
         try {
-            channelService.requireMember(user, Long.valueOf(match.group(1)));
+            channelService.requireMember(user.id(), user.username(), Long.valueOf(match.group(1)));
         } catch (RuntimeException e) {
             throw denied();
         }

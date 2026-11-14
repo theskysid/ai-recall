@@ -9,8 +9,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.Lock;
+import jakarta.persistence.LockModeType;
 
 public interface MemoryVectorRepository extends JpaRepository<MemoryVector, UUID> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT m FROM MemoryVector m WHERE m.id = :id")
+    Optional<MemoryVector> findByIdForUpdate(@Param("id") UUID id);
 
     @Modifying
     @Query("DELETE FROM MemoryVector m WHERE m.channelId = :channelId")

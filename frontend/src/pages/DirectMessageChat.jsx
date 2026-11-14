@@ -3,6 +3,8 @@ import { conversationService } from '../services/conversationService';
 import Icon from '../components/ui/Icon';
 import { hueClass } from '../utils/avatarHue';
 import { mergeEcho } from '../utils/mergeEcho';
+import { createTypingThrottle } from '../utils/typingThrottle';
+import { chatDiagnostics } from '../utils/chatDiagnostics';
 import { groupThread, formatTime, parseTs } from '../utils/thread';
 import '../styles/ChannelPage.css';
 import '../styles/DirectMessageChat.css';
@@ -31,6 +33,7 @@ const DirectMessageChat = ({
     const messagesEndRef = useRef(null);
     const messageIdsRef = useRef(new Set());
     const typingTimeoutRef = useRef(null);
+    const typingThrottleRef = useRef(createTypingThrottle());
     const isInitialScrollRef = useRef(true);
 
     const scrollToBottom = (behavior = 'smooth') => {
@@ -163,7 +166,8 @@ const DirectMessageChat = ({
     const handleTypingInput = (e) => {
         setMessageInput(e.target.value);
 
-        if (stompClient.current && stompClient.current.connected && conversation) {
+        if (stompClient.current && stompClient.current.connected && conversation
+            && typingThrottleRef.current.shouldSend(conversation.id)) {
             try {
                 stompClient.current.send(
                     '/app/dm.typing',
@@ -191,12 +195,14 @@ const DirectMessageChat = ({
             senderUsername: currentUser,
             recipientUsername: recipientUsername,
             content: content,
-            type: 'MESSAGE'
+            type: 'MESSAGE',
+            clientMessageId: chatDiagnostics.start('dm.send')
         };
 
         try {
             stompClient.current.send('/app/dm.sendMessage', {}, JSON.stringify(payload));
             setMessageInput('');
+            typingThrottleRef.current.reset();
             // Render before the round-trip; handleIncomingDm swaps in the server copy.
             // ponytail: a send that never echoes stays dimmed forever — add a timeout
             // and a retry affordance if that turns out to happen in practice.

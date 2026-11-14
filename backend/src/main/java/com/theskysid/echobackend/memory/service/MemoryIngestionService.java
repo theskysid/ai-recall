@@ -94,13 +94,14 @@ public class MemoryIngestionService {
     }
 
     private void storeIfChannelExists(MemoryVector vector) {
+        List<DecisionService.PreparedConflict> prepared = decisionService.prepareSupersession(vector);
         new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
             // Serialize with channel deletion, so queued ingestion cannot recreate
             // orphaned memories after the last member leaves.
             if (channelRepository.findByIdForShare(vector.getChannelId()).isEmpty()) {
                 return;
             }
-            decisionService.processSupersession(vector);
+            decisionService.applySupersession(vector, prepared);
             memoryVectorRepository.save(vector);
         });
     }

@@ -1,5 +1,6 @@
 package com.theskysid.echobackend.channel.websocket;
 
+import com.theskysid.echobackend.config.ChatLatencyInterceptor;
 import com.theskysid.echobackend.channel.dto.ChannelMessageDTO;
 import com.theskysid.echobackend.channel.dto.ChannelMessageRequestDTO;
 import com.theskysid.echobackend.channel.entity.ChannelMessage;
@@ -12,6 +13,7 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
@@ -41,12 +43,12 @@ public class ChannelChatController {
     @MessageMapping("/channel/{channelId}/send")
     public void sendChannelMessage(@DestinationVariable Long channelId,
                                    @Payload ChannelMessageRequestDTO request,
-                                   Principal principal) {
+                                   Principal principal, SimpMessageHeaderAccessor headers) {
         if (principal == null) {
             return;
         }
         String senderUsername = IdentifierNormalizer.normalizeIdentifier(principal.getName());
-        if (senderUsername == null || senderUsername.isBlank() || userRepository.findByUsernameIgnoreCase(senderUsername).isEmpty()) {
+        if (senderUsername == null || senderUsername.isBlank()) {
             return;
         }
 
@@ -59,7 +61,9 @@ public class ChannelChatController {
                         .orElseThrow(() -> new RuntimeException("Sender not found"));
                 ChannelMessage saved = channelService.postMessage(
                         channelId, sender, request.getContent(), request.getColor());
-                broadcast(channelId, toDTO(saved));
+                ChannelMessageDTO dto = toDTO(saved);
+                dto.setClientMessageId(request.getClientMessageId());
+                messagingTemplate.convertAndSend("/topic/channel/" + channelId, dto, ChatLatencyInterceptor.deliveryHeaders(headers));
             } catch (RuntimeException e) {
                 // Sender not a member / channel missing — drop silently, matching global chat behaviour.
             }

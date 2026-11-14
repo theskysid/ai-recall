@@ -79,7 +79,7 @@ class WebSocketAuthorizationInterceptorTest {
         connect();
         var message = inbound(headers(StompCommand.SUBSCRIBE, destination, () -> "alice"));
         assertNotNull(message);
-        if (destination.startsWith("/topic/channel/")) verify(channels).requireMember(alice, 42L);
+        if (destination.startsWith("/topic/channel/")) verify(channels).requireMember(1L, "alice", 42L);
     }
 
     @ParameterizedTest
@@ -92,7 +92,7 @@ class WebSocketAuthorizationInterceptorTest {
     @Test
     void nonMembersCannotSubscribeOrSendAnyChannelEvent() {
         connect();
-        doThrow(new IllegalStateException("not a member")).when(channels).requireMember(alice, 42L);
+        doThrow(new IllegalStateException("not a member")).when(channels).requireMember(1L, "alice", 42L);
         assertThrows(AccessDeniedException.class, () -> inbound(headers(StompCommand.SUBSCRIBE, "/topic/channel/42", () -> "alice")));
         assertThrows(AccessDeniedException.class, () -> inbound(headers(StompCommand.SEND, "/app/channel/42/send", () -> "alice")));
     }
@@ -105,7 +105,7 @@ class WebSocketAuthorizationInterceptorTest {
         headers.setSessionId("session");
         var message = MessageBuilder.createMessage(new byte[0], headers.getMessageHeaders());
         assertSame(message, interceptor.authorizeDelivery(message));
-        doThrow(new IllegalStateException("left")).when(channels).requireMember(alice, 42L);
+        doThrow(new IllegalStateException("left")).when(channels).requireMember(1L, "alice", 42L);
         assertNull(interceptor.authorizeDelivery(message));
     }
 
@@ -116,9 +116,42 @@ class WebSocketAuthorizationInterceptorTest {
         assertThrows(AccessDeniedException.class, () -> inbound(headers(StompCommand.SUBSCRIBE, "/topic/public", () -> "alice")));
     }
 
+    @Test
+    void typingFloodIsDroppedBeforeDatabaseWorkAndClaimedIdsAreOverwritten() {
+        connect();
+        clearInvocations(users, channels);
+        var first = headers(StompCommand.SEND, "/app/dm.typing", () -> "alice");
+        first.setHeader(WebSocketAuthorizationInterceptor.AUTHENTICATED_USER_ID, 999L);
+        assertNotNull(inbound(first));
+        assertEquals(1L, first.getHeader(WebSocketAuthorizationInterceptor.AUTHENTICATED_USER_ID));
+        for (int i = 0; i < 100; i++) {
+            assertNull(inbound(headers(StompCommand.SEND, "/app/dm.typing", () -> "alice")));
+        }
+        verifyNoInteractions(users, channels);
+    }
+
+    @Test
+    void channelAuthorizationUsesOneMembershipQuery() {
+        connect();
+        clearInvocations(users, channels);
+        inbound(headers(StompCommand.SUBSCRIBE, "/topic/channel/42", () -> "alice"));
+        verify(channels).requireMember(1L, "alice", 42L);
+        verifyNoInteractions(users);
+    }
+
+    @Test
+    void renamedAccountsCannotReceiveTheirOldPrivateQueue() {
+        connect();
+        when(users.existsByIdAndUsername(1L, "alice")).thenReturn(false);
+        var headers = org.springframework.messaging.simp.SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
+        headers.setDestination("/queue/dm-usersession");
+        headers.setSessionId("session");
+        assertNull(interceptor.authorizeDelivery(MessageBuilder.createMessage(new byte[0], headers.getMessageHeaders())));
+    }
+
     private void connect() {
         when(users.findByUsernameIgnoreCase("alice")).thenReturn(Optional.of(alice));
-        lenient().when(users.findById(1L)).thenReturn(Optional.of(alice));
+        lenient().when(users.existsByIdAndUsername(1L, "alice")).thenReturn(true);
         inbound(headers(StompCommand.CONNECT, null,
                 new UsernamePasswordAuthenticationToken("alice", null, java.util.List.of())));
     }

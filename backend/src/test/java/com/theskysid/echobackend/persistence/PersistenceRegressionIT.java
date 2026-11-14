@@ -131,4 +131,19 @@ class PersistenceRegressionIT {
         return new TransactionTemplate(transactions).execute(status -> codes
                 .findByIdentifierAndType(email, OtpVerification.IdentifierType.EMAIL).orElseThrow().getFailedAttempts());
     }
+
+    @Test
+    void combinedChannelAccessQueryHonorsIdentityAndLeave() {
+        User owner = users.save(User.builder().username("membership-owner").authProvider(AuthProvider.EMAIL).build());
+        User outsider = users.save(User.builder().username("membership-outsider").authProvider(AuthProvider.EMAIL).build());
+        Channel channel = channelService.createChannel(owner, "membership", "test");
+        assertDoesNotThrow(() -> channelService.requireMember(owner.getId(), owner.getUsername(), channel.getId()));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class,
+                () -> channelService.requireMember(owner.getId(), "wrong-name", channel.getId()));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class,
+                () -> channelService.requireMember(outsider.getId(), outsider.getUsername(), channel.getId()));
+        channelService.leaveChannel(owner, channel.getId());
+        assertThrows(org.springframework.web.server.ResponseStatusException.class,
+                () -> channelService.requireMember(owner.getId(), owner.getUsername(), channel.getId()));
+    }
 }

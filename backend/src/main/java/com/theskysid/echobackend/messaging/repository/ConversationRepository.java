@@ -12,6 +12,15 @@ import java.util.Optional;
 
 public interface ConversationRepository extends JpaRepository<Conversation, Long> {
 
+    /** One current database check establishes identity, participation, and friendship. */
+    @Query("SELECT c FROM Conversation c JOIN FETCH c.participantOne a JOIN FETCH c.participantTwo b " +
+            "WHERE c.id = :id AND ((a.id = :senderId AND a.username = :username) " +
+            "OR (b.id = :senderId AND b.username = :username)) AND EXISTS " +
+            "(SELECT f.id FROM Friendship f WHERE f.status = 'ACCEPTED' AND " +
+            "((f.requester = a AND f.addressee = b) OR (f.requester = b AND f.addressee = a)))")
+    Optional<Conversation> findAccessibleForSocket(@Param("id") Long id, @Param("senderId") Long senderId,
+                                                  @Param("username") String username);
+
     /**
      * Find a conversation between two specific users.
      * Participants are always stored with smaller ID as participantOne.

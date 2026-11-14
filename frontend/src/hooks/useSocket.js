@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
 import { authService } from '../services/authService';
+import { chatDiagnostics } from '../utils/chatDiagnostics';
 
 const useSocket = ({
     username,
@@ -49,6 +50,7 @@ const useSocket = ({
             stompClient.current = null;
             socketRef.current = null;
             setIsConnected(false);
+            chatDiagnostics.clear();
         };
 
         const connectAndFetch = async () => {
@@ -103,6 +105,7 @@ const useSocket = ({
                 // Ephemeral DM queue subscription
                 stompClient.current.subscribe('/user/queue/dm', (msg) => {
                     const dmMessage = JSON.parse(msg.body);
+                    chatDiagnostics.finish(dmMessage, msg.headers);
                     const otherUser = dmMessage.senderUsername === username ? dmMessage.recipientUsername : dmMessage.senderUsername;
                     const handler = dmHandlers?.current?.get(otherUser);
 
@@ -188,7 +191,9 @@ const useSocket = ({
         }
         return stompClient.current.subscribe(`/topic/channel/${channelId}`, (msg) => {
             try {
-                onMessage(JSON.parse(msg.body));
+                const message = JSON.parse(msg.body);
+                chatDiagnostics.finish(message, msg.headers);
+                onMessage(message);
             } catch (error) {
                 console.error('Error parsing channel message:', error);
             }
@@ -206,7 +211,8 @@ const useSocket = ({
             sender: username,
             content,
             color: userColor,
-            type: 'CHAT'
+            type: 'CHAT',
+            clientMessageId: chatDiagnostics.start('channel.send')
         }));
         return true;
     }, [username, userColor]);

@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class ChannelMessageRequestDTO {
     private String sender;
+    private String clientMessageId;
     private String content;
     private String color;
     private String type;

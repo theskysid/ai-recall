@@ -7,6 +7,8 @@ import com.theskysid.echobackend.messaging.entity.RetentionPolicy;
 import com.theskysid.echobackend.messaging.repository.ConversationRepository;
 import com.theskysid.echobackend.messaging.repository.DirectMessageRepository;
 import com.theskysid.echobackend.user.entity.User;
+import com.theskysid.echobackend.user.repository.UserRepository;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,45 @@ public class DirectMessageService {
 
     @Autowired
     private FriendshipService friendshipService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private MeterRegistry meterRegistry;
+
+    public record SocketConversation(Conversation conversation, User sender) {}
+
+    /** Resolve and authorize once, then persist in the same transaction. */
+    @Transactional
+    public DirectMessage sendMessage(Long conversationId, Long senderId, String username, String recipientUsername, String content) {
+        SocketConversation access = resolveSocketConversation(conversationId, senderId, username, recipientUsername);
+        return meterRegistry.timer("chat.database", "operation", "dm.persist")
+                .record(() -> persistMessage(access.conversation(), access.sender(), content));
+    }
+
+    @Transactional
+    public SocketConversation getSocketConversation(Long conversationId, Long senderId, String username, String recipientUsername) {
+        return resolveSocketConversation(conversationId, senderId, username, recipientUsername);
+    }
+
+    private SocketConversation resolveSocketConversation(Long conversationId, Long senderId, String username, String recipientUsername) {
+        if (senderId == null || username == null) throw new RuntimeException("Authentication is required");
+        if (conversationId != null) {
+            Conversation conversation = meterRegistry.timer("chat.database", "operation", "dm.authorize").record(() ->
+                    conversationRepository.findAccessibleForSocket(conversationId, senderId, username)
+                            .orElseThrow(() -> new RuntimeException("You cannot access this conversation")));
+            User sender = conversation.getParticipantOne().getId().equals(senderId)
+                    ? conversation.getParticipantOne() : conversation.getParticipantTwo();
+            return new SocketConversation(conversation, sender);
+        }
+        if (recipientUsername == null || recipientUsername.isBlank()) throw new RuntimeException("A conversation or recipient is required");
+        User sender = userRepository.findById(senderId).filter(user -> user.getUsername().equals(username))
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        User recipient = userRepository.findByUsernameIgnoreCase(recipientUsername)
+                .orElseThrow(() -> new RuntimeException("Recipient not found"));
+        return new SocketConversation(getOrCreateConversation(sender, recipient), sender);
+    }
 
     /**
      * Get or create a conversation between two users.
@@ -63,7 +104,10 @@ public class DirectMessageService {
     @Transactional
     public DirectMessage sendMessage(Conversation conversation, User sender, String content) {
         assertConversationAccess(conversation, sender);
+        return persistMessage(conversation, sender, content);
+    }
 
+    private DirectMessage persistMessage(Conversation conversation, User sender, String content) {
         if (content == null || content.trim().isEmpty()) {
             throw new RuntimeException("Message content cannot be empty");
         }
@@ -163,7 +207,9 @@ public class DirectMessageService {
         }
 
         User otherParticipant = conversation.getOtherParticipant(currentUser);
-        if (!friendshipService.areFriends(currentUser, otherParticipant)) {
+        boolean friends = meterRegistry.timer("chat.database", "operation", "dm.friendship")
+                .record(() -> friendshipService.areFriends(currentUser, otherParticipant));
+        if (!friends) {
             throw new RuntimeException("You can only access conversations with current friends");
         }
     }

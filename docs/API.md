@@ -87,4 +87,9 @@ below, not directly to broker topics or queues.
 - `SEND /app/chat.addUser` - Register session and broadcast online status
 - `SEND /app/channel/{channelId}/send` - Send a channel message (CHAT, JOIN, LEAVE, TYPING). Only `CHAT` is persisted; `TYPING`/`JOIN`/`LEAVE` are broadcast only, and an unknown or blank `type` falls back to `CHAT`
 - `SEND /app/dm.sendMessage` - Send a direct message
-- `SEND /app/dm.typing` - Send a typing indicator for DMs
+- `SEND /app/dm.typing` - Send a typing indicator for DMs; excess frames are dropped at one accepted notification per second per connection
+
+DM and channel sends may include an optional `clientMessageId`, which is echoed in
+the immediate delivery payload for diagnostics. It is not an authorization token,
+an idempotency key, or a persisted history field. Outgoing chat frames include
+`x-chat-server-ms` for server-side delivery time. See [Chat performance](CHAT_PERFORMANCE.md).

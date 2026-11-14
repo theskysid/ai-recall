@@ -177,6 +177,13 @@ public class ChannelService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public void requireMember(Long userId, String username, Long channelId) {
+        if (!channelMembershipRepository.hasCurrentAccess(channelId, userId, username)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this channel");
+        }
+    }
+
     /**
      * Persist a CHAT message posted to a channel by one of its members. Validates
      * that the channel exists and the sender is a current member before saving.

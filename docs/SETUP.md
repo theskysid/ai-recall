@@ -65,3 +65,6 @@ recreate their tables. The separate test context does not need pgvector or API k
 RECALL_TEST_DB_URL='jdbc:postgresql://127.0.0.1:5432/recall_regression?user=postgres' \
   ./mvnw -Dtest=PersistenceRegressionIT test
 ```
+
+For two-client delivery benchmarks and browser/backend timing, see
+[Chat delivery performance](CHAT_PERFORMANCE.md).

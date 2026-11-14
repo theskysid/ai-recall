@@ -51,8 +51,9 @@
   Config in `config/WebSocketConfig`.
 - Async ingestion (`@EnableAsync`): `ChannelService.postMessage` and
   `TranscriptionController` (after the transcript row is saved)
-  fire `MemoryIngestionService` `@Async` methods → embed + LLM decision/supersession
-  → pgvector, never blocking the broadcast.
+  fire `MemoryIngestionService` `@Async` methods → embed and prepare LLM decision assessments
+  outside a write transaction → briefly lock/recheck the channel and affected decisions
+  → pgvector. Slow model calls do not hold chat database connections.
 
 ## Layering conventions
 

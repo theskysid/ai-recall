@@ -7,6 +7,7 @@ public class DirectMessageRequestDTO {
     private Long conversationId;
     private String senderUsername;
     private String recipientUsername;
+    private String clientMessageId;
     private String content;
     private String type; // "MESSAGE" or "TYPING"
 }

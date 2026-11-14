@@ -22,6 +22,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Autowired
     private WebSocketAuthorizationInterceptor authorizationInterceptor;
 
+    @Autowired
+    private ChatLatencyInterceptor latencyInterceptor;
+
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         // /user destinations must pass through Spring's user destination resolver.
@@ -32,7 +35,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(authorizationInterceptor);
+        registration.interceptors(latencyInterceptor, authorizationInterceptor);
     }
 
     @Override
@@ -40,7 +43,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registration.interceptors(new ChannelInterceptor() {
             @Override
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
-                return authorizationInterceptor.authorizeDelivery(message);
+                return latencyInterceptor.timeDelivery(authorizationInterceptor.authorizeDelivery(message));
             }
         });
     }

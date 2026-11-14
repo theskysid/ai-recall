@@ -14,6 +14,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.UUID;
+import java.util.Objects;
+import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
@@ -252,73 +256,56 @@ public class DecisionService {
         };
     }
 
-    /**
-     * If the new vector is a decision, flag it and supersede any older active
-     * decision in the same channel that it replaces/contradicts. Runs synchronously
-     * inside the caller's @Async ingestion flow.
-     */
-    public void processSupersession(MemoryVector newVector) {
-        if (newVector == null || newVector.getContent() == null) {
-            return;
-        }
+    /** Immutable snapshot: applying a slow model reply must not overwrite a newer decision state. */
+    public record PreparedConflict(UUID id, String content, MemoryStatus status, UUID supersedesId,
+                                   UUID conflictsWithId, ConflictResult result) {}
 
-        // Anything that isn't a confirmed decision — including a failed
-        // extraction — leaves the vector as a plain memory for the caller to
-        // save: no flag, no title, no supersession.
-        ExtractionResult extraction = extractDecision(newVector.getContent());
-        newVector.setDecision(extraction == ExtractionResult.DECISION);
-        if (extraction != ExtractionResult.DECISION) {
-            return;
-        }
-
-        if (newVector.getTitle() == null) {
-            newVector.setTitle(generateTitle(newVector.getContent()));
-        }
-
+    /** All model calls run before the short channel/decision write transaction. */
+    public List<PreparedConflict> prepareSupersession(MemoryVector vector) {
+        if (vector == null || vector.getContent() == null) return List.of();
+        ExtractionResult extraction = extractDecision(vector.getContent());
+        vector.setDecision(extraction == ExtractionResult.DECISION);
+        if (!vector.isDecision()) return List.of();
+        if (vector.getTitle() == null) vector.setTitle(generateTitle(vector.getContent()));
+        List<PreparedConflict> prepared = new ArrayList<>();
         try {
-            // Persist now so the new decision has an id to link older decisions to.
-            MemoryVector saved = memoryVectorRepository.save(newVector);
-
-            float[] embedding = saved.getEmbedding() != null
-                    ? saved.getEmbedding()
-                    : embeddingService.embed(saved.getContent());
-
-            List<MemoryVector> oldDecisions =
-                    memoryVectorRepository.findTopDecisionsByChannel(saved.getChannelId(), embeddingService.toVectorLiteral(embedding));
-
-            for (MemoryVector old : oldDecisions) {
-                if (old.getId().equals(saved.getId())) {
-                    continue;
-                }
-                switch (classifyConflict(saved.getContent(), old.getContent())) {
-                    case SUPERSEDE -> {
-                        old.setSupersedesId(saved.getId());
-                        old.setStatus(MemoryStatus.SUPERSEDED);
-                        memoryVectorRepository.save(old);
-                    }
-                    case UNRESOLVED -> {
-                        // Both sides stay retrievable — neither replaced the other.
-                        // Only one clash is recorded per row: with several the last
-                        // one seen wins the pointer, while the status still says
-                        // "contested". A join table would be the fix if that matters.
-                        old.setStatus(MemoryStatus.UNRESOLVED);
-                        old.setConflictsWithId(saved.getId());
-                        memoryVectorRepository.save(old);
-
-                        saved.setStatus(MemoryStatus.UNRESOLVED);
-                        saved.setConflictsWithId(old.getId());
-                        memoryVectorRepository.save(saved);
-                    }
-                    case NO_CONFLICT -> { /* nothing to do */ }
-                    // Already logged and counted in classifyConflict. Both rows
-                    // stay exactly as they were — an unclassified pair is not
-                    // evidence of anything.
-                    case LLM_ERROR -> { /* nothing to do */ }
-                }
+            float[] embedding = vector.getEmbedding() != null ? vector.getEmbedding() : embeddingService.embed(vector.getContent());
+            for (MemoryVector old : memoryVectorRepository.findTopDecisionsByChannel(
+                    vector.getChannelId(), embeddingService.toVectorLiteral(embedding))) {
+                if (old.getId().equals(vector.getId())) continue;
+                prepared.add(new PreparedConflict(old.getId(), old.getContent(), old.getStatus(), old.getSupersedesId(),
+                        old.getConflictsWithId(), classifyConflict(vector.getContent(), old.getContent())));
             }
         } catch (Exception e) {
-            logger.warn("Supersession processing failed: {}", e.getMessage());
+            logger.warn("Supersession preparation failed: {}", e.getMessage());
         }
+        return List.copyOf(prepared);
+    }
+
+    /** Called inside ingestion's transaction after locking and rechecking the channel. No model calls. */
+    public void applySupersession(MemoryVector vector, List<PreparedConflict> prepared) {
+        if (!vector.isDecision()) return;
+        MemoryVector saved = memoryVectorRepository.save(vector);
+        // Consistent lock order prevents intersecting batches from deadlocking.
+        for (PreparedConflict plan : prepared.stream().sorted(Comparator.comparing(PreparedConflict::id)).toList()) {
+            if (plan.result() != ConflictResult.SUPERSEDE && plan.result() != ConflictResult.UNRESOLVED) continue;
+            MemoryVector old = memoryVectorRepository.findByIdForUpdate(plan.id()).orElse(null);
+            if (old == null || !Objects.equals(old.getChannelId(), saved.getChannelId()) || !old.isDecision()
+                    || !Objects.equals(old.getContent(), plan.content()) || old.getStatus() != plan.status()
+                    || !Objects.equals(old.getSupersedesId(), plan.supersedesId())
+                    || !Objects.equals(old.getConflictsWithId(), plan.conflictsWithId())) continue;
+            if (plan.result() == ConflictResult.SUPERSEDE) {
+                old.setSupersedesId(saved.getId());
+                old.setStatus(MemoryStatus.SUPERSEDED);
+            } else {
+                old.setStatus(MemoryStatus.UNRESOLVED);
+                old.setConflictsWithId(saved.getId());
+                saved.setStatus(MemoryStatus.UNRESOLVED);
+                saved.setConflictsWithId(old.getId());
+            }
+            memoryVectorRepository.save(old);
+        }
+        memoryVectorRepository.save(saved);
     }
 
     /**

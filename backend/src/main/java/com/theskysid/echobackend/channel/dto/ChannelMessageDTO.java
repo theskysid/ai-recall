@@ -11,6 +11,7 @@ public class ChannelMessageDTO {
     private Long id;
     private Long channelId;
     private String sender;
+    private String clientMessageId;
     private String content;
     private String color;
     private String type;

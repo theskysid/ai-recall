@@ -34,7 +34,24 @@ class MemoryIngestionServiceTest {
         ingestion.ingestMessage(ChannelMessage.builder().id(1L).content("queued message")
                 .channel(Channel.builder().id(42L).build()).build());
         verify(channels).findByIdForShare(42L);
-        verifyNoInteractions(memories, decisions);
+        verify(decisions).prepareSupersession(any());
+        verify(decisions, never()).applySupersession(any(), any());
+        verifyNoInteractions(memories);
         verify(transactions).commit(any());
+    }
+
+    @Test
+    void modelPreparationFinishesBeforeOpeningTheWriteTransaction() {
+        when(embeddings.embed("message")).thenReturn(new float[384]);
+        when(transactions.getTransaction(any())).thenReturn(mock(TransactionStatus.class));
+        when(channels.findByIdForShare(42L)).thenReturn(Optional.of(Channel.builder().id(42L).build()));
+        ingestion.ingestMessage(ChannelMessage.builder().id(1L).content("message")
+                .channel(Channel.builder().id(42L).build()).build());
+        var order = inOrder(decisions, transactions, channels);
+        order.verify(decisions).prepareSupersession(any());
+        order.verify(transactions).getTransaction(any());
+        order.verify(channels).findByIdForShare(42L);
+        order.verify(decisions).applySupersession(any(), any());
+        order.verify(transactions).commit(any());
     }
 }

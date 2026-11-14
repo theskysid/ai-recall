@@ -12,6 +12,11 @@ import java.util.Optional;
 
 public interface ChannelMembershipRepository extends JpaRepository<ChannelMembership, Long> {
 
+    @Query("SELECT COUNT(m) > 0 FROM ChannelMembership m WHERE m.channel.id = :channelId " +
+            "AND m.user.id = :userId AND m.user.username = :username")
+    boolean hasCurrentAccess(@Param("channelId") Long channelId, @Param("userId") Long userId,
+                             @Param("username") String username);
+
     /**
      * Find all memberships for a user, i.e. the channels they currently belong to,
      * ordered by most recently joined first.

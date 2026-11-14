@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import { createTypingThrottle } from './typingThrottle.js';
+let time = 0;
+const throttle = createTypingThrottle(1000, () => time);
+assert.equal(throttle.shouldSend(1), true);
+for (time = 1; time < 1000; time++) assert.equal(throttle.shouldSend(1), false);
+assert.equal(throttle.shouldSend(1), true);
+time = 1001;
+assert.equal(throttle.shouldSend(2), true, 'Switching conversations sends a leading event');
+throttle.reset();
+assert.equal(throttle.shouldSend(2), true, 'Typing a new message can start immediately');

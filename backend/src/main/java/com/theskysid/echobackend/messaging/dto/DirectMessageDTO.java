@@ -13,6 +13,7 @@ public class DirectMessageDTO {
     private Long senderId;
     private String senderUsername;
     private String recipientUsername;
+    private String clientMessageId;
     private String content;
     private LocalDateTime timestamp;
     private LocalDateTime expiresAt;

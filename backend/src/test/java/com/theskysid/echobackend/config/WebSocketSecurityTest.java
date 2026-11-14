@@ -52,7 +52,7 @@ class WebSocketSecurityTest {
     @Profile("websocket-regression")
     @EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class,
             SecurityAutoConfiguration.class, UserDetailsServiceAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class})
-    @Import({WebSocketConfig.class, WebSocketAuthorizationInterceptor.class})
+    @Import({WebSocketConfig.class, WebSocketAuthorizationInterceptor.class, ChatLatencyInterceptor.class})
     static class TestApp {
         @Bean JwtService jwtService() {
             return new JwtService();
@@ -75,6 +75,8 @@ class WebSocketSecurityTest {
         bob = User.builder().id(2L).username("bob").build();
         when(users.findById(1L)).thenReturn(Optional.of(alice));
         when(users.findById(2L)).thenReturn(Optional.of(bob));
+        when(users.existsByIdAndUsername(1L, "alice")).thenReturn(true);
+        when(users.existsByIdAndUsername(2L, "bob")).thenReturn(true);
         var sockJs = new SockJsClient(List.of(new WebSocketTransport(new StandardWebSocketClient())));
         client = new WebSocketStompClient(sockJs);
         client.setMessageConverter(new StringMessageConverter());
@@ -82,7 +84,12 @@ class WebSocketSecurityTest {
 
     @AfterEach
     void cleanup() {
-        for (var session : sessions) if (session.isConnected()) session.disconnect();
+        for (var session : sessions) {
+            try { if (session.isConnected()) session.disconnect(); }
+            catch (org.springframework.messaging.MessageDeliveryException ignored) {
+                // A deliberately denied subscription may already be closing the socket.
+            }
+        }
         client.stop();
         sessions.clear();
     }
@@ -134,14 +141,14 @@ class WebSocketSecurityTest {
         }
         assertEquals("member-message", first);
         received.clear();
-        doThrow(new IllegalStateException("left channel")).when(channels).requireMember(alice, 42L);
+        doThrow(new IllegalStateException("left channel")).when(channels).requireMember(1L, "alice", 42L);
         messaging.convertAndSend("/topic/channel/42", "after-leave");
         assertNull(received.poll(300, TimeUnit.MILLISECONDS));
     }
 
     @Test
     void nonMemberChannelSubscriptionsAreRejected() throws Exception {
-        doThrow(new IllegalStateException("not a member")).when(channels).requireMember(bob, 42L);
+        doThrow(new IllegalStateException("not a member")).when(channels).requireMember(2L, "bob", 42L);
         var errors = new LinkedBlockingQueue<String>();
         var session = connect(bob, errors);
         session.subscribe("/topic/channel/42", handler(new LinkedBlockingQueue<>()));
