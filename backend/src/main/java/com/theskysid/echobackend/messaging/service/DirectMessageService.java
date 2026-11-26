@@ -183,9 +183,9 @@ public class DirectMessageService {
 
     /**
      * Scheduled cleanup: delete expired messages and empty conversations.
-     * Runs every 5 minutes.
+     * The deployment can space out runs so the database can suspend between them.
      */
-    @Scheduled(fixedRate = 300_000)
+    @Scheduled(fixedRateString = "${DM_CLEANUP_INTERVAL_MS:300000}")
     @Transactional
     public void cleanupExpiredMessages() {
         LocalDateTime now = LocalDateTime.now();
