@@ -48,7 +48,7 @@ public class SecurityConfig {
                                 "/auth/email-otp/**",
                                 "/auth/google/**")
                         .permitAll()
-                        .requestMatchers("/actuator/health", "/ws/**").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/health/liveness", "/ws/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())

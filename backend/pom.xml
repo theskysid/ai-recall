@@ -18,7 +18,7 @@
     </properties>
     <dependencies>
 
-        <!-- /actuator/health gates both compose healthchecks and the deploy. -->
+        <!-- Liveness and database-aware health endpoints for Compose and deploy verification. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>

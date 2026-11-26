@@ -19,10 +19,23 @@ services:
       - ./.env
     environment:
       JAVA_TOOL_OPTIONS: "-Xmx512m"
+      SPRING_DATASOURCE_HIKARI_MINIMUMIDLE: "0"
+      SPRING_DATASOURCE_HIKARI_IDLETIMEOUT: "60000"
+      SPRING_DATASOURCE_HIKARI_KEEPALIVETIME: "0"
+      DM_CLEANUP_INTERVAL_MS: "1800000"
     ports:
       - "127.0.0.1:8080:8080"
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      # Keep the database idle between requests. Older images can still pass after a rollback.
+      test:
+        - CMD-SHELL
+        - >-
+          code=$$(curl -sSo /dev/null -w '%{http_code}' http://localhost:8080/actuator/health/liveness) || exit 1;
+          case "$$code" in
+            200) exit 0 ;;
+            403|404) curl -fsS http://localhost:8080/actuator/health ;;
+            *) exit 1 ;;
+          esac
       interval: 30s
       timeout: 10s
       retries: 5
